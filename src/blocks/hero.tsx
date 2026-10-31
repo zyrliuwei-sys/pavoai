@@ -1,3 +1,4 @@
+import { useRouter } from '@/core/i18n/navigation';
 import { m } from '@/paraglide/messages.js';
 import { LandingHero } from '@/components/landing/hero';
 
@@ -31,6 +32,7 @@ const TILES = [
  * Hero — the PavoAI opening section: headline, prompt bar and video tiles.
  */
 export function Hero() {
+  const router = useRouter();
   const headline = m['lp.hero.headline']();
   const emphasized = m['lp.hero.emphasized']();
 
@@ -47,6 +49,13 @@ export function Hero() {
       eyebrow={m['lp.hero.eyebrow']()}
       words={words}
       subtitle={m['lp.hero.subtitle']()}
+      // The prompt bar is the tool entry: submit carries the visitor's prompt
+      // (and picked mode) into the sign-up flow instead of doing nothing.
+      onSubmitPrompt={(prompt, tab) => {
+        const params = new URLSearchParams({ mode: tab });
+        if (prompt.trim()) params.set('prompt', prompt.trim());
+        router.navigate({ href: `/sign-up?${params.toString()}` });
+      }}
       tabs={[
         {
           id: 'video',

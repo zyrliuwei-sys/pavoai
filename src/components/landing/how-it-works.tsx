@@ -40,6 +40,8 @@ function StepFrame({
         <img
           src={image}
           alt={alt ?? ''}
+          width={640}
+          height={360}
           loading="lazy"
           onError={() => setFailed(true)}
           className="absolute inset-0 h-full w-full object-cover"

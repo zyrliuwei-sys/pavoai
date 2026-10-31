@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "prebuild": "node scripts/db-setup.mjs",
-    "build": "vite build",
+    "build": "DATABASE_PROVIDER=sqlite vite build",
     "start": "node .output/server/index.mjs",
     "precf:build": "node scripts/db-setup.mjs",
-    "cf:build": "NITRO_PRESET=cloudflare_module vite build",
+    "cf:build": "DATABASE_PROVIDER=sqlite NITRO_PRESET=cloudflare_module vite build",
     "cf:deploy": "sh -c 'set -a && [ -f .env.production ] && . ./.env.production; set +a && pnpm cf:build && exec wrangler deploy'",
     "postinstall": "mkdir -p data && (test -f src/config/db/schema.ts || node scripts/db-setup.mjs)",
     "db:setup": "node scripts/db-setup.mjs",

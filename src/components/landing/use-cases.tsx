@@ -69,6 +69,8 @@ export function LandingUseCases({
                 <img
                   src={card.image}
                   alt={card.title}
+                  width={600}
+                  height={800}
                   loading="lazy"
                   className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-[1.04] group-hover:opacity-100"
                 />

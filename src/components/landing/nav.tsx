@@ -64,7 +64,13 @@ export function LandingNav({
           className="flex items-center gap-2.5"
           aria-label={appName}
         >
-          <img src={logoSrc} alt="" className="h-7 w-7 rounded-lg" />
+          <img
+            src={logoSrc}
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-lg"
+          />
           <span className="text-[15px] font-semibold text-white">
             {appName}
           </span>

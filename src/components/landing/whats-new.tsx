@@ -75,6 +75,8 @@ export function LandingWhatsNew({
                   <img
                     src={card.image}
                     alt={card.title}
+                    width={640}
+                    height={400}
                     loading="lazy"
                     className="h-full w-full object-cover"
                   />

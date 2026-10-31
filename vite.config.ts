@@ -113,6 +113,16 @@ export default defineConfig({
       srcDirectory: 'src',
     }),
     viteReact(),
-    nitro(),
+    // Prerender the marketing landing at build time: both locale variants are
+    // pure composition (no per-request data), so serving them as static edge
+    // assets removes the SSR render AND the config-table D1 read from TTFB.
+    // Analytics scripts come from the build-time config read — a rebuild picks
+    // up admin changes.
+    nitro({
+      routeRules: {
+        '/': { prerender: true },
+        '/zh': { prerender: true },
+      },
+    }),
   ],
 });

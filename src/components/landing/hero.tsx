@@ -25,6 +25,8 @@ export interface LandingHeroProps {
   /** Example prompts cycled by the typewriter in the prompt bar. */
   promptExamples: string[];
   ctaLabel: string;
+  /** Called with the submitted prompt + active tab id; wired by the block. */
+  onSubmitPrompt?: (prompt: string, tabId: string) => void;
   trust: string[];
   tiles: HeroTile[];
   marquee: { title: string; models: string[]; pauseLabel: string };
@@ -43,6 +45,7 @@ export function LandingHero({
   tabs,
   promptExamples,
   ctaLabel,
+  onSubmitPrompt,
   trust,
   tiles,
   marquee,
@@ -112,7 +115,13 @@ export function LandingHero({
 
         {/* Prompt bar — typewriter cycles example prompts until the visitor types */}
         <form
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSubmitPrompt?.(
+              draft ?? typed ?? '',
+              activeTab?.id ?? tabs[0]?.id ?? 'video'
+            );
+          }}
           className="mt-4 flex h-[60px] w-full max-w-[640px] items-center rounded-[18px] bg-white/[0.07] py-1.5 pr-1.5 pl-4 ring-1 ring-white/10 transition-shadow duration-300 focus-within:ring-[var(--sv-iris)]"
         >
           <input
@@ -160,6 +169,8 @@ export function LandingHero({
               <img
                 src={tile.src}
                 alt={tile.alt}
+                width={640}
+                height={360}
                 loading="lazy"
                 className="sv-kenburns h-full w-full object-cover"
                 style={
