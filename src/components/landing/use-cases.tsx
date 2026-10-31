@@ -1,11 +1,13 @@
 import type { CSSProperties } from 'react';
-import { ArrowRight, type LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 import { RevealSection } from '@/components/landing/reveal';
 
 export interface UseCase {
   title: string;
   description: string;
+  /** Long-form caption under the image — always fully visible (SEO copy). */
+  detail: string;
   image: string;
   icon: LucideIcon;
 }
@@ -15,7 +17,6 @@ export interface LandingUseCasesProps {
   title: string;
   subtitle: string;
   cases: UseCase[];
-  ctaLabel: string;
   href: string;
 }
 
@@ -24,7 +25,6 @@ export function LandingUseCases({
   title,
   subtitle,
   cases,
-  ctaLabel,
   href,
 }: LandingUseCasesProps) {
   // Stagger cascade: title words → subtitle → cards.
@@ -63,35 +63,33 @@ export function LandingUseCases({
               <a
                 key={card.title}
                 href={href}
-                className="sv-enter sv-hover-lift sv-press group relative block aspect-[3/4] overflow-hidden rounded-[16px] bg-zinc-100 ring-1 ring-zinc-950/[0.08]"
+                className="sv-enter sv-hover-lift sv-press group relative block overflow-hidden rounded-[16px] bg-white ring-1 ring-zinc-950/[0.08]"
                 style={{ '--i': cardBase + index } as CSSProperties}
               >
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  width={600}
-                  height={800}
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-[1.04] group-hover:opacity-100"
-                />
-                <span className="absolute top-4 left-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur">
-                  <Icon size={16} />
-                </span>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-16">
-                  <h3 className="text-[15px] font-semibold text-white">
-                    {card.title}
-                  </h3>
-                  <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-white/65">
-                    {card.description}
-                  </p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-[var(--sv-iris-bright)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
-                    {ctaLabel}
-                    <ArrowRight
-                      className="size-3.5 transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
+                <div className="relative aspect-[4/3] overflow-hidden rounded-t-[16px] bg-zinc-100">
+                  <img
+                    src={card.image}
+                    alt={card.title}
+                    width={600}
+                    height={450}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-[1.04] group-hover:opacity-100"
+                  />
+                  <span className="absolute top-4 left-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur">
+                    <Icon size={16} />
                   </span>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-14">
+                    <h3 className="text-[15px] font-semibold text-white">
+                      {card.title}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-white/65">
+                      {card.description}
+                    </p>
+                  </div>
                 </div>
+                <p className="p-4 text-[13px] leading-relaxed text-zinc-600">
+                  {card.detail}
+                </p>
               </a>
             );
           })}
