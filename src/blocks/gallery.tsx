@@ -65,7 +65,7 @@ export function Gallery() {
         kind,
         duration,
       }))}
-      cta={{ label: m['lp.gal.cta'](), href: '/sign-up' }}
+      cta={{ label: m['lp.gal.cta'](), href: '/#generator' }}
     />
   );
 }

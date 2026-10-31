@@ -40,7 +40,8 @@ export function UseCases() {
         icon,
       }))}
       ctaLabel={m['lp.uc.cta']()}
-      href="/sign-up"
+      // P0-2 interim: try it in the on-page generator instead of a sign-up wall.
+      href="/#generator"
     />
   );
 }

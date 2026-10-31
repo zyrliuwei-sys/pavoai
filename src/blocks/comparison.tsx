@@ -27,7 +27,8 @@ export function Comparison() {
         features: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => tDynamic(`lp.cmp.f${i}`)),
         pricePrefix: m['lp.cmp.price_prefix'](),
         price: m['lp.cmp.price'](),
-        cta: { label: m['lp.cmp.cta'](), href: '/sign-up' },
+        // P0-2: send the visitor to the in-page generator instead of /sign-up.
+        cta: { label: m['lp.cmp.cta'](), href: '/#generator' },
         secondary: { label: m['lp.cmp.secondary'](), href: '/#tools' },
       }}
     />
