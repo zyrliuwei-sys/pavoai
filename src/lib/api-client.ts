@@ -48,6 +48,16 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 export const apiGet = <T>(url: string, init?: RequestInit) =>
   request<T>(url, init);
 
+/** Plain-text resources such as sitemap XML and ownership verification files. */
+export async function apiGetText(url: string) {
+  const response = await fetch(url, { cache: 'no-store' });
+  return {
+    ok: response.ok,
+    status: response.status,
+    text: await response.text(),
+  };
+}
+
 export const apiPost = <T = void>(url: string, body?: unknown) =>
   request<T>(url, {
     method: 'POST',

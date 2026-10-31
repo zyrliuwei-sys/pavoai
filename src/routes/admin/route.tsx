@@ -6,10 +6,12 @@ import {
   FolderOpen,
   Home,
   LayoutDashboard,
+  Radar,
   Settings,
   Shield,
 } from 'lucide-react';
 
+import { matchPermission } from '@/core/auth/rbac';
 import { envConfigs } from '@/config';
 import { m } from '@/paraglide/messages.js';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
@@ -69,17 +71,28 @@ function AdminLayout() {
 
   const footerNavItems = [
     ...(isSuperAdmin
-      ? [{
-          href: '/admin/footer-badges',
-          label: m['admin.nav.footer_badges'](),
-          icon: BadgeCheck,
-        }]
+      ? [
+          {
+            href: '/admin/footer-badges',
+            label: m['admin.nav.footer_badges'](),
+            icon: BadgeCheck,
+          },
+        ]
       : []),
     {
       href: '/admin/agent',
       label: m['admin.nav.agent'](),
       icon: Bot,
     },
+    ...(matchPermission('admin.indexnow.read', permissions?.permissions ?? [])
+      ? [
+          {
+            href: '/admin/indexnow',
+            label: m['admin.nav.indexnow'](),
+            icon: Radar,
+          },
+        ]
+      : []),
     {
       href: '/admin/settings',
       label: m['admin.nav.settings'](),

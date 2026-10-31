@@ -42,6 +42,7 @@ wrangler.jsonc
 *.pem
 
 # debug
+.indexnow-backup-*/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

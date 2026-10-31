@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { INDEXNOW_KEY_PATTERN, MAX_INDEXNOW_URLS } from '@/lib/indexnow';
+
 // The shared contract for REST, MCP, documentation, and permission discovery.
 const id = z.string().min(1).max(191);
 const short = z.string().max(500);
@@ -75,6 +77,53 @@ function op(
 }
 
 export const adminOperations: AdminOperation[] = [
+  op(
+    'indexnow_get',
+    'Read IndexNow ownership verification and site status.',
+    'indexnow.read',
+    'GET',
+    'indexnow',
+    empty
+  ),
+  op(
+    'indexnow_update',
+    'Save the public IndexNow ownership token and serve its verification file.',
+    'indexnow.write',
+    'PUT',
+    'indexnow',
+    z.object({ key: z.string().trim().regex(INDEXNOW_KEY_PATTERN) }).strict()
+  ),
+  op(
+    'indexnow_submit',
+    'Notify IndexNow search engines about up to 10,000 URLs on the configured site host.',
+    'indexnow.submit',
+    'POST',
+    'indexnow',
+    z
+      .object({
+        urls: z
+          .array(z.string().trim().min(1).max(2048))
+          .min(1)
+          .max(MAX_INDEXNOW_URLS),
+      })
+      .strict()
+  ),
+  op(
+    'footer_badges_get',
+    'Read the public footer badges. Requires super administrator (*) access.',
+    'footer-badges.read',
+    'GET',
+    'footer-badges',
+    empty
+  ),
+  op(
+    'footer_badges_update',
+    'Replace the public footer badge list with validated HTTPS links and images. Requires super administrator (*) access.',
+    'footer-badges.write',
+    'POST',
+    'footer-badges',
+    z.object({ badges: z.array(z.unknown()).max(200) }).strict()
+  ),
   op(
     'users_list',
     "List users with balances. Search matches email or name; verify an exact email before a write. utm_source filters by exact sign-up source; '' selects untagged (direct) users.",

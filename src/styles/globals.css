@@ -351,6 +351,44 @@
   }
 }
 
+@layer utilities {
+  @keyframes badge-marquee {
+    from {
+      transform: translate3d(-50%, 0, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  .badge-marquee {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 6%,
+      #000 94%,
+      transparent
+    );
+  }
+  .badge-marquee-track {
+    animation: badge-marquee var(--badge-marquee-duration, 60s) linear infinite;
+  }
+  .badge-marquee:hover .badge-marquee-track,
+  .badge-marquee:focus-within .badge-marquee-track {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .badge-marquee {
+      overflow-x: auto;
+    }
+    .badge-marquee-track {
+      animation: none !important;
+    }
+    .badge-marquee-track > [aria-hidden='true'] {
+      display: none;
+    }
+  }
+}
+
 /* With the appearance switch on, toasts follow the theme: card surface +
    theme border/text from the Toaster's popover tokens; only the icon
    carries the type color. Off, <Toaster richColors> keeps the old look. */

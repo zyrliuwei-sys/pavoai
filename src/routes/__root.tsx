@@ -52,7 +52,8 @@ import '@/styles/globals.css';
 // server function so drizzle/db code never reaches the client bundle.
 const getAnalyticsConfigs = createServerFn().handler(async () => {
   const { getAllConfigs } = await import('@/modules/config/service');
-  const { getStoredFooterBadges } = await import('@/modules/footer-badges/service');
+  const { getStoredFooterBadges } =
+    await import('@/modules/footer-badges/service');
   const { getCookie } = await import('@tanstack/react-start/server');
   const { safeEmbedSetting } = await import('@/lib/embed-ids');
   const [configs, storedFooterBadges] = await Promise.all([

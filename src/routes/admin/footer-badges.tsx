@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 import { apiGet, apiPost } from '@/lib/api-client';
 import { m } from '@/paraglide/messages.js';
+import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +19,8 @@ import { Textarea } from '@/components/ui/textarea';
 const queryKey = ['admin-footer-badges'];
 
 function AdminFooterBadgesPage() {
+  const { data: permissions } = useUserPermissions();
+  const isSuperAdmin = permissions?.permissions?.includes('*') === true;
   const queryClient = useQueryClient();
   const [markup, setMarkup] = useState('');
   const [inputError, setInputError] = useState(false);
@@ -25,9 +28,11 @@ function AdminFooterBadgesPage() {
     data: badges = [],
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     queryKey,
     queryFn: () => apiGet<FooterBadge[]>('/api/admin/footer-badges'),
+    enabled: isSuperAdmin,
   });
 
   const saveMutation = useMutation({
@@ -65,6 +70,14 @@ function AdminFooterBadgesPage() {
 
   function removeBadge(index: number) {
     saveMutation.mutate(badges.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  if (!isSuperAdmin) {
+    return (
+      <p className="text-muted-foreground p-4 text-sm md:p-6">
+        {m['admin.footer_badges.forbidden']()}
+      </p>
+    );
   }
 
   return (
@@ -118,7 +131,9 @@ function AdminFooterBadgesPage() {
             <Button
               type="button"
               onClick={addBadge}
-              disabled={saveMutation.isPending || isLoading}
+              disabled={
+                saveMutation.isPending || isLoading || isError || !markup.trim()
+              }
             >
               {saveMutation.isPending ? (
                 m['admin.footer_badges.adding']()
@@ -142,6 +157,15 @@ function AdminFooterBadgesPage() {
             <p className="text-muted-foreground text-sm">
               {m['admin.footer_badges.loading']()}
             </p>
+          ) : isError ? (
+            <div role="alert" className="space-y-3">
+              <p className="text-destructive text-sm">
+                {m['admin.footer_badges.load_error']()}
+              </p>
+              <Button type="button" variant="outline" onClick={() => refetch()}>
+                {m['admin.footer_badges.retry']()}
+              </Button>
+            </div>
           ) : badges.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               {m['admin.footer_badges.empty']()}
@@ -150,7 +174,7 @@ function AdminFooterBadgesPage() {
             <ul className="space-y-3">
               {badges.map((badge, index) => (
                 <li
-                  key={`${badge.href}:${badge.src}`}
+                  key={`${index}:${badge.href}:${badge.src}`}
                   className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0 space-y-2">

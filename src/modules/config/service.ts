@@ -95,7 +95,10 @@ const PROTECTED_CONFIG_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 // Dedicated modules own their validation, permissions, and persistence.
-const MODULE_MANAGED_CONFIG_KEYS: ReadonlySet<string> = new Set(['footer_badges']);
+const MODULE_MANAGED_CONFIG_KEYS: ReadonlySet<string> = new Set([
+  'footer_badges',
+  'indexnow_key',
+]);
 
 /**
  * Keys whose values are secrets: encrypted at rest in the config table and
@@ -189,11 +192,10 @@ export async function saveConfigs(configs: ConfigMap) {
           !MODULE_MANAGED_CONFIG_KEYS.has(name) &&
           !isMaskedConfigValue(value)
       )
-      .map(
-        async ([name, value]): Promise<[string, string]> =>
-          isSecretConfigKey(name)
-            ? [name, await encryptSecret(value)]
-            : [name, value]
+      .map(async ([name, value]): Promise<[string, string]> =>
+        isSecretConfigKey(name)
+          ? [name, await encryptSecret(value)]
+          : [name, value]
       )
   );
   if (entries.length === 0) {
@@ -238,7 +240,8 @@ export async function getAdminConfigs(): Promise<ConfigMap> {
   const configs = await getAllConfigs();
   const result: ConfigMap = {};
   for (const [name, value] of Object.entries(configs)) {
-    if (PROTECTED_CONFIG_KEYS.has(name)) continue;
+    if (PROTECTED_CONFIG_KEYS.has(name) || MODULE_MANAGED_CONFIG_KEYS.has(name))
+      continue;
     result[name] =
       isSecretConfigKey(name) && value ? maskConfigValue(value) : value;
   }
@@ -315,11 +318,10 @@ export async function replaceCustomConfigs(
   const entries = await Promise.all(
     clean
       .filter(([, value]) => !isMaskedConfigValue(value))
-      .map(
-        async ([name, value]): Promise<[string, string]> =>
-          isSecretConfigKey(name)
-            ? [name, await encryptSecret(value)]
-            : [name, value]
+      .map(async ([name, value]): Promise<[string, string]> =>
+        isSecretConfigKey(name)
+          ? [name, await encryptSecret(value)]
+          : [name, value]
       )
   );
 

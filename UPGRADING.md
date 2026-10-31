@@ -46,6 +46,45 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-10-31: IndexNow administration
+
+The admin sidebar now includes `/admin/indexnow`: save an ownership key,
+verify `/{key}.txt`, and submit sitemap URLs or specific changed pages.
+The existing `config` table stores `indexnow_key`; no schema migration or
+additional package is needed. This public verification token is managed by
+IndexNow, excluded from general/custom settings, and read without caching.
+
+### Action required
+
+- [ ] Run `pnpm admin:token sync-permissions` to register
+      `admin.indexnow.read`, `admin.indexnow.write`, and
+      `admin.indexnow.submit`. Super admins already have access. Grant the
+      explicit codes to other roles as needed; ordinary admin seeds grant
+      read and submit, while key changes require a separate write grant.
+- [ ] Set `VITE_APP_URL` to the public site's origin before deploying and
+      save your IndexNow key on the new page. Local preview supports saving
+      and checking the key file; external submission is disabled for local
+      origins. Each request accepts at most 10,000 same-host URLs.
+- [ ] Submission acceptance (HTTP 200/202) is not a guarantee of indexing.
+
+## 2026-10-31: Install administrator-managed footer badges
+
+Super administrators can manage HTTPS badge links at `/admin/footer-badges`.
+Badges are stored under `footer_badges` in the existing `config` table;
+no schema change or database migration is required. The generic settings
+and custom settings APIs cannot overwrite or remove this module-owned key.
+
+Take the footer-badges feature, module, admin handlers/operations, routes,
+translations, root loader, public config, user permissions endpoint, footer
+block/component, and marquee CSS together. Custom footers can render badges
+through the new optional `SiteFooter.badges` slot. Keep the root loader
+integration so badges appear in server-rendered HTML for backlink verification.
+
+The new `admin.footer-badges.read` and `admin.footer-badges.write` operations
+also require the global `*` permission; ordinary administrator wildcards
+cannot grant access. Existing super administrators work without re-seeding.
+No badges appear until one is added in the admin page.
+
 ## 2026-10-31: Hide the footer attribution by default
 
 `SiteFooter` no longer displays the "Built with ShipAny" badge by default.
