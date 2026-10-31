@@ -35,6 +35,7 @@ jobs:
       VITE_APP_NAME: PavoAI
       VITE_APP_DESCRIPTION: Free AI video generator and AI short-film studio — text to video, image to video and AI editing with 20+ top models like Veo, Kling and Sora.
       # ci-wrangler.mjs inputs
+      ACCOUNT_ID: d7c3d8fa2229ed65b03fd28fc8659989
       WORKER_NAME: pavoai
       D1_DATABASE_NAME: pavoai
       D1_DATABASE_ID: 8a42e09a-d9fa-40c4-beef-f97c5d2e81eb
