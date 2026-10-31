@@ -1,0 +1,45 @@
+export const meta = {
+  title: 'How to Write Video Prompts That Look Cinematic',
+  description:
+    'The four-part prompt formula behind AI video clips that do not look AI-generated: camera, light, motion and mood — with before/after examples you can copy.',
+  created_at: '2026-10-28',
+  author_name: 'PavoAI Team',
+  author_image: '/logo.png',
+  image: '/imgs/generated/blog-prompt.jpg',
+};
+
+Most AI video prompts fail the same way: they describe a subject and stop. "A woman walking through Tokyo" gives the model nothing to direct, so you get a documentary shot from a camera that does not exist. Cinematic clips come from prompts written like a director would brief a shot — camera, light, motion, mood. Here is the formula.
+
+## 1. Camera first, subject second
+
+Name the shot before the content: close-up, wide establishing, over-the-shoulder, drone pull-back, handheld follow. The lens language does more for the look of the frame than the subject does.
+
+- Weak: `a chef plating a dish`
+- Strong: `slow macro close-up, shallow depth of field, a chef plating a dish`
+
+## 2. Light like a cinematographer
+
+Light is the difference between a clip and a stock video. Specify source, direction and quality: golden-hour backlight, hard noon sun, single practical lamp, neon bounce at night, soft overcast key.
+
+- Weak: `a perfume bottle on a table`
+- Strong: `low-key studio light, one hard key from camera left, a perfume bottle on a black table, rim light on the glass`
+
+## 3. Give the motion a direction
+
+Models animate what moves — so say what moves and how: "steam rises slowly", "the camera pushes in", "her coat flutters in the wind". One deliberate motion reads as cinema; three competing motions read as noise.
+
+## 4. Set the mood, then stop
+
+End with grade and tone: muted teal-and-orange, faded film grain, high-contrast noir, pastel and airy. Then stop writing. Long prompts dilute; every extra clause is another instruction the model can drop.
+
+## A full example, assembled
+
+`Slow dolly-in on a lone astronaut standing in a red sand desert, golden-hour side light, dust drifting across the lens, muted warm grade, subtle film grain.`
+
+Camera, light, motion, mood — eleven words of scene, all of them directional. That structure, reused across shots, is also how you keep a multi-scene video consistent: lock the light and grade, change only the subject and the camera move.
+
+## Iterate in passes
+
+First pass: get the composition right with a fast model. Second pass: swap to a heavier model and keep the winning prompt verbatim. Third pass: change one variable at a time — never rewrite a working prompt wholesale. On PavoAI you can run the same prompt across Veo, Kling and the rest in one window, which is exactly the workflow this formula was tuned for.
+
+Write your next prompt with the four parts and compare it against your old one — the difference is usually immediate.
