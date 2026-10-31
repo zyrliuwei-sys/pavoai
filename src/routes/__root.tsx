@@ -140,6 +140,16 @@ export const Route = createRootRoute({
         { title: envConfigs.app_name },
         { name: 'description', content: envConfigs.app_description },
         { name: 'generator', content: 'ShipAny' },
+        // Google Search Console ownership proof for https://pavoai.net
+        {
+          name: 'google-site-verification',
+          content: 'ZDYmopNb1Ex4E5tucTPV_7jY7LImwXwSXnZ6XhWso30',
+        },
+        // Bing Webmaster Tools ownership proof for https://pavoai.net
+        {
+          name: 'msvalidate.01',
+          content: 'B0CDD13837D509DA74D7BD8E5CD0629C',
+        },
       ],
       links: [
         { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
