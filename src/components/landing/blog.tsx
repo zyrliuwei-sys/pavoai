@@ -28,11 +28,11 @@ export function LandingBlog({
   readLabel,
 }: LandingBlogProps) {
   return (
-    <RevealSection className="sv-night relative py-20 sm:py-28 lg:py-32">
+    <RevealSection className="sv-day relative py-20 sm:py-28 lg:py-32">
       <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8">
         <div className="flex items-end justify-between gap-6">
           <div>
-            <p className="text-[13px] text-white/60">{label}</p>
+            <p className="text-[13px] text-zinc-500">{label}</p>
             <h2 className="sv-display mt-3 text-[clamp(2rem,1.1rem+2.6vw,4.2rem)] leading-none">
               {title}
             </h2>
@@ -40,7 +40,7 @@ export function LandingBlog({
           {link && (
             <a
               href={link.href}
-              className="text-sm font-medium text-[var(--sv-iris-bright)] transition hover:underline"
+              className="text-sm font-medium text-[var(--sv-iris-strong)] transition hover:underline"
             >
               {link.label}
             </a>
@@ -52,7 +52,7 @@ export function LandingBlog({
             <a
               key={post.title}
               href={post.href}
-              className="sv-enter sv-hover-lift group relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-[16px] ring-1 ring-white/[0.07]"
+              className="sv-enter sv-hover-lift group relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-[16px] bg-zinc-100 ring-1 ring-zinc-950/[0.08]"
               style={{ '--i': i } as CSSProperties}
             >
               <img
@@ -75,7 +75,7 @@ export function LandingBlog({
                 <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-white/60">
                   {post.excerpt}
                 </p>
-                <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-[var(--sv-iris-bright)]">
+                <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-[var(--sv-iris-strong)]">
                   {readLabel}
                   <ArrowRight
                     size={14}

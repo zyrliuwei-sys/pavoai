@@ -37,14 +37,14 @@ export function LandingGallery({
   return (
     <RevealSection
       id="gallery"
-      className="sv-night sv-grain relative overflow-hidden py-20 sm:py-28 lg:py-32"
+      className="sv-day sv-grain relative overflow-hidden py-20 sm:py-28 lg:py-32"
     >
       <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8">
-        <p className="text-[13px] text-white/60">{label}</p>
+        <p className="text-[13px] text-zinc-500">{label}</p>
         <h2 className="sv-display mt-3 text-[clamp(2rem,1.1rem+2.6vw,4.2rem)] leading-none">
           {title}
         </h2>
-        <p className="mt-4 max-w-[520px] text-[15px] leading-relaxed text-white/70">
+        <p className="mt-4 max-w-[520px] text-[15px] leading-relaxed text-zinc-600">
           {subtitle}
         </p>
 
@@ -54,7 +54,7 @@ export function LandingGallery({
             return (
               <figure
                 key={`${item.src}-${i}`}
-                className="sv-hover-lift group relative mb-4 break-inside-avoid overflow-hidden rounded-[16px] ring-1 ring-white/[0.07]"
+                className="sv-hover-lift group relative mb-4 break-inside-avoid overflow-hidden rounded-[16px] bg-zinc-100 ring-1 ring-zinc-950/[0.08]"
                 style={{ aspectRatio: item.aspect ?? '4/5' }}
               >
                 <img
@@ -94,7 +94,7 @@ export function LandingGallery({
         <div className="mt-8 flex justify-center">
           <a
             href={cta.href}
-            className="sv-press inline-flex h-11 items-center rounded-full px-6 text-sm font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/[0.06]"
+            className="sv-press inline-flex h-11 items-center rounded-full bg-white px-6 text-sm font-semibold text-zinc-900 ring-1 ring-zinc-950/15 transition hover:bg-zinc-50"
           >
             {cta.label}
           </a>

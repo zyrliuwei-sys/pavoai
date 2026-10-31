@@ -32,11 +32,11 @@ export function LandingUseCases({
   const cardBase = titleWords.length + 1;
 
   return (
-    <RevealSection id="use-cases" className="sv-night py-20 sm:py-28 lg:py-32">
+    <RevealSection id="use-cases" className="sv-day py-20 sm:py-28 lg:py-32">
       <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8">
         <div>
-          <p className="text-[13px] text-white/60">{label}</p>
-          <h2 className="sv-display mt-2 text-[clamp(2rem,1.1rem+2.6vw,4.2rem)] leading-none text-[#f4f6fb]">
+          <p className="text-[13px] text-zinc-500">{label}</p>
+          <h2 className="sv-display mt-2 text-[clamp(2rem,1.1rem+2.6vw,4.2rem)] leading-none text-zinc-950">
             {titleWords.map((word, i) => (
               <span
                 key={`${word}-${i}`}
@@ -49,7 +49,7 @@ export function LandingUseCases({
             ))}
           </h2>
           <p
-            className="sv-enter mt-4 max-w-[560px] text-[15px] leading-relaxed text-white/70"
+            className="sv-enter mt-4 max-w-[560px] text-[15px] leading-relaxed text-zinc-600"
             style={{ '--i': titleWords.length } as CSSProperties}
           >
             {subtitle}
@@ -63,7 +63,7 @@ export function LandingUseCases({
               <a
                 key={card.title}
                 href={href}
-                className="sv-enter sv-hover-lift sv-press group relative block aspect-[3/4] overflow-hidden rounded-[16px] bg-[#0a0e15] ring-1 ring-white/[0.07]"
+                className="sv-enter sv-hover-lift sv-press group relative block aspect-[3/4] overflow-hidden rounded-[16px] bg-zinc-100 ring-1 ring-zinc-950/[0.08]"
                 style={{ '--i': cardBase + index } as CSSProperties}
               >
                 <img
@@ -84,7 +84,7 @@ export function LandingUseCases({
                   <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-white/65">
                     {card.description}
                   </p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-[var(--sv-iris-bright)]">
+                  <span className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-[var(--sv-iris-bright)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
                     {ctaLabel}
                     <ArrowRight
                       className="size-3.5 transition-transform group-hover:translate-x-0.5"

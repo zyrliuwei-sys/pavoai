@@ -435,24 +435,24 @@
 }
 
 /* ---------------------------------------------------------------------------
- * PavoAI landing design system — extracted from kenerateai.com
- * Night sections (#05060a) alternate with white sections; blue-500 accent.
+ * PavoAI landing design system — light mode.
+ * Day sections (mist #f7f9fa) alternate with white sections; iris accent.
  * ------------------------------------------------------------------------- */
 :root {
-  --sv-night: #080b11;
-  --sv-night-foreground: #f2f5f9;
-  --sv-night-muted: rgba(242, 245, 249, 0.64);
-  --sv-iris: #2ba398; /* peacock teal — accent on light, text-safe on night */
+  --sv-day: #f7f9fa;
+  --sv-day-foreground: #0e1318;
+  --sv-day-muted: rgba(14, 19, 24, 0.62);
+  --sv-iris: #2ba398; /* peacock teal — accent on light, text-safe */
   --sv-iris-strong: #1f7d75; /* button fill (white text ≥ 4.5:1) */
   --sv-iris-deep: #175e59;
-  --sv-iris-bright: #5cc9bd; /* accent on night surfaces */
+  --sv-iris-bright: #5cc9bd; /* legacy accent kept for on-image chips */
   --sv-gold: #d4a94e; /* feather-eye highlight, live markers only */
 }
 
 @layer utilities {
-  .sv-night {
-    background-color: var(--sv-night);
-    color: var(--sv-night-foreground);
+  .sv-day {
+    background-color: var(--sv-day);
+    color: var(--sv-day-foreground);
   }
 
   /* Cinema-poster display face: Anton (Latin) / Noto Sans SC (CJK). */

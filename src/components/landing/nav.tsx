@@ -56,7 +56,7 @@ export function LandingNav({
       className={cn(
         'fixed inset-x-0 top-0 z-50 border-b transition-all duration-300',
         scrolled
-          ? 'border-white/[0.08] bg-[#080b11]/80 backdrop-blur-md'
+          ? 'border-zinc-950/[0.08] bg-white/85 backdrop-blur-md'
           : 'border-transparent',
         hidden && !open && '-translate-y-full'
       )}
@@ -75,7 +75,7 @@ export function LandingNav({
             height={28}
             className="h-7 w-7 rounded-lg"
           />
-          <span className="text-[15px] font-semibold text-white">
+          <span className="text-[15px] font-semibold text-zinc-950">
             {appName}
           </span>
         </Link>
@@ -86,7 +86,7 @@ export function LandingNav({
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+              className="rounded-full px-3.5 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-950/[0.05] hover:text-zinc-950"
             >
               {link.label}
               {link.badge ? (
@@ -110,7 +110,7 @@ export function LandingNav({
           ) : (
             <Link
               href={signInHref}
-              className="sv-underline px-3 text-sm font-medium text-white/70 transition-colors hover:text-white"
+              className="sv-underline px-3 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
             >
               {signInLabel}
             </Link>
@@ -129,7 +129,7 @@ export function LandingNav({
           aria-expanded={open}
           aria-label="Toggle navigation menu"
           onClick={() => setOpen((v) => !v)}
-          className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/[0.06] lg:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-950/[0.05] lg:hidden"
         >
           {open ? (
             <X aria-hidden className="h-5 w-5" />
@@ -147,14 +147,14 @@ export function LandingNav({
         )}
       >
         <div className="overflow-hidden">
-          <div className="border-b border-white/[0.08] bg-[#080b11] px-6 py-4">
+          <div className="border-b border-zinc-950/[0.08] bg-white px-6 py-4">
             <nav className="flex flex-col gap-1" aria-label="Mobile">
               {links.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="rounded-xl px-3.5 py-2.5 text-[15px] font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+                  className="rounded-xl px-3.5 py-2.5 text-[15px] font-medium text-zinc-600 transition-colors hover:bg-zinc-950/[0.05] hover:text-zinc-950"
                 >
                   {link.label}
                   {link.badge ? (
@@ -177,7 +177,7 @@ export function LandingNav({
                 <Link
                   href={signInHref}
                   onClick={() => setOpen(false)}
-                  className="flex h-10 items-center justify-center rounded-full text-sm font-medium text-white/70 transition-colors hover:text-white"
+                  className="flex h-10 items-center justify-center rounded-full text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950"
                 >
                   {signInLabel}
                 </Link>
