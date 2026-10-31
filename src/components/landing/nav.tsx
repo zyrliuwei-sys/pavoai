@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
+import { useSession } from '@/core/auth/client';
 import { Link } from '@/core/i18n/navigation';
 import { cn } from '@/lib/utils';
+import { SiteUserMenu } from '@/components/site-user-menu';
 
 export interface NavLink {
   label: string;
@@ -33,6 +35,8 @@ export function LandingNav({
   const [open, setOpen] = useState(false);
   // Hide on scroll down, reveal on scroll up (not while the menu is open).
   const [hidden, setHidden] = useState(false);
+  const { data: session } = useSession();
+  const user = session?.user;
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -97,12 +101,20 @@ export function LandingNav({
 
         {/* Desktop actions */}
         <div className="hidden items-center gap-1 lg:flex">
-          <Link
-            href={signInHref}
-            className="sv-underline px-3 text-sm font-medium text-white/70 transition-colors hover:text-white"
-          >
-            {signInLabel}
-          </Link>
+          {user ? (
+            <SiteUserMenu
+              name={user.name || 'User'}
+              email={user.email}
+              image={user.image}
+            />
+          ) : (
+            <Link
+              href={signInHref}
+              className="sv-underline px-3 text-sm font-medium text-white/70 transition-colors hover:text-white"
+            >
+              {signInLabel}
+            </Link>
+          )}
           <Link
             href={ctaHref}
             className="sv-press inline-flex h-10 items-center rounded-full bg-[var(--sv-iris-strong)] px-4 text-[13.5px] font-semibold text-white transition hover:bg-[var(--sv-iris-deep)]"
@@ -155,13 +167,21 @@ export function LandingNav({
               ))}
             </nav>
             <div className="mt-3 flex flex-col gap-2">
-              <Link
-                href={signInHref}
-                onClick={() => setOpen(false)}
-                className="flex h-10 items-center justify-center rounded-full text-sm font-medium text-white/70 transition-colors hover:text-white"
-              >
-                {signInLabel}
-              </Link>
+              {user ? (
+                <SiteUserMenu
+                  name={user.name || 'User'}
+                  email={user.email}
+                  image={user.image}
+                />
+              ) : (
+                <Link
+                  href={signInHref}
+                  onClick={() => setOpen(false)}
+                  className="flex h-10 items-center justify-center rounded-full text-sm font-medium text-white/70 transition-colors hover:text-white"
+                >
+                  {signInLabel}
+                </Link>
+              )}
               <Link
                 href={ctaHref}
                 onClick={() => setOpen(false)}
