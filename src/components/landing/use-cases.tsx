@@ -32,11 +32,11 @@ export function LandingUseCases({
   const cardBase = titleWords.length + 1;
 
   return (
-    <RevealSection id="use-cases" className="sv-day py-20 sm:py-28 lg:py-32">
+    <RevealSection id="use-cases" className="sv-night py-20 sm:py-28 lg:py-32">
       <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8">
         <div>
-          <p className="text-[13px] text-zinc-500">{label}</p>
-          <h2 className="sv-display mt-2 text-[clamp(2rem,1.1rem+2.6vw,4.2rem)] leading-none text-zinc-950">
+          <p className="text-[13px] text-white/60">{label}</p>
+          <h2 className="sv-display mt-2 text-[clamp(2rem,1.1rem+2.6vw,4.2rem)] leading-none text-[#f4f6fb]">
             {titleWords.map((word, i) => (
               <span
                 key={`${word}-${i}`}
@@ -49,7 +49,7 @@ export function LandingUseCases({
             ))}
           </h2>
           <p
-            className="sv-enter mt-4 max-w-[560px] text-[15px] leading-relaxed text-zinc-600"
+            className="sv-enter mt-4 max-w-[560px] text-[15px] leading-relaxed text-white/70"
             style={{ '--i': titleWords.length } as CSSProperties}
           >
             {subtitle}
@@ -63,10 +63,10 @@ export function LandingUseCases({
               <a
                 key={card.title}
                 href={href}
-                className="sv-enter sv-hover-lift sv-press group relative block overflow-hidden rounded-[16px] bg-white ring-1 ring-zinc-950/[0.08]"
+                className="sv-enter sv-hover-lift sv-press group relative block overflow-hidden rounded-[16px] bg-[#0a0e15] ring-1 ring-white/[0.07]"
                 style={{ '--i': cardBase + index } as CSSProperties}
               >
-                <div className="relative aspect-[4/3] overflow-hidden rounded-t-[16px] bg-zinc-100">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-t-[16px] bg-black/40">
                   <img
                     src={card.image}
                     alt={card.title}
@@ -87,7 +87,7 @@ export function LandingUseCases({
                     </p>
                   </div>
                 </div>
-                <p className="p-4 text-[13px] leading-relaxed text-zinc-600">
+                <p className="p-4 text-[13px] leading-relaxed text-white/65">
                   {card.detail}
                 </p>
               </a>

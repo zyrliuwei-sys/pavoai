@@ -27,11 +27,11 @@ function StatValue({ value, start }: { value: string; start: boolean }) {
   const parsed = parseValue(value);
   const n = useCountUp(parsed?.n ?? 0, start && !!parsed);
   return (
-    <div className="sv-display text-[clamp(2.5rem,1.5rem+2vw,4.16rem)] leading-none text-zinc-950">
+    <div className="sv-display text-[clamp(2.5rem,1.5rem+2vw,4.16rem)] leading-none text-[#f4f6fb]">
       {parsed ? (
         <>
           {n}
-          <span className="text-[var(--sv-iris-strong)]">{parsed.suffix}</span>
+          <span className="text-[var(--sv-iris-bright)]">{parsed.suffix}</span>
         </>
       ) : (
         value
@@ -47,7 +47,7 @@ export function LandingStatsBand({ items }: LandingStatsBandProps) {
   return (
     <section
       ref={groupRef}
-      className="sv-day sv-rv-group border-y border-zinc-950/[0.08]"
+      className="sv-night sv-rv-group border-y border-white/[0.08]"
     >
       <div
         ref={viewRef}
@@ -62,9 +62,9 @@ export function LandingStatsBand({ items }: LandingStatsBandProps) {
             >
               <StatValue value={item.value} start={inView} />
               <p className="mt-3 text-[13px]">
-                <span className="font-medium text-zinc-800">{item.lead}</span>
+                <span className="font-medium text-white/85">{item.lead}</span>
                 {item.rest ? (
-                  <span className="text-zinc-500">{` ${item.rest}`}</span>
+                  <span className="text-white/60">{` ${item.rest}`}</span>
                 ) : null}
               </p>
             </div>

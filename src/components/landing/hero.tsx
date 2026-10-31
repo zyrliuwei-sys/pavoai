@@ -67,23 +67,23 @@ export function LandingHero({
   return (
     <section
       id="generator"
-      className="sv-day sv-grain relative isolate flex min-h-svh flex-col items-center overflow-hidden px-6 pt-28 pb-8 lg:pt-32"
+      className="sv-night sv-grain relative isolate flex min-h-svh flex-col items-center overflow-hidden px-6 pt-28 pb-8 lg:pt-32"
     >
       <div className="relative z-10 mx-auto flex w-full max-w-[1040px] flex-1 flex-col items-center text-center">
         {/* Eyebrow */}
-        <div className="inline-flex h-8 items-center gap-2 rounded-full border border-zinc-950/10 bg-white px-3 text-[12.5px] font-medium text-zinc-700 shadow-sm">
+        <div className="inline-flex h-8 items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 text-[12.5px] font-medium text-white/85 backdrop-blur-md">
           {eyebrow}
         </div>
 
         {/* Headline — masked rise, one gate per word. Scale tuned for the
             long category H1 so the prompt bar stays in the first screen. */}
-        <h1 className="sv-display mt-6 max-w-[17ch] text-[clamp(2.25rem,1rem+4.6vw,6.5rem)] leading-[0.94] tracking-[-0.01em] text-zinc-950">
+        <h1 className="sv-display mt-6 max-w-[17ch] text-[clamp(2.25rem,1rem+4.6vw,6.5rem)] leading-[0.94] tracking-[-0.01em] text-[#f4f6fb]">
           {words.map((word, index) => (
             <Fragment key={`${word.text}-${index}`}>
               <span className="sv-mask">
                 <span
                   className={cn(
-                    word.emphasized && 'text-[var(--sv-iris-strong)] italic'
+                    word.emphasized && 'text-[var(--sv-iris-bright)] italic'
                   )}
                   style={{ '--i': index } as CSSProperties}
                 >
@@ -96,12 +96,12 @@ export function LandingHero({
         </h1>
 
         {/* Subtitle */}
-        <p className="mt-6 max-w-[640px] text-[15px] leading-relaxed text-zinc-600 sm:text-base">
+        <p className="mt-6 max-w-[640px] text-[15px] leading-relaxed text-white/70 sm:text-base">
           {subtitle}
         </p>
 
         {/* Mode tabs */}
-        <div className="mt-8 inline-flex rounded-full bg-zinc-950/[0.05] p-1 ring-1 ring-zinc-950/10">
+        <div className="mt-8 inline-flex rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10">
           {tabs.map((tab) => {
             const active = tab.id === activeTab?.id;
             return (
@@ -111,7 +111,7 @@ export function LandingHero({
                 aria-pressed={active}
                 onClick={() => setActiveId(tab.id)}
                 className={cn(
-                  'h-9 rounded-full px-4 text-sm font-medium text-zinc-600 hover:text-zinc-950',
+                  'h-9 rounded-full px-4 text-sm font-medium text-white/70 hover:text-white',
                   active && 'bg-[var(--sv-iris-strong)] text-white'
                 )}
               >
@@ -130,7 +130,7 @@ export function LandingHero({
               activeTab?.id ?? tabs[0]?.id ?? 'video'
             );
           }}
-          className="mt-4 flex h-[60px] w-full max-w-[640px] items-center rounded-[18px] bg-white py-1.5 pr-1.5 pl-4 shadow-sm ring-1 ring-zinc-950/10 transition-shadow duration-300 focus-within:ring-2 focus-within:ring-[var(--sv-iris)]"
+          className="mt-4 flex h-[60px] w-full max-w-[640px] items-center rounded-[18px] bg-white/[0.07] py-1.5 pr-1.5 pl-4 ring-1 ring-white/10 transition-shadow duration-300 focus-within:ring-[var(--sv-iris)]"
         >
           <input
             key={activeTab?.id}
@@ -144,7 +144,7 @@ export function LandingHero({
                 : (activeTab?.placeholder ?? '')
             }
             aria-label={activeTab?.placeholder}
-            className="sv-meta min-w-0 flex-1 bg-transparent text-[16px] text-zinc-900 placeholder:text-zinc-400 focus:outline-none"
+            className="sv-meta min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-white/45 focus:outline-none"
           />
           <button
             type="submit"
@@ -160,7 +160,7 @@ export function LandingHero({
           {trust.map((t) => (
             <li
               key={t}
-              className="rounded-full border border-zinc-950/10 bg-white px-3 py-1 text-[11.5px] text-zinc-600"
+              className="rounded-full border border-white/15 px-3 py-1 text-[11.5px] text-white/70"
             >
               {t}
             </li>
@@ -168,8 +168,8 @@ export function LandingHero({
         </ul>
 
         {/* Example chips — one tap fills the prompt bar so the tool works on this page */}
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-          <span className="sv-meta text-[11.5px] text-zinc-500">
+        <div className="mt-3 flex max-w-[640px] flex-wrap items-center justify-center gap-2">
+          <span className="sv-meta text-[11.5px] text-white/50">
             {examplesLabel}
           </span>
           {promptExamples.map((example) => (
@@ -181,7 +181,7 @@ export function LandingHero({
                 setDraft(example);
                 inputRef.current?.focus();
               }}
-              className="max-w-[240px] truncate rounded-full border border-zinc-950/10 bg-white px-3 py-1 text-[11.5px] text-zinc-600 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-zinc-950"
+              className="max-w-[240px] truncate rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[11.5px] text-white/70 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
             >
               {example}
             </button>
@@ -193,7 +193,7 @@ export function LandingHero({
           {tiles.map((tile, index) => (
             <div
               key={`${tile.src}-${index}`}
-              className="sv-enter sv-hover-lift relative aspect-video overflow-hidden rounded-[14px] bg-zinc-100 ring-1 ring-zinc-950/[0.08] transition-[box-shadow] duration-500 hover:ring-[var(--sv-iris)]/50"
+              className="sv-enter sv-hover-lift relative aspect-video overflow-hidden rounded-[14px] ring-1 ring-white/[0.07] transition-[box-shadow] duration-500 hover:ring-[var(--sv-iris)]/50"
               style={{ '--i': index + tileBase } as CSSProperties}
             >
               <img
@@ -224,7 +224,7 @@ export function LandingHero({
         <div className="relative z-10 mt-14 w-full">
           <div className="flex items-center gap-3">
             <h2
-              className="shrink-0 text-left text-[12.5px] leading-snug font-medium text-zinc-500"
+              className="shrink-0 text-left text-[12.5px] leading-snug font-medium text-white/60"
               style={{ width: MARQUEE_TITLE_WIDTH }}
             >
               {marquee.title.split('\n').map((line, index) => (
@@ -247,11 +247,11 @@ export function LandingHero({
                 {doubledModels.map((model, index) => (
                   <span
                     key={`${model}-${index}`}
-                    className="flex shrink-0 items-center gap-2 text-sm font-medium text-zinc-600"
+                    className="flex shrink-0 items-center gap-2 text-sm font-medium text-white/70"
                   >
                     <Sparkles
                       size={14}
-                      className="text-[var(--sv-iris-strong)]"
+                      className="text-[var(--sv-iris-bright)]"
                       aria-hidden
                     />
                     {model}
@@ -263,7 +263,7 @@ export function LandingHero({
               type="button"
               aria-pressed={paused}
               onClick={() => setPaused((value) => !value)}
-              className="ml-3 shrink-0 rounded-full border border-zinc-950/15 bg-white px-2.5 py-1 text-[11px] text-zinc-500 hover:text-zinc-900"
+              className="ml-3 shrink-0 rounded-full border border-white/15 px-2.5 py-1 text-[11px] text-white/60 hover:text-white"
             >
               {paused ? 'Resume' : marquee.pauseLabel}
             </button>

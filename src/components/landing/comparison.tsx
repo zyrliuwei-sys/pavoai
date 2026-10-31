@@ -79,33 +79,31 @@ export function LandingComparison({
 
           {/* New way */}
           <div
-            className="sv-enter relative overflow-hidden rounded-[24px] border border-[#cde5e0] bg-[#eff7f5] p-6 sm:p-8"
+            className="sv-enter relative overflow-hidden rounded-[24px] bg-[#080b11] p-6 sm:p-8"
             style={{ '--i': 1 } as CSSProperties}
           >
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(31,125,117,0.10),transparent)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(59,130,246,0.22),transparent)]" />
             <div className="relative">
-              <p className="text-[13px] font-semibold tracking-wider text-[var(--sv-iris-strong)] uppercase">
+              <p className="text-[13px] font-semibold tracking-wider text-[var(--sv-iris-bright)] uppercase">
                 {newWay.kicker}
               </p>
-              <h3 className="mt-2 text-xl font-semibold text-zinc-950">
+              <h3 className="mt-2 text-xl font-semibold text-white">
                 {newWay.heading}
               </h3>
-              <p className="mt-1 text-[13px] text-zinc-500">{newWay.note}</p>
+              <p className="mt-1 text-[13px] text-white/60">{newWay.note}</p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {newWay.features.map((feature) => (
                   <span
                     key={feature}
-                    className="rounded-full bg-white px-3.5 py-1.5 text-[13px] font-medium text-zinc-800 ring-1 ring-zinc-950/10"
+                    className="rounded-full bg-white/[0.08] px-3.5 py-1.5 text-[13px] font-medium text-white/85 ring-1 ring-white/10"
                   >
                     {feature}
                   </span>
                 ))}
               </div>
-              <p className="mt-6 text-sm text-zinc-600">
+              <p className="mt-6 text-sm text-white/70">
                 {newWay.pricePrefix}{' '}
-                <span className="font-semibold text-zinc-950">
-                  {newWay.price}
-                </span>
+                <span className="font-semibold text-white">{newWay.price}</span>
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <a
@@ -116,7 +114,7 @@ export function LandingComparison({
                 </a>
                 <a
                   href={newWay.secondary.href}
-                  className="inline-flex h-11 items-center rounded-full bg-white px-5 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-950/15 transition hover:bg-zinc-50"
+                  className="inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-white/85 ring-1 ring-white/20 transition hover:bg-white/[0.06]"
                 >
                   {newWay.secondary.label}
                 </a>
