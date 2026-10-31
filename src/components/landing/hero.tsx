@@ -75,8 +75,9 @@ export function LandingHero({
           {eyebrow}
         </div>
 
-        {/* Headline — masked rise, one gate per word */}
-        <h1 className="sv-display mt-6 max-w-[15ch] text-[clamp(3rem,1.2rem+6.6vw,8.5rem)] leading-[0.94] tracking-[-0.01em] text-zinc-950">
+        {/* Headline — masked rise, one gate per word. Scale tuned for the
+            long category H1 so the prompt bar stays in the first screen. */}
+        <h1 className="sv-display mt-6 max-w-[17ch] text-[clamp(2.25rem,1rem+4.6vw,6.5rem)] leading-[0.94] tracking-[-0.01em] text-zinc-950">
           {words.map((word, index) => (
             <Fragment key={`${word.text}-${index}`}>
               <span className="sv-mask">
