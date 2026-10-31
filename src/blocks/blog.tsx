@@ -3,9 +3,15 @@ import { m } from '@/paraglide/messages.js';
 import { LandingBlog } from '@/components/landing/blog';
 
 /**
- * Blog — three featured cards on night. v1 uses curated i18n posts;
- * swap in loader posts from `getBlogPostsFn` when the blog has content.
+ * Blog — three featured cards on night. Cards deep-link to the local MDX
+ * posts in `src/content/posts/` (keep in sync with BLOG_POST_SLUGS).
  */
+const FEATURED_SLUGS = [
+  'veo-3-1-vs-kling-3-0',
+  'how-to-write-cinematic-video-prompts',
+  'ugc-ads-with-ai-prompts',
+] as const;
+
 export function Blog() {
   return (
     <LandingBlog
@@ -18,7 +24,7 @@ export function Blog() {
         category: tDynamic(`lp.blog.p${i}c`),
         date: tDynamic(`lp.blog.p${i}d`),
         image: `/imgs/generated/blog-${['models', 'prompt', 'ugc'][i - 1]}.jpg`,
-        href: '/blog',
+        href: `/blog/${FEATURED_SLUGS[i - 1]}`,
       }))}
       readLabel={m['lp.blog.read']()}
     />
