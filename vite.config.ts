@@ -123,6 +123,10 @@ export default defineConfig({
         '/': { prerender: true },
         '/zh': { prerender: true },
       },
+      // Emit zh.html instead of zh/index.html so /zh serves the static page
+      // directly — the subfolder layout makes /zh 307 to /zh/, which then
+      // disagrees with the canonical (also what internal links point at).
+      prerender: { autoSubfolderIndex: false },
     }),
   ],
 });
