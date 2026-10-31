@@ -1,4 +1,4 @@
-import { Fragment, useState, type CSSProperties } from 'react';
+import { Fragment, useRef, useState, type CSSProperties } from 'react';
 import { Play, Sparkles } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -24,6 +24,8 @@ export interface LandingHeroProps {
   tabs: HeroTab[];
   /** Example prompts cycled by the typewriter in the prompt bar. */
   promptExamples: string[];
+  /** Label in front of the clickable example chips. */
+  examplesLabel: string;
   ctaLabel: string;
   /** Called with the submitted prompt + active tab id; wired by the block. */
   onSubmitPrompt?: (prompt: string, tabId: string) => void;
@@ -44,6 +46,7 @@ export function LandingHero({
   subtitle,
   tabs,
   promptExamples,
+  examplesLabel,
   ctaLabel,
   onSubmitPrompt,
   trust,
@@ -55,21 +58,26 @@ export function LandingHero({
   // null = visitor hasn't typed; the typewriter owns the placeholder.
   const [draft, setDraft] = useState<string | null>(null);
   const typed = useTypewriter(promptExamples);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? tabs[0];
   const doubledModels = [...marquee.models, ...marquee.models];
   const tileBase = words.length + TILE_STAGGER_OFFSET;
 
   return (
-    <section className="sv-night sv-grain relative isolate flex min-h-svh flex-col items-center overflow-hidden px-6 pt-28 pb-8 lg:pt-32">
+    <section
+      id="generator"
+      className="sv-night sv-grain relative isolate flex min-h-svh flex-col items-center overflow-hidden px-6 pt-28 pb-8 lg:pt-32"
+    >
       <div className="relative z-10 mx-auto flex w-full max-w-[1040px] flex-1 flex-col items-center text-center">
         {/* Eyebrow */}
         <div className="inline-flex h-8 items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 text-[12.5px] font-medium text-white/85 backdrop-blur-md">
           {eyebrow}
         </div>
 
-        {/* Headline — masked rise, one gate per word */}
-        <h1 className="sv-display mt-6 max-w-[15ch] text-[clamp(3rem,1.2rem+6.6vw,8.5rem)] leading-[0.94] tracking-[-0.01em] text-[#f4f6fb]">
+        {/* Headline — masked rise, one gate per word. Scale tuned for the
+            long category H1 so the prompt bar stays in the first screen. */}
+        <h1 className="sv-display mt-6 max-w-[17ch] text-[clamp(2.25rem,1rem+4.6vw,6.5rem)] leading-[0.94] tracking-[-0.01em] text-[#f4f6fb]">
           {words.map((word, index) => (
             <Fragment key={`${word.text}-${index}`}>
               <span className="sv-mask">
@@ -126,6 +134,7 @@ export function LandingHero({
         >
           <input
             key={activeTab?.id}
+            ref={inputRef}
             type="text"
             value={draft ?? ''}
             onChange={(e) => setDraft(e.target.value)}
@@ -157,6 +166,27 @@ export function LandingHero({
             </li>
           ))}
         </ul>
+
+        {/* Example chips — one tap fills the prompt bar so the tool works on this page */}
+        <div className="mt-3 flex max-w-[640px] flex-wrap items-center justify-center gap-2">
+          <span className="sv-meta text-[11.5px] text-white/50">
+            {examplesLabel}
+          </span>
+          {promptExamples.map((example) => (
+            <button
+              key={example}
+              type="button"
+              title={example}
+              onClick={() => {
+                setDraft(example);
+                inputRef.current?.focus();
+              }}
+              className="max-w-[240px] truncate rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[11.5px] text-white/70 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
+            >
+              {example}
+            </button>
+          ))}
+        </div>
 
         {/* Gallery */}
         <div className="mt-12 grid w-full grid-cols-2 gap-3 sm:grid-cols-4 lg:mt-16 lg:gap-4">

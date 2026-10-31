@@ -74,6 +74,7 @@ export function Hero() {
         },
       ]}
       ctaLabel={m['lp.hero.cta']()}
+      examplesLabel={m['lp.hero.examples_label']()}
       promptExamples={[
         m['lp.hero.pe1'](),
         m['lp.hero.pe2'](),

@@ -36,11 +36,13 @@ export function UseCases() {
       cases={CASES.map(({ icon, slug, i }) => ({
         title: tDynamic(`lp.uc.c${i}`),
         description: tDynamic(`lp.uc.c${i}d`),
+        // Long-form visible caption (P1-4): model + flow + typical time.
+        detail: tDynamic(`lp.uc.c${i}x`),
         image: `/imgs/generated/${slug}.jpg`,
         icon,
       }))}
-      ctaLabel={m['lp.uc.cta']()}
-      href="/sign-up"
+      // P0-2 interim: try it in the on-page generator instead of a sign-up wall.
+      href="/#generator"
     />
   );
 }
