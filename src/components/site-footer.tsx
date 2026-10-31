@@ -51,7 +51,7 @@ export function SiteFooter({
     <footer className="bg-neutral-950 text-neutral-100">
       <div className="mx-auto max-w-7xl px-6 pt-14 pb-6 sm:px-10 sm:pt-16 lg:px-16">
         {tagline && (
-          <p className="mb-12 w-full font-serif text-3xl leading-[1.15] tracking-tight text-neutral-100 italic sm:text-4xl">
+          <p className="mb-12 w-full font-serif text-3xl leading-[1.15] tracking-tight text-neutral-100 sm:text-4xl">
             {tagline}
           </p>
         )}

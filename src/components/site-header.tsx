@@ -33,7 +33,7 @@ export function SiteHeader({ navLinks }: { navLinks?: NavLink[] }) {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Brand */}
         <Link href="/" className="flex items-center">
-          <span className="font-serif text-lg italic">
+          <span className="font-serif text-lg tracking-[0.01em]">
             {envConfigs.app_name}
           </span>
         </Link>

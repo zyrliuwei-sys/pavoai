@@ -1,0 +1,88 @@
+{
+  "heroEyebrow": {
+    "text": "Kenerate AI — image & video studio",
+    "html": "<p class=\"sv-enter inline-flex h-8 items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 text-[12.5px] font-medium text-white/85 backdrop-blur-md\" style=\"--i:0\"><span class=\"sv-live\" aria-hidden=\"true\"></span>Kenerate AI — image &amp; video studio</p>"
+  },
+  "galleryMediaCount": 6,
+  "marquee": {
+    "section": "hd sv-night sv-night-grain relative isolate flex min-h-[100svh] flex-col overflo",
+    "inHero": true,
+    "headingText": "Every top model,one loginSeedance 2.5Kling 3.0Veo 3.1Sora 2Wan 3.0HailuoGPT Image 2Nano Banana 2.1Seedream 5.0FLUX 2Qwen Image 3RecraftGrok ImagineElevenLabsMiniMaxMeshy 7Seedance 2.5Kling 3.0Veo 3.1Sora 2Wan 3.0HailuoGPT Image 2Nano Banana 2.1Seedream 5.0FLUX 2Qwen Image 3RecraftGrok ImagineElevenLabsMiniMaxMeshy 7Pause",
+    "trackCls": "home-marquee relative min-w-0 flex-1 overflow-hidden py-3",
+    "items": [
+      "Create",
+      "&",
+      "edit",
+      "images",
+      "and",
+      "videos",
+      "with",
+      "AI.",
+      "See every tool",
+      "Create free",
+      "free",
+      "Seedance 2.5",
+      "Kling 3.0",
+      "Veo 3.1",
+      "Sora 2",
+      "Wan 3.0",
+      "Hailuo"
+    ]
+  },
+  "ucCard": {
+    "count": 8,
+    "radius": "20px",
+    "pad": "0px",
+    "grid": "none",
+    "gap": "normal",
+    "cls": "sv-spot sv-hover-lift sv-press group relative block aspect-[3/4] overflow-hidden rounded-[20px] bg-[var(--sv-viewer)] ring-1 ring-white/[0.07] focus-v"
+  },
+  "ucCardText": "Short filmsScript a scene, keep your cast consistentTry it",
+  "toolTabs": ["AI agentChat"],
+  "toolCardCount": 48,
+  "faq": {
+    "itemCount": 8,
+    "firstQ": "What is Kenerate AI?",
+    "cls": "accordion__item"
+  },
+  "faqQs": [
+    "What is Kenerate AI?",
+    "Is Kenerate AI free to use?",
+    "How do I make an AI video from text or a photo?",
+    "Can I edit photos with AI?",
+    "Can I edit videos with AI?",
+    "Do I need a subscription? Do credits expire?",
+    "Can I use what I create commercially?",
+    "Which is the best AI model for images and videos?"
+  ],
+  "footerCols": [
+    "AI Image",
+    "AI Video",
+    "Image Editing",
+    "Video Editing",
+    "Audio & 3D",
+    "Compare",
+    "Company",
+    "All pages",
+    "AI Image31",
+    "AI Video20",
+    "Photo editing66",
+    "Video editing53",
+    "Ads & film26",
+    "Music & voice90",
+    "3D & agent48",
+    "Compare93",
+    "How-to23",
+    "7 more AI Image guides",
+    "2 more Ads & film guides",
+    "69 more Compare guides",
+    "elgrith.com",
+    "Add us on Google"
+  ],
+  "footerLinkCount": 579,
+  "blogCardCount": 1,
+  "blogCard": {
+    "aspect": "NaN",
+    "cls": "sv-spot sv-hover-lift sv-press group relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-[20px] bg-"
+  }
+}

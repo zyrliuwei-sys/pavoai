@@ -1,0 +1,392 @@
+{
+  "nav": {
+    "tag": "header",
+    "text": "NewAI singers— any voice sings your lyricsMake a songKenerate AIKenerateAI, Happy HalloweenImageVideoEditAudio & 3DAgent",
+    "position": "fixed",
+    "top": "0px",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "borderBottom": "0px solid rgb(35, 39, 51)",
+    "height": "104px",
+    "padding": "0px",
+    "zIndex": "100"
+  },
+  "navLink": {
+    "tag": "a",
+    "text": "Models",
+    "fontSize": "14px",
+    "fontWeight": "500",
+    "color": "oklab(0.973041 -0.000133127 -0.00697362 / 0.7)",
+    "padding": "0px 14px",
+    "borderRadius": "1.67772e+07px"
+  },
+  "navCta": {
+    "tag": "a",
+    "text": "Start freeStart",
+    "backgroundColor": "rgb(59, 130, 246)",
+    "color": "rgb(255, 255, 255)",
+    "borderRadius": "9999px",
+    "padding": "0px 16px",
+    "fontSize": "13.5px",
+    "fontWeight": "600",
+    "height": "40px"
+  },
+  "heroEyebrow": {
+    "tag": "a",
+    "text": "New studioFashion StudioGarment photos in — on-model photos, try-on and colorways for your whole catalog out.",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "color": "rgb(255, 255, 255)",
+    "backgroundColor": "rgb(11, 11, 14)",
+    "border": "0px solid rgb(228, 228, 231)",
+    "borderRadius": "20px",
+    "padding": "0px"
+  },
+  "h1": {
+    "tag": "h1",
+    "text": "Create & edit images and videos with AI.",
+    "fontSize": "114.24px",
+    "fontWeight": "600",
+    "lineHeight": "105.101px",
+    "letterSpacing": "-5.712px",
+    "color": "rgb(244, 246, 251)",
+    "textAlign": "center",
+    "maxWidth": "1138.98px",
+    "fontFamily": "\"Google Sans\", \"Google Sans Fallback\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, \"Google Sans Fallback\", system-ui, sans-serif"
+  },
+  "h1Html": "<span class=\"sv-w\" style=\"--w:0\">Create</span> <span class=\"sv-w\" style=\"--w:1\">&amp;</span> <span class=\"sv-w\" style=\"--w:2\">edit</span> <span class=\"sv-w\" style=\"--w:3\">images</span> <span class=\"sv-w\" style=\"--w:4\">and</span> <span class=\"sv-w\" style=\"--w:5\">videos</span> <span class=\"sv-w\" style=\"--w:6\">with</span> <span class=\"sv-w\" style=\"--w:7\">AI.</span>",
+  "heroSub": {
+    "tag": "p",
+    "text": "Kenerate AI — image & video studio",
+    "fontSize": "12.5px",
+    "lineHeight": "18.75px",
+    "color": "oklab(0.999994 0.0000455678 0.0000200868 / 0.85)",
+    "textAlign": "center"
+  },
+  "tabPill": {
+    "tag": "button",
+    "text": "Video",
+    "fontSize": "14px",
+    "fontWeight": "500",
+    "color": "oklab(0.973041 -0.000133127 -0.00697362 / 0.7)",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "borderRadius": "1.67772e+07px",
+    "padding": "0px 14px",
+    "border": "0px solid rgb(35, 39, 51)"
+  },
+  "tabPillActive": {
+    "tag": "button",
+    "text": "Video",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "color": "oklab(0.973041 -0.000133127 -0.00697362 / 0.7)",
+    "border": "0px solid rgb(35, 39, 51)"
+  },
+  "promptBox": {
+    "tag": "div",
+    "text": "Describe what you want to makeCreate free",
+    "backgroundColor": "oklab(0.999994 0.0000455678 0.0000200868 / 0.07)",
+    "border": "0px solid rgb(35, 39, 51)",
+    "borderRadius": "18px",
+    "padding": "6px 6px 6px 16px",
+    "display": "flex",
+    "alignItems": "center"
+  },
+  "promptInput": {
+    "tag": "input",
+    "text": "",
+    "fontSize": "17px",
+    "color": "rgb(255, 255, 255)",
+    "backgroundColor": "rgba(0, 0, 0, 0)"
+  },
+  "createBtn": {
+    "tag": "button",
+    "text": "Create free",
+    "backgroundColor": "rgb(59, 130, 246)",
+    "color": "rgb(255, 255, 255)",
+    "borderRadius": "9999px",
+    "padding": "0px 24px",
+    "fontSize": "15px",
+    "fontWeight": "600",
+    "height": "48px"
+  },
+  "trust": {
+    "tag": "p",
+    "text": "25 free credits · no card · commercial use · no watermark",
+    "fontSize": "12.5px",
+    "color": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)",
+    "textAlign": "center"
+  },
+  "h2samples": [
+    {
+      "tag": "h2",
+      "text": "Fresh on Kenerate",
+      "fontSize": "66.88px",
+      "fontWeight": "600",
+      "lineHeight": "66.88px",
+      "color": "rgb(9, 9, 11)",
+      "textAlign": "start",
+      "letterSpacing": "-2.6752px"
+    },
+    {
+      "tag": "h2",
+      "text": "Your AI agent, now creative",
+      "fontSize": "66.88px",
+      "fontWeight": "600",
+      "lineHeight": "66.88px",
+      "color": "rgb(244, 246, 251)",
+      "textAlign": "start",
+      "letterSpacing": "-2.6752px"
+    },
+    {
+      "tag": "h2",
+      "text": "Stop paying for fifteen AI apps",
+      "fontSize": "66.88px",
+      "fontWeight": "600",
+      "lineHeight": "66.88px",
+      "color": "rgb(9, 9, 11)",
+      "textAlign": "start",
+      "letterSpacing": "-2.6752px"
+    },
+    {
+      "tag": "h2",
+      "text": "Made on Kenerate",
+      "fontSize": "66.88px",
+      "fontWeight": "600",
+      "lineHeight": "66.88px",
+      "color": "rgb(244, 246, 251)",
+      "textAlign": "start",
+      "letterSpacing": "-2.6752px"
+    },
+    {
+      "tag": "h2",
+      "text": "Make any video you can imagine",
+      "fontSize": "66.88px",
+      "fontWeight": "600",
+      "lineHeight": "66.88px",
+      "color": "rgb(244, 246, 251)",
+      "textAlign": "start",
+      "letterSpacing": "-2.6752px"
+    },
+    {
+      "tag": "h2",
+      "text": "Generate. Edit. Finish.",
+      "fontSize": "66.88px",
+      "fontWeight": "600",
+      "lineHeight": "66.88px",
+      "color": "rgb(9, 9, 11)",
+      "textAlign": "start",
+      "letterSpacing": "-2.6752px"
+    }
+  ],
+  "sectionSub": {
+    "tag": "p",
+    "text": "What's new",
+    "fontSize": "13px",
+    "color": "rgb(95, 95, 104)",
+    "lineHeight": "19.5px"
+  },
+  "marquee": {
+    "tag": "div",
+    "text": "ImageVideoMusic",
+    "animationName": "scroll-shadow-start-fade, scroll-shadow-end-fade",
+    "animationDuration": "auto, auto",
+    "animationTimingFunction": "linear, linear",
+    "animationIterationCount": "1, 1",
+    "display": "block",
+    "width": "254.406px"
+  },
+  "keyframes": [
+    {
+      "name": "slide-up",
+      "css": "@keyframes slide-up { \n  0% { opacity: 0; transform: translateY(24px); }\n  100% { opacity: 1; transform: translateY(0px); }\n}"
+    },
+    {
+      "name": "slide-in-left",
+      "css": "@keyframes slide-in-left { \n  0% { opacity: 0; transform: translate(-20px); }\n  100% { opacity: 1; transform: translate(0px); }\n}"
+    },
+    {
+      "name": "marquee",
+      "css": "@keyframes marquee { \n  0% { transform: translate(0px); }\n  100% { transform: translateX(calc(-100% - var(--gap))); }\n}"
+    },
+    {
+      "name": "marquee-rtl",
+      "css": "@keyframes marquee-rtl { \n  0% { transform: translate(-50%); }\n  100% { transform: translate(0px); }\n}"
+    },
+    {
+      "name": "shimmer-slide",
+      "css": "@keyframes shimmer-slide { \n  100% { transform: translate(calc(-100% + 100cqw)); }\n}"
+    },
+    {
+      "name": "slide-in-right",
+      "css": "@keyframes slide-in-right { \n  0% { opacity: 0; transform: translate(40px); }\n  100% { opacity: 1; transform: translate(0px); }\n}"
+    },
+    {
+      "name": "marquee-col-up",
+      "css": "@keyframes marquee-col-up { \n  0% { transform: translateY(0px); }\n  100% { transform: translateY(100px); }\n}"
+    },
+    {
+      "name": "marquee-col-down",
+      "css": "@keyframes marquee-col-down { \n  0% { transform: translateY(0px); }\n  100% { transform: translateY(-100px); }\n}"
+    },
+    {
+      "name": "home-marquee-x",
+      "css": "@keyframes home-marquee-x { \n  0% { transform: translate(0px); }\n  100% { transform: translateX(calc(-50% - var(--gap,8px) / 2)); }\n}"
+    },
+    {
+      "name": "home-marquee-y",
+      "css": "@keyframes home-marquee-y { \n  0% { transform: translateY(0px); }\n  100% { transform: translateY(calc(-50% - var(--gap,12px) / 2)); }\n}"
+    },
+    {
+      "name": "marquee-vertical",
+      "css": "@keyframes marquee-vertical { \n  0% { transform: translateY(0px); }\n  100% { transform: translateY(calc(-100% - var(--gap))); }\n}"
+    }
+  ],
+  "badgeCard": {
+    "tag": "div",
+    "text": "{\"@context\":\"https://schema.org\",\"@type\":\"SoftwareApplication\",\"name\":\"Kenerate AI\",\"alternateName\":\"KenerateAI\",\"publis",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "border": "0px solid rgb(228, 228, 231)",
+    "borderRadius": "0px",
+    "padding": "0px",
+    "display": "flex",
+    "flexDirection": "column",
+    "width": "1440px"
+  },
+  "comparePanelHeading": {
+    "tag": "div",
+    "text": "The ideaStop paying for fifteen AI appsMidjourney for images, Kling for video, ElevenLabs for voice, Suno for music, Mes",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "color": "rgb(9, 9, 11)"
+  },
+  "newWayPanel": {
+    "tag": "section",
+    "text": "The workMade on KenerateEvery picture and clip on this page was made by Kenerate AI — from one prompt or one photo.Make ",
+    "backgroundColor": "rgb(5, 6, 10)",
+    "border": "0px solid rgb(35, 39, 51)",
+    "borderRadius": "0px",
+    "padding": "128px 0px 56px",
+    "borderWidth": "0px"
+  },
+  "useCaseCard": {
+    "tag": "a",
+    "text": "Short filmsScript a scene, keep your cast consistentTry it",
+    "backgroundColor": "rgb(0, 0, 0)",
+    "border": "0px solid rgb(35, 39, 51)",
+    "borderRadius": "20px",
+    "padding": "0px",
+    "display": "block",
+    "flexDirection": "row",
+    "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.999994 0.0000455678 0.0000200868 / 0.07) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+  },
+  "useCaseIcon": {
+    "tag": "span",
+    "text": "Try it",
+    "width": "51.4766px",
+    "height": "20.25px",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "borderRadius": "0px",
+    "color": "rgb(255, 255, 255)"
+  },
+  "toolCard": {
+    "tag": "div",
+    "text": "{\"@context\":\"https://schema.org\",\"@type\":\"SoftwareApplication\",\"name\":\"Kenerate AI\",\"alternateName\":\"KenerateAI\",\"publis",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "border": "0px solid rgb(228, 228, 231)",
+    "borderRadius": "0px",
+    "padding": "0px",
+    "display": "flex",
+    "flexDirection": "column"
+  },
+  "statNum": {
+    "tag": "span",
+    "text": "200+",
+    "fontSize": "66.56px",
+    "fontWeight": "600",
+    "color": "rgb(244, 246, 251)",
+    "letterSpacing": "-2.9952px",
+    "lineHeight": "66.56px"
+  },
+  "statLabel": null,
+  "statsBand": {
+    "tag": "section",
+    "text": "AI models200+studios & tools24image & video output4Kcredits that expire0",
+    "backgroundColor": "rgb(5, 6, 10)",
+    "borderRadius": "0px",
+    "padding": "0px",
+    "marginTop": "0px",
+    "marginBottom": "0px"
+  },
+  "faqTrigger": {
+    "tag": "button",
+    "text": "What is Kenerate AI?",
+    "fontSize": "18px",
+    "fontWeight": "600",
+    "color": "rgb(9, 9, 11)",
+    "padding": "14px 16px",
+    "borderBottom": "0px solid rgb(228, 228, 231)"
+  },
+  "faqBox": {
+    "tag": "div",
+    "text": "What is Kenerate AI?Kenerate AI is an all-in-one AI image and video studio. You can generate images and videos, edit pho",
+    "border": "0px none color(srgb 0.0352941 0.0352941 0.0431373 / 0.1)",
+    "borderRadius": "0px",
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "padding": "0px",
+    "marginBottom": "0px"
+  },
+  "blogCard": {
+    "tag": "a",
+    "text": "GuidesOct 31, 2026How to Make AI Cat Videos: Steps, 10 Prompts and Costs (2026)Turn a photo of your cat into a dancing, ",
+    "backgroundColor": "rgb(0, 0, 0)",
+    "border": "0px solid rgb(35, 39, 51)",
+    "borderRadius": "20px",
+    "overflow": "hidden",
+    "display": "flex",
+    "flexDirection": "column"
+  },
+  "blogImg": {
+    "tag": "img",
+    "text": "",
+    "width": "644.438px",
+    "height": "519.375px",
+    "objectFit": "cover",
+    "borderRadius": "0px"
+  },
+  "footer": {
+    "tag": "footer",
+    "text": "Site footerMade with Kenerate AI · Dragon flightMake it real.Generate and edit images and videos, make music, voices and",
+    "backgroundColor": "rgb(255, 255, 255)",
+    "borderTop": "0px solid rgb(228, 228, 231)",
+    "padding": "8px 12px 12px",
+    "color": "rgb(9, 9, 11)"
+  },
+  "footerLink": {
+    "tag": "a",
+    "text": "Start creating free",
+    "fontSize": "15px",
+    "color": "rgb(29, 78, 216)",
+    "padding": "0px 24px"
+  },
+  "footerHeading": {
+    "tag": "p",
+    "text": "Made with Kenerate AI · Dragon flight",
+    "fontSize": "12.5px",
+    "fontWeight": "500",
+    "color": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)"
+  },
+  "galleryCard": null,
+  "galleryImg": null,
+  "stepNum": null,
+  "pageBg": "rgba(0, 0, 0, 0)",
+  "bodyBg2": "rgba(0, 0, 0, 0)",
+  "sectionPadding": "0px",
+  "container": {
+    "tag": "div",
+    "text": "What's newFresh on KenerateAll 200+ modelsLive nowNano Banana 2.1Google's newest image model — cleaner text, 4K, 14 rati",
+    "maxWidth": "1240px",
+    "margin": "0px 100px",
+    "padding": "0px 32px",
+    "display": "block",
+    "flexDirection": "row"
+  }
+}

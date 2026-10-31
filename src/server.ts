@@ -25,8 +25,17 @@ function ensureCloudflareEnv(): Promise<void> {
         (globalThis as any).__CF_ENV__ = mod.env;
         ensureDefaultUserAgent();
       })
-      .catch(() => {
-        // Not running on Cloudflare Workers — nothing to stash.
+      .catch(async () => {
+        // Vite runs in Node. Resolve the configured DB binding for development;
+        // remote:true connects to the same D1 as the deployed app over its API.
+        // This branch and its dependency are removed from production builds.
+        if (import.meta.env.DEV && envConfigs.database_provider === 'd1') {
+          const g = globalThis as any;
+          g.__CF_DEV_PLATFORM__ ??= import('./core/db/d1-dev').then(
+            ({ createD1DevEnv }) => createD1DevEnv()
+          );
+          g.__CF_ENV__ = await g.__CF_DEV_PLATFORM__;
+        }
       });
   }
   return cfEnvPromise;

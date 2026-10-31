@@ -46,6 +46,19 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-10-31: Share D1 between local development and Workers
+
+The Node-based Vite dev server now resolves the configured D1 binding when
+`DATABASE_PROVIDER=d1`. Set `account_id` and the `DB` binding in
+`wrangler.jsonc` and use `remote: true` to connect development to that D1
+database through Cloudflare's official API, including atomic query batches.
+Leave `DATABASE_URL` empty and authenticate with `wrangler login`. Local
+changes then write directly to the shared database. This does not deploy a
+Worker; production still uses its native binding after deployment.
+
+The D1 atomic tests explicitly disable remote bindings so they always use an
+isolated local database, even when development targets a remote database.
+
 ## 2026-10-31: IndexNow administration
 
 The admin sidebar now includes `/admin/indexnow`: save an ownership key,

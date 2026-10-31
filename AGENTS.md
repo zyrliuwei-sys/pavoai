@@ -419,8 +419,10 @@ try {
   `inArray` lists (≤ 90) and multi-row inserts. Keep a batch to a modest number
   of statements.
 - Test on the D1 path: `pnpm test:atomic` (SQLite batch),
-  `pnpm test:atomic:d1` (real local D1 via wrangler), and
-  `ATOMIC_PG_URL=… pnpm test:atomic:pg` (Postgres transaction).
+  `pnpm test:atomic:d1` (real local D1 via wrangler — `remoteBindings: false`
+  keeps tests local even when the dev binding targets a remote database),
+  `pnpm test:d1-http` (the remote-D1 dev transport in `core/db/d1-http.ts`),
+  and `ATOMIC_PG_URL=… pnpm test:atomic:pg` (Postgres transaction).
 
 ### Guest posts (paid articles)
 

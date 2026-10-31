@@ -1,12 +1,28 @@
+import { envConfigs } from '@/config';
 import { m } from '@/paraglide/messages.js';
-import { SiteHeader } from '@/components/site-header';
+import { LandingNav } from '@/components/landing/nav';
 
+/**
+ * Site header — wraps the PavoAI landing nav with i18n content.
+ * Used by the homepage, /pricing and /blog routes.
+ */
 export function Header() {
-  const navLinks = [
-    { href: '/#features', label: m['landing.nav.features']() },
-    { href: '/pricing', label: m['landing.nav.pricing']() },
-    { href: '/blog', label: m['landing.nav.blog']() },
-  ];
-
-  return <SiteHeader navLinks={navLinks} />;
+  return (
+    <LandingNav
+      logoSrc={envConfigs.app_logo}
+      appName={envConfigs.app_name}
+      links={[
+        { label: m['lp.nav.video'](), href: '/#gallery' },
+        { label: m['lp.nav.image'](), href: '/#use-cases' },
+        { label: m['lp.nav.tools'](), href: '/#tools' },
+        { label: m['lp.nav.models'](), href: '/#whats-new' },
+        { label: m['lp.nav.pricing'](), href: '/pricing' },
+        { label: m['lp.nav.blog'](), href: '/blog' },
+      ]}
+      signInLabel={m['lp.nav.sign_in']()}
+      signInHref="/sign-in"
+      ctaLabel={m['lp.nav.cta']()}
+      ctaHref="/sign-up"
+    />
+  );
 }

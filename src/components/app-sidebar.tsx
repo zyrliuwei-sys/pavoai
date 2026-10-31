@@ -172,12 +172,12 @@ export function AppSidebar({
                   className="size-7 shrink-0 rounded-lg object-contain"
                 />
               )}
-              <span className="flex-1 truncate font-serif text-lg leading-none italic group-data-[collapsible=icon]:hidden">
+              <span className="flex-1 truncate font-serif text-lg leading-none tracking-[0.01em] group-data-[collapsible=icon]:hidden">
                 {brand}
               </span>
               {/* Icon rail without a logo: the brand's first letter. */}
               {!showLogo && typeof brand === 'string' && (
-                <span className="hidden w-full text-center font-serif text-lg leading-none italic group-data-[collapsible=icon]:block">
+                <span className="hidden w-full text-center font-serif text-lg leading-none tracking-[0.01em] group-data-[collapsible=icon]:block">
                   {brand.charAt(0)}
                 </span>
               )}

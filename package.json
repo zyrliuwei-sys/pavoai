@@ -30,6 +30,7 @@
     "test:payment": "node --import tsx --test tests/payment-idempotency.test.ts tests/payment-guards.test.ts tests/refund.test.ts",
     "test:atomic": "node --import tsx --test tests/atomic.test.ts",
     "test:atomic:d1": "ATOMIC_D1=1 node --import tsx --test tests/atomic.test.ts",
+    "test:d1-http": "node --import tsx --test tests/d1-http.test.ts",
     "test:atomic:pg": "TSX_TSCONFIG_PATH=tests/tsconfig.pg.json node --import tsx --test tests/atomic.test.ts"
   },
   "lint-staged": {
@@ -43,8 +44,11 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/inter-tight": "^5.3.0",
     "@fontsource-variable/nunito": "^5.3.0",
     "@fontsource-variable/source-serif-4": "^5.3.1",
+    "@fontsource/anton": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/libre-baskerville": "^5.3.0",
     "@libsql/client": "^0.14.0",
     "@mdx-js/react": "^3.1.1",
