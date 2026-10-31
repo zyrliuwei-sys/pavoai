@@ -1,0 +1,79 @@
+# Deploys to Cloudflare Workers on every push to main.
+#
+# One-time setup (already done if deploys are green):
+#   GitHub repo → Settings → Secrets and variables → Actions →
+#   add repository secret CLOUDFLARE_API_TOKEN.
+#   Token: Cloudflare dashboard → My Profile → API Tokens →
+#   "Edit Cloudflare Workers" template. CLOUDFLARE_ACCOUNT_ID is not
+#   secret and lives in the env block below.
+#
+# wrangler.jsonc is gitignored (real D1 database_id), so scripts/ci-wrangler.mjs
+# rebuilds it from wrangler.example.jsonc before the build. Secrets
+# (AUTH_SECRET, CONFIG_ENCRYPTION_KEY) live on the Worker and survive deploys.
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: d7c3d8fa2229ed65b03fd28fc8659989
+      # Values normally sourced from .env.production (gitignored) — cf:deploy
+      # falls back to these when that file is absent in the CI checkout.
+      DATABASE_PROVIDER: d1
+      VITE_APP_URL: https://pavoai.net
+      VITE_APP_NAME: PavoAI
+      VITE_APP_DESCRIPTION: Free AI video generator and AI short-film studio — text to video, image to video and AI editing with 20+ top models like Veo, Kling and Sora.
+      # ci-wrangler.mjs inputs
+      WORKER_NAME: pavoai
+      D1_DATABASE_NAME: pavoai
+      D1_DATABASE_ID: 8a42e09a-d9fa-40c4-beef-f97c5d2e81eb
+      CUSTOM_DOMAIN: pavoai.net
+    steps:
+      - name: Fail fast if the API token is missing
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it under GitHub → Settings → Secrets and variables → Actions → New repository secret (Cloudflare 'Edit Cloudflare Workers' token)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Materialize wrangler.jsonc from the committed template
+        run: node scripts/ci-wrangler.mjs
+
+      - name: Apply D1 migrations
+        run: npx wrangler d1 migrations apply pavoai --remote
+
+      - name: Build and deploy
+        run: pnpm run cf:deploy
+
+      - name: Smoke test
+        run: |
+          sleep 10
+          curl -sS --fail -o /dev/null -w "homepage HTTP=%{http_code}\n" https://pavoai.net/
+          curl -sS --fail -o /dev/null -w "config   HTTP=%{http_code}\n" https://pavoai.net/api/config/public
