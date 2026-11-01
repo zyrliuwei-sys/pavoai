@@ -121,8 +121,6 @@ export function Hero() {
         m['lp.hero.trust_3'](),
         m['lp.hero.trust_4'](),
       ]}
-      referenceLabel={m['lp.hero.reference']()}
-      referenceHint={m['lp.hero.reference_hint']()}
       styleLabel={m['lp.hero.style']()}
       fastLabel={m['lp.hero.fast']()}
       stages={[

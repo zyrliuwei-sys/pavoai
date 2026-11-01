@@ -10,14 +10,12 @@ import {
   Check,
   ChevronDown,
   FastForward,
-  ImagePlus,
   Loader2,
   Palette,
   Pause,
   Play,
   RefreshCw,
   Sparkles,
-  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -68,9 +66,6 @@ export interface LandingGeneratorProps {
   examplesLabel: string;
   generateLabel: string;
   trust: string[];
-  /** Reference-image area. */
-  referenceLabel: string;
-  referenceHint: string;
   /** Toggle chips. */
   styleLabel: string;
   fastLabel: string;
@@ -88,9 +83,6 @@ export interface LandingGeneratorProps {
 
 /** Poll cadence for the generation task. */
 const POLL_MS = 2500;
-
-/** Max client-side reference images (matches the reference design's 6). */
-const MAX_REFS = 6;
 
 /** Result-card sizing per aspect chip. */
 const ASPECT_FRAME: Record<string, string> = {
@@ -141,11 +133,11 @@ function ChipGroup({
 
 /**
  * The hero's composer-style generator, mirroring the reference design: one
- * panel holding mode tabs, a multiline prompt, reference images and a
- * toolbar (model dropdown, aspect, quality, Style/Fast toggles) with a
- * large Generate button — then an in-place render preview that finishes
- * with the real generated image/video. Pure component — all copy arrives
- * via props from the hero block; only the generation API call lives here.
+ * panel holding mode tabs, a multiline prompt and a toolbar (model dropdown,
+ * aspect, quality, Style/Fast toggles) with a large Generate button — then
+ * an in-place render preview that finishes with the real generated
+ * image/video. Pure component — all copy arrives via props from the hero
+ * block; only the generation API call lives here.
  */
 export function LandingGenerator({
   tabs,
@@ -153,8 +145,6 @@ export function LandingGenerator({
   examplesLabel,
   generateLabel,
   trust,
-  referenceLabel,
-  referenceHint,
   styleLabel,
   fastLabel,
   stages,
@@ -191,10 +181,6 @@ export function LandingGenerator({
   const [modelsOpen, setModelsOpen] = useState(false);
   const modelMenuRef = useRef<HTMLDivElement>(null);
 
-  // Client-side reference images (object URLs, revoked on remove/unmount).
-  const [refs, setRefs] = useState<{ id: string; url: string }[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // Freeze the typewriter once there is something real to show (typed draft
   // or an active run) — it re-rendered the whole bar every 55ms otherwise.
   const typed = useTypewriter(promptExamples, {
@@ -223,13 +209,10 @@ export function LandingGenerator({
     };
   }, []);
 
-  // Stop the demo audio when the generator unmounts and drop ref previews.
-  const refsRef = useRef(refs);
-  refsRef.current = refs;
+  // Stop the demo audio when the generator unmounts.
   useEffect(
     () => () => {
       audioRef.current?.pause();
-      for (const r of refsRef.current) URL.revokeObjectURL(r.url);
     },
     []
   );
@@ -375,26 +358,6 @@ export function LandingGenerator({
     }
   };
 
-  const addRefFiles = (files: FileList | null) => {
-    if (!files) return;
-    const next = [...refs];
-    for (const file of Array.from(files)) {
-      if (next.length >= MAX_REFS) break;
-      if (!file.type.startsWith('image/')) continue;
-      next.push({
-        id: `${file.name}-${file.size}-${Math.random()}`,
-        url: URL.createObjectURL(file),
-      });
-    }
-    setRefs(next);
-  };
-
-  const removeRef = (id: string) => {
-    const target = refs.find((r) => r.id === id);
-    if (target) URL.revokeObjectURL(target.url);
-    setRefs((list) => list.filter((r) => r.id !== id));
-  };
-
   const onTextareaKeyDown = (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -460,55 +423,8 @@ export function LandingGenerator({
           className="sv-meta mt-3 min-h-[92px] w-full resize-none rounded-xl bg-transparent px-2 py-1.5 text-[15.5px] leading-relaxed text-white placeholder:text-white/40 focus:outline-none disabled:opacity-60"
         />
 
-        {/* Toolbar: reference images + settings + Generate */}
+        {/* Toolbar: settings + Generate */}
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {/* Reference images — client-side previews only */}
-          <div className="flex items-center gap-1.5">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                addRefFiles(e.target.files);
-                e.target.value = '';
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              title={`${referenceLabel} · ${referenceHint}`}
-              className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl border border-dashed border-white/20 px-2.5 text-[12px] text-white/60 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
-            >
-              <ImagePlus size={14} aria-hidden />
-              {referenceLabel}
-              <span className="text-white/35">
-                {refs.length}/{MAX_REFS}
-              </span>
-            </button>
-            {refs.map((r) => (
-              <span
-                key={r.id}
-                className="relative h-9 w-9 rounded-lg ring-1 ring-white/15"
-              >
-                <img
-                  src={r.url}
-                  alt=""
-                  className="h-full w-full rounded-lg object-cover"
-                />
-                <button
-                  type="button"
-                  aria-label="Remove"
-                  onClick={() => removeRef(r.id)}
-                  className="absolute -top-1.5 -right-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-black/75 text-white ring-1 ring-white/30 transition-colors hover:bg-black"
-                >
-                  <X size={10} aria-hidden />
-                </button>
-              </span>
-            ))}
-          </div>
-
           {/* Model dropdown */}
           <div ref={modelMenuRef} className="relative">
             <button

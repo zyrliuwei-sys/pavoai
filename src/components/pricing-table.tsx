@@ -14,8 +14,7 @@ import { Button } from '@/components/ui/button';
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
 
 export type PricingFeature =
-  | string
-  | { icon?: IconComponent; label: string; tooltip?: string };
+  string | { icon?: IconComponent; label: string; tooltip?: string };
 
 export interface PricingPlan {
   id: string;
@@ -161,7 +160,7 @@ export function PricingTable({
 
             {/* Price */}
             <div className="mb-2 flex items-baseline gap-1">
-              <span className="font-serif text-5xl tracking-tight">
+              <span className="text-foreground font-serif text-5xl tracking-tight">
                 {plan.price}
               </span>
               {plan.interval && (
