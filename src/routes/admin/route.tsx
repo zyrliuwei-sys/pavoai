@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import {
   BadgeCheck,
+  BookOpen,
   Bot,
   CreditCard,
   FolderOpen,
@@ -83,6 +84,11 @@ function AdminLayout() {
       href: '/admin/agent',
       label: m['admin.nav.agent'](),
       icon: Bot,
+    },
+    {
+      href: '/admin/ops-playbook',
+      label: m['admin.nav.ops_playbook'](),
+      icon: BookOpen,
     },
     ...(matchPermission('admin.indexnow.read', permissions?.permissions ?? [])
       ? [

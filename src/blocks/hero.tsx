@@ -30,6 +30,55 @@ const TILES = [
 ];
 
 /**
+ * Composer toolbar options per mode — model dropdown, aspect chips and
+ * quality chips, mirroring the reference generator design.
+ */
+const VIDEO_MODELS = [
+  { id: 'veo', label: 'Veo 3.1' },
+  { id: 'kling', label: 'Kling 3.0' },
+  { id: 'sora', label: 'Sora 2' },
+  { id: 'hailuo', label: 'Hailuo 02' },
+  { id: 'wan', label: 'Wan 3.0' },
+  { id: 'seedance', label: 'Seedance 1.0' },
+];
+const IMAGE_MODELS = [
+  { id: 'seedream', label: 'Seedream 4' },
+  { id: 'flux', label: 'Flux.2' },
+  { id: 'gemini-image', label: 'Gemini 3 Pro Image' },
+  { id: 'ideogram', label: 'Ideogram 3' },
+];
+const AUDIO_MODELS = [
+  { id: 'suno', label: 'Suno V5' },
+  { id: 'udio', label: 'Udio v2' },
+  { id: 'stable-audio', label: 'Stable Audio 2' },
+];
+const VIDEO_ASPECTS = [
+  { id: '16:9', label: '16:9' },
+  { id: '9:16', label: '9:16' },
+  { id: '1:1', label: '1:1' },
+];
+const IMAGE_ASPECTS = [
+  { id: '1:1', label: '1:1' },
+  { id: '16:9', label: '16:9' },
+  { id: '9:16', label: '9:16' },
+];
+const VIDEO_QUALITIES = [
+  { id: '480p', label: '480p' },
+  { id: '720p', label: '720p' },
+  { id: '1080p', label: '1080p' },
+];
+const IMAGE_QUALITIES = [
+  { id: '1k', label: '1K' },
+  { id: '2k', label: '2K' },
+  { id: '4k', label: '4K' },
+];
+const AUDIO_QUALITIES = [
+  { id: '15s', label: '15s' },
+  { id: '30s', label: '30s' },
+  { id: '60s', label: '60s' },
+];
+
+/**
  * Demo results for the hero generator. Keywords are matched (en + zh,
  * lowercase, substring) against the prompt so a themed clip plays; prompts
  * with no hit fall back to a deterministic pick. Videos are pre-rendered
@@ -383,16 +432,24 @@ export function Hero() {
           id: 'video',
           label: m['lp.hero.tab_video'](),
           placeholder: m['lp.hero.placeholder_video'](),
+          models: VIDEO_MODELS,
+          aspects: VIDEO_ASPECTS,
+          qualities: VIDEO_QUALITIES,
         },
         {
           id: 'image',
           label: m['lp.hero.tab_image'](),
           placeholder: m['lp.hero.placeholder_image'](),
+          models: IMAGE_MODELS,
+          aspects: IMAGE_ASPECTS,
+          qualities: IMAGE_QUALITIES,
         },
         {
           id: 'audio',
           label: m['lp.hero.tab_audio'](),
           placeholder: m['lp.hero.placeholder_audio'](),
+          models: AUDIO_MODELS,
+          qualities: AUDIO_QUALITIES,
         },
       ]}
       ctaLabel={m['lp.hero.cta']()}
@@ -408,6 +465,10 @@ export function Hero() {
         m['lp.hero.trust_3'](),
         m['lp.hero.trust_4'](),
       ]}
+      referenceLabel={m['lp.hero.reference']()}
+      referenceHint={m['lp.hero.reference_hint']()}
+      styleLabel={m['lp.hero.style']()}
+      fastLabel={m['lp.hero.fast']()}
       stages={[
         m['lp.hero.stage_1'](),
         m['lp.hero.stage_2'](),

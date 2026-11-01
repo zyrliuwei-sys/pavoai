@@ -28,6 +28,11 @@ export interface LandingHeroProps {
   /** Called with the finished prompt + mode from the result card CTA. */
   onSignUp?: (prompt: string, tabId: string) => void;
   trust: string[];
+  /** Generator composer labels (reference images, toggles). */
+  referenceLabel: string;
+  referenceHint: string;
+  styleLabel: string;
+  fastLabel: string;
   /** Generator render-preview copy. */
   stages: string[];
   readyLabel: string;
@@ -58,6 +63,10 @@ export function LandingHero({
   ctaLabel,
   onSignUp,
   trust,
+  referenceLabel,
+  referenceHint,
+  styleLabel,
+  fastLabel,
   stages,
   readyLabel,
   againLabel,
@@ -117,6 +126,10 @@ export function LandingHero({
           examplesLabel={examplesLabel}
           generateLabel={ctaLabel}
           trust={trust}
+          referenceLabel={referenceLabel}
+          referenceHint={referenceHint}
+          styleLabel={styleLabel}
+          fastLabel={fastLabel}
           stages={stages}
           readyLabel={readyLabel}
           againLabel={againLabel}

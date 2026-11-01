@@ -1,21 +1,43 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+} from 'react';
 import {
   ArrowRight,
   Check,
+  ChevronDown,
+  FastForward,
+  ImagePlus,
   Loader2,
+  Palette,
   Pause,
   Play,
   RefreshCw,
   Sparkles,
+  X,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useTypewriter } from '@/components/landing/reveal';
 
+export interface GeneratorOption {
+  id: string;
+  label: string;
+}
+
 export interface GeneratorTab {
   id: string;
   label: string;
   placeholder: string;
+  /** Model dropdown entries shown in the toolbar. */
+  models: GeneratorOption[];
+  /** Aspect chips; omit (audio) to hide the group. */
+  aspects?: GeneratorOption[];
+  /** Quality chips (480p/1K/…), echoed on the result badge. */
+  qualities: GeneratorOption[];
 }
 
 export interface GeneratorAsset {
@@ -23,17 +45,20 @@ export interface GeneratorAsset {
   keywords: string[];
   src: string;
   poster?: string;
-  /** Model badge on the result card, e.g. "Veo 3.1". */
+  /** Fallback model badge when no model is picked; per-tab picks win. */
   model: string;
   /** Short spec hint, e.g. "0:08 · 640×360". */
   meta?: string;
 }
 
-/** What a finished run produced, and from which prompt + mode. */
+/** What a finished run produced, and from which settings. */
 interface RunResult {
   asset: GeneratorAsset;
   prompt: string;
   tabId: string;
+  model: string;
+  meta: string;
+  aspectId?: string;
 }
 
 export interface LandingGeneratorProps {
@@ -43,6 +68,12 @@ export interface LandingGeneratorProps {
   examplesLabel: string;
   generateLabel: string;
   trust: string[];
+  /** Reference-image area. */
+  referenceLabel: string;
+  referenceHint: string;
+  /** Toggle chips. */
+  styleLabel: string;
+  fastLabel: string;
   /** Stage labels cycled while the render preview runs. */
   stages: string[];
   readyLabel: string;
@@ -57,8 +88,24 @@ export interface LandingGeneratorProps {
   onSignUp?: (prompt: string, tabId: string) => void;
 }
 
-/** How long the fake render takes to reach 100%. */
+/** Fake render duration: standard vs Fast mode. */
 const RENDER_MS = 4800;
+const RENDER_FAST_MS = 2200;
+
+/** Max client-side reference images (matches the reference design's 6). */
+const MAX_REFS = 6;
+
+/** Result-card sizing per aspect chip. */
+const ASPECT_FRAME: Record<string, string> = {
+  '16:9': 'aspect-video',
+  '9:16': 'aspect-[9/16]',
+  '1:1': 'aspect-square',
+};
+const ASPECT_WRAP: Record<string, string> = {
+  '16:9': 'max-w-[640px]',
+  '9:16': 'max-w-[350px]',
+  '1:1': 'max-w-[460px]',
+};
 
 /** djb2 — stable per prompt, so the same prompt always "renders" the same clip. */
 function hashPrompt(text: string): number {
@@ -93,10 +140,46 @@ function pickAsset(
   return pool[candidates[seed % candidates.length]];
 }
 
+/** Toolbar chip group — option list with one active id (aspect/quality). */
+function ChipGroup({
+  options,
+  value,
+  onChange,
+}: {
+  options: GeneratorOption[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <div className="inline-flex items-center gap-0.5 rounded-full bg-white/[0.06] p-0.5 ring-1 ring-white/10">
+      {options.map((option) => {
+        const active = option.id === value;
+        return (
+          <button
+            key={option.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(option.id)}
+            className={cn(
+              'sv-meta rounded-full px-2.5 py-1 text-[11.5px] text-white/60 transition-colors hover:text-white',
+              active && 'bg-[var(--sv-iris-strong)] text-white'
+            )}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
- * The hero's interactive generator: mode tabs + prompt bar, then an in-place
- * render preview that finishes with a playable demo result. Pure component —
- * all copy and demo assets arrive via props from the hero block.
+ * The hero's composer-style generator, mirroring the reference design: one
+ * panel holding mode tabs, a multiline prompt, reference images and a
+ * toolbar (model dropdown, aspect, quality, Style/Fast toggles) with a
+ * large Generate button — then an in-place render preview that finishes
+ * with a playable demo result. Pure component — all copy and assets arrive
+ * via props from the hero block.
  */
 export function LandingGenerator({
   tabs,
@@ -104,6 +187,10 @@ export function LandingGenerator({
   examplesLabel,
   generateLabel,
   trust,
+  referenceLabel,
+  referenceHint,
+  styleLabel,
+  fastLabel,
   stages,
   readyLabel,
   againLabel,
@@ -122,30 +209,84 @@ export function LandingGenerator({
   const [result, setResult] = useState<RunResult | null>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
 
+  // Toolbar selections, kept per tab id.
+  const [modelByTab, setModelByTab] = useState<Record<string, string>>(() =>
+    Object.fromEntries(tabs.map((tab) => [tab.id, tab.models[0]?.id ?? '']))
+  );
+  const [aspectByTab, setAspectByTab] = useState<Record<string, string>>(() =>
+    Object.fromEntries(tabs.map((tab) => [tab.id, tab.aspects?.[0]?.id ?? '']))
+  );
+  const [qualityByTab, setQualityByTab] = useState<Record<string, string>>(() =>
+    Object.fromEntries(tabs.map((tab) => [tab.id, tab.qualities[0]?.id ?? '']))
+  );
+  const [styleOn, setStyleOn] = useState(false);
+  const [fastOn, setFastOn] = useState(false);
+
+  // Model dropdown (open one at a time).
+  const [modelsOpen, setModelsOpen] = useState(false);
+  const modelMenuRef = useRef<HTMLDivElement>(null);
+
+  // Client-side reference images (object URLs, revoked on remove/unmount).
+  const [refs, setRefs] = useState<{ id: string; url: string }[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Freeze the typewriter once there is something real to show (typed draft
   // or an active run) — it re-rendered the whole bar every 55ms otherwise.
   const typed = useTypewriter(promptExamples, {
     active: draft === null && phase === 'idle',
   });
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   // Bumped per run so regenerating the same prompt rotates the demo clip.
   const attemptRef = useRef(0);
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? tabs[0];
+  const activeModelId = modelByTab[activeTab?.id ?? ''] ?? '';
+  const activeModel =
+    activeTab?.models.find((m) => m.id === activeModelId) ??
+    activeTab?.models[0];
+  const activeAspectId = aspectByTab[activeTab?.id ?? ''] ?? '';
+  const activeQualityId = qualityByTab[activeTab?.id ?? ''] ?? '';
 
-  // Stop the demo audio when the generator unmounts.
-  useEffect(() => () => audioRef.current?.pause(), []);
+  // Stop the demo audio when the generator unmounts and drop ref previews.
+  const refsRef = useRef(refs);
+  refsRef.current = refs;
+  useEffect(
+    () => () => {
+      audioRef.current?.pause();
+      for (const r of refsRef.current) URL.revokeObjectURL(r.url);
+    },
+    []
+  );
+
+  // Close the model dropdown on outside pointer / Escape.
+  useEffect(() => {
+    if (!modelsOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!modelMenuRef.current?.contains(e.target as Node))
+        setModelsOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModelsOpen(false);
+    };
+    window.addEventListener('pointerdown', onPointer);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('pointerdown', onPointer);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [modelsOpen]);
 
   // Drive the fake render: eased 0→100, then flip to the result.
   useEffect(() => {
     if (phase !== 'rendering') return;
+    const duration = fastOn ? RENDER_FAST_MS : RENDER_MS;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const t = window.setTimeout(() => {
         setProgress(100);
         setPhase('done');
-      }, 900);
+      }, 600);
       return () => window.clearTimeout(t);
     }
     const t0 = performance.now();
@@ -154,7 +295,7 @@ export function LandingGenerator({
       // Ease-out: fast start, trickle near 100 like a real render queue.
       const value = Math.min(
         100,
-        Math.round(100 * (1 - Math.pow(1 - elapsed / RENDER_MS, 2.4)))
+        Math.round(100 * (1 - Math.pow(1 - elapsed / duration, 2.4)))
       );
       setProgress(value);
       if (value >= 100) {
@@ -163,7 +304,7 @@ export function LandingGenerator({
       }
     }, 90);
     return () => window.clearInterval(timer);
-  }, [phase]);
+  }, [phase, fastOn]);
 
   // Autoplay audio results once the run finishes (the Generate click is the
   // user gesture browsers need); fall back to the manual play button.
@@ -186,12 +327,29 @@ export function LandingGenerator({
   }, [phase]);
 
   const startRun = (prompt: string, tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
     const asset = pickAsset(assets[tabId] ?? [], prompt, attemptRef.current);
     if (!asset) return;
     attemptRef.current += 1;
     audioRef.current?.pause();
     setAudioPlaying(false);
-    setResult({ asset, prompt, tabId });
+    const model =
+      tab?.models.find((m) => m.id === (modelByTab[tabId] ?? ''))?.label ??
+      asset.model;
+    const quality = tab?.qualities.find(
+      (q) => q.id === (qualityByTab[tabId] ?? '')
+    )?.label;
+    const meta = [asset.meta, quality, styleOn ? styleLabel : '']
+      .filter(Boolean)
+      .join(' · ');
+    setResult({
+      asset,
+      prompt,
+      tabId,
+      model,
+      meta,
+      aspectId: aspectByTab[tabId] || undefined,
+    });
     setProgress(0);
     setPhase('rendering');
   };
@@ -199,7 +357,7 @@ export function LandingGenerator({
   const submit = () => {
     const prompt = (draft ?? typed ?? '').trim() || promptExamples[0] || '';
     if (!prompt) {
-      inputRef.current?.focus();
+      textareaRef.current?.focus();
       return;
     }
     startRun(prompt, activeTab?.id ?? tabs[0]?.id ?? '');
@@ -208,6 +366,7 @@ export function LandingGenerator({
   const switchTab = (tabId: string) => {
     setActiveId(tabId);
     setDraft(null); // tab placeholders differ; let the typewriter take over
+    setModelsOpen(false);
     if (phase !== 'idle') {
       setPhase('idle');
       setResult(null);
@@ -217,50 +376,81 @@ export function LandingGenerator({
     }
   };
 
+  const addRefFiles = (files: FileList | null) => {
+    if (!files) return;
+    const next = [...refs];
+    for (const file of Array.from(files)) {
+      if (next.length >= MAX_REFS) break;
+      if (!file.type.startsWith('image/')) continue;
+      next.push({
+        id: `${file.name}-${file.size}-${Math.random()}`,
+        url: URL.createObjectURL(file),
+      });
+    }
+    setRefs(next);
+  };
+
+  const removeRef = (id: string) => {
+    const target = refs.find((r) => r.id === id);
+    if (target) URL.revokeObjectURL(target.url);
+    setRefs((list) => list.filter((r) => r.id !== id));
+  };
+
+  const onTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (phase !== 'rendering') submit();
+    }
+  };
+
   const stageLabel =
     stages[
       Math.min(stages.length - 1, Math.floor((progress / 100) * stages.length))
     ] ?? stages[0];
 
   const isAudioResult = result?.tabId === 'audio';
+  const resultAspect =
+    ASPECT_FRAME[result?.aspectId ?? '16:9'] ?? 'aspect-video';
+  const resultWrap = ASPECT_WRAP[result?.aspectId ?? '16:9'] ?? 'max-w-[640px]';
 
   return (
     <div className="flex w-full flex-col items-center">
-      {/* Mode tabs */}
-      <div className="mt-8 inline-flex rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10">
-        {tabs.map((tab) => {
-          const active = tab.id === activeTab?.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              aria-pressed={active}
-              onClick={() => switchTab(tab.id)}
-              className={cn(
-                'h-9 rounded-full px-4 text-sm font-medium text-white/70 hover:text-white',
-                active && 'bg-[var(--sv-iris-strong)] text-white'
-              )}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Prompt bar — typewriter cycles example prompts until the visitor types */}
+      {/* Composer panel */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           if (phase !== 'rendering') submit();
         }}
-        className="mt-4 flex h-[60px] w-full max-w-[640px] items-center rounded-[18px] bg-white/[0.07] py-1.5 pr-1.5 pl-4 ring-1 ring-white/10 transition-shadow duration-300 focus-within:ring-[var(--sv-iris)]"
+        className="mt-8 w-full max-w-[860px] rounded-[22px] bg-white/[0.055] p-3 ring-1 ring-white/10 backdrop-blur-md sm:p-4"
       >
-        <input
-          key={activeTab?.id}
-          ref={inputRef}
-          type="text"
+        {/* Mode tabs — inside the panel, per the reference layout */}
+        <div className="inline-flex rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10">
+          {tabs.map((tab) => {
+            const active = tab.id === activeTab?.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => switchTab(tab.id)}
+                className={cn(
+                  'h-8 rounded-full px-4 text-[13px] font-medium text-white/65 transition-colors hover:text-white',
+                  active && 'bg-[var(--sv-iris-strong)] text-white'
+                )}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Prompt textarea — Enter generates, Shift+Enter breaks a line */}
+        <textarea
+          ref={textareaRef}
+          rows={3}
           value={draft ?? ''}
           onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={onTextareaKeyDown}
           placeholder={
             draft === null && typed
               ? `${typed}▍`
@@ -268,25 +458,195 @@ export function LandingGenerator({
           }
           aria-label={activeTab?.placeholder}
           disabled={phase === 'rendering'}
-          className="sv-meta min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-white/45 focus:outline-none disabled:opacity-60"
+          className="sv-meta mt-3 min-h-[92px] w-full resize-none rounded-xl bg-transparent px-2 py-1.5 text-[15.5px] leading-relaxed text-white placeholder:text-white/40 focus:outline-none disabled:opacity-60"
         />
-        <button
-          type="submit"
-          disabled={phase === 'rendering'}
-          className="sv-press inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[15px] font-semibold text-white hover:bg-[var(--sv-iris-deep)] disabled:cursor-wait"
-        >
-          {phase === 'rendering' ? (
-            <>
-              <Loader2 size={16} className="animate-spin" aria-hidden />
-              <span className="tabular-nums">{progress}%</span>
-            </>
-          ) : (
-            <>
-              <Sparkles size={16} aria-hidden />
-              {generateLabel}
-            </>
+
+        {/* Toolbar: reference images + settings + Generate */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {/* Reference images — client-side previews only */}
+          <div className="flex items-center gap-1.5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                addRefFiles(e.target.files);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              title={`${referenceLabel} · ${referenceHint}`}
+              className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl border border-dashed border-white/20 px-3 text-[12px] text-white/60 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
+            >
+              <ImagePlus size={14} aria-hidden />
+              {referenceLabel}
+              <span className="text-white/35">
+                {refs.length}/{MAX_REFS}
+              </span>
+            </button>
+            {refs.map((r) => (
+              <span
+                key={r.id}
+                className="group relative h-9 w-9 overflow-hidden rounded-lg ring-1 ring-white/15"
+              >
+                <img
+                  src={r.url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  aria-label="Remove"
+                  onClick={() => removeRef(r.id)}
+                  className="absolute inset-0 flex items-center justify-center bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  <X size={13} aria-hidden />
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {/* Model dropdown */}
+          <div ref={modelMenuRef} className="relative">
+            <button
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded={modelsOpen}
+              onClick={() => setModelsOpen((v) => !v)}
+              className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 text-[12px] text-white/75 ring-1 ring-white/10 transition-colors hover:text-white"
+            >
+              <Sparkles
+                size={13}
+                className="text-[var(--sv-iris-bright)]"
+                aria-hidden
+              />
+              {activeModel?.label}
+              <ChevronDown
+                size={13}
+                className={cn(
+                  'transition-transform',
+                  modelsOpen && 'rotate-180'
+                )}
+                aria-hidden
+              />
+            </button>
+            {modelsOpen && (
+              <div
+                role="listbox"
+                className="absolute bottom-11 left-0 z-20 max-h-64 min-w-[190px] overflow-auto rounded-2xl bg-[#101720] p-1.5 shadow-2xl ring-1 shadow-black/50 ring-white/15"
+              >
+                {activeTab?.models.map((model) => {
+                  const active = model.id === activeModel?.id;
+                  return (
+                    <button
+                      key={model.id}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => {
+                        setModelByTab((prev) => ({
+                          ...prev,
+                          [activeTab.id]: model.id,
+                        }));
+                        setModelsOpen(false);
+                      }}
+                      className={cn(
+                        'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[12.5px] text-white/75 transition-colors hover:bg-white/[0.07] hover:text-white',
+                        active && 'text-white'
+                      )}
+                    >
+                      {model.label}
+                      {active && (
+                        <Check
+                          size={13}
+                          className="text-[var(--sv-iris-bright)]"
+                          aria-hidden
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Aspect chips (video/image only) */}
+          {activeTab?.aspects && (
+            <ChipGroup
+              options={activeTab.aspects}
+              value={activeAspectId}
+              onChange={(id) =>
+                setAspectByTab((prev) => ({ ...prev, [activeTab.id]: id }))
+              }
+            />
           )}
-        </button>
+
+          {/* Quality chips */}
+          {activeTab && (
+            <ChipGroup
+              options={activeTab.qualities}
+              value={activeQualityId}
+              onChange={(id) =>
+                setQualityByTab((prev) => ({ ...prev, [activeTab.id]: id }))
+              }
+            />
+          )}
+
+          {/* Style toggle */}
+          <button
+            type="button"
+            aria-pressed={styleOn}
+            onClick={() => setStyleOn((v) => !v)}
+            className={cn(
+              'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-[12px] ring-1 transition-colors',
+              styleOn
+                ? 'bg-[var(--sv-iris-strong)]/25 text-white ring-[var(--sv-iris)]/50'
+                : 'text-white/60 ring-white/10 hover:text-white'
+            )}
+          >
+            <Palette size={13} aria-hidden />
+            {styleLabel}
+          </button>
+
+          {/* Fast toggle — really shortens the render preview */}
+          <button
+            type="button"
+            aria-pressed={fastOn}
+            onClick={() => setFastOn((v) => !v)}
+            className={cn(
+              'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-[12px] ring-1 transition-colors',
+              fastOn
+                ? 'bg-[var(--sv-iris-strong)]/25 text-white ring-[var(--sv-iris)]/50'
+                : 'text-white/60 ring-white/10 hover:text-white'
+            )}
+          >
+            <FastForward size={13} aria-hidden />
+            {fastLabel}
+          </button>
+
+          {/* Generate — the panel's primary action, bottom right */}
+          <button
+            type="submit"
+            disabled={phase === 'rendering'}
+            className="sv-press ml-auto inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[14.5px] font-semibold text-white shadow-[var(--sv-iris-deep)]/30 shadow-lg hover:bg-[var(--sv-iris-deep)] disabled:cursor-wait"
+          >
+            {phase === 'rendering' ? (
+              <>
+                <Loader2 size={16} className="animate-spin" aria-hidden />
+                <span className="tabular-nums">{progress}%</span>
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} aria-hidden />
+                {generateLabel}
+              </>
+            )}
+          </button>
+        </div>
       </form>
 
       {/* Render monitor / result card */}
@@ -296,7 +656,13 @@ export function LandingGenerator({
           className="sv-enter mt-4 w-full max-w-[640px]"
           style={{ '--i': 0 } as CSSProperties}
         >
-          <div className="relative aspect-video w-full overflow-hidden rounded-[18px] bg-[#0a0f14] ring-1 ring-white/10">
+          <div
+            className={cn(
+              'relative mx-auto w-full overflow-hidden rounded-[18px] bg-[#0a0f14] ring-1 ring-white/10',
+              resultAspect,
+              resultWrap
+            )}
+          >
             {phase === 'rendering' ? (
               <>
                 {result.asset.poster && !isAudioResult && (
@@ -310,7 +676,7 @@ export function LandingGenerator({
                 <div className="sv-scan absolute inset-0" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
                   <span className="sv-meta rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[11px] text-white/75 backdrop-blur">
-                    {result.asset.model}
+                    {result.model}
                   </span>
                   <p
                     className="text-[15px] font-medium text-white/90"
@@ -420,8 +786,8 @@ export function LandingGenerator({
                   {readyLabel}
                 </span>
                 <span className="sv-meta ml-auto rounded-full bg-black/55 px-2.5 py-1 text-[11px] text-white/85 backdrop-blur">
-                  {result.asset.model}
-                  {result.asset.meta ? ` · ${result.asset.meta}` : ''}
+                  {result.model}
+                  {result.meta ? ` · ${result.meta}` : ''}
                 </span>
               </div>
             )}
@@ -466,7 +832,7 @@ export function LandingGenerator({
         ))}
       </ul>
 
-      {/* Example chips — one tap fills the prompt bar so the tool works on this page */}
+      {/* Example chips — one tap fills the prompt so the tool works on this page */}
       <div className="mt-3 flex max-w-[640px] flex-wrap items-center justify-center gap-2">
         <span className="sv-meta text-[11.5px] text-white/50">
           {examplesLabel}
@@ -478,7 +844,7 @@ export function LandingGenerator({
             title={example}
             onClick={() => {
               setDraft(example);
-              inputRef.current?.focus();
+              textareaRef.current?.focus();
             }}
             className="max-w-[240px] truncate rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[11.5px] text-white/70 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
           >
