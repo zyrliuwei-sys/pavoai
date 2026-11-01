@@ -161,7 +161,7 @@ function ChipGroup({
             aria-pressed={active}
             onClick={() => onChange(option.id)}
             className={cn(
-              'sv-meta rounded-full px-2.5 py-1 text-[11.5px] text-white/60 transition-colors hover:text-white',
+              'sv-meta rounded-full px-2 py-1 text-[11px] text-white/60 transition-colors hover:text-white',
               active && 'bg-[var(--sv-iris-strong)] text-white'
             )}
           >
@@ -421,7 +421,7 @@ export function LandingGenerator({
           e.preventDefault();
           if (phase !== 'rendering') submit();
         }}
-        className="mt-8 w-full max-w-[860px] rounded-[22px] bg-white/[0.055] p-3 ring-1 ring-white/10 backdrop-blur-md sm:p-4"
+        className="mt-8 w-full max-w-[1040px] rounded-[22px] bg-white/[0.055] p-3 ring-1 ring-white/10 backdrop-blur-md sm:p-4"
       >
         {/* Mode tabs — inside the panel, per the reference layout */}
         <div className="inline-flex rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10">
@@ -462,7 +462,7 @@ export function LandingGenerator({
         />
 
         {/* Toolbar: reference images + settings + Generate */}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {/* Reference images — client-side previews only */}
           <div className="flex items-center gap-1.5">
             <input
@@ -480,7 +480,7 @@ export function LandingGenerator({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               title={`${referenceLabel} · ${referenceHint}`}
-              className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl border border-dashed border-white/20 px-3 text-[12px] text-white/60 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
+              className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl border border-dashed border-white/20 px-2.5 text-[12px] text-white/60 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
             >
               <ImagePlus size={14} aria-hidden />
               {referenceLabel}
@@ -517,7 +517,7 @@ export function LandingGenerator({
               aria-haspopup="listbox"
               aria-expanded={modelsOpen}
               onClick={() => setModelsOpen((v) => !v)}
-              className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 text-[12px] text-white/75 ring-1 ring-white/10 transition-colors hover:text-white"
+              className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/[0.06] px-2.5 text-[12px] text-white/75 ring-1 ring-white/10 transition-colors hover:text-white"
             >
               <Sparkles
                 size={13}
@@ -602,7 +602,7 @@ export function LandingGenerator({
             aria-pressed={styleOn}
             onClick={() => setStyleOn((v) => !v)}
             className={cn(
-              'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-[12px] ring-1 transition-colors',
+              'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-[12px] ring-1 transition-colors',
               styleOn
                 ? 'bg-[var(--sv-iris-strong)]/25 text-white ring-[var(--sv-iris)]/50'
                 : 'text-white/60 ring-white/10 hover:text-white'
@@ -618,7 +618,7 @@ export function LandingGenerator({
             aria-pressed={fastOn}
             onClick={() => setFastOn((v) => !v)}
             className={cn(
-              'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-[12px] ring-1 transition-colors',
+              'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-[12px] ring-1 transition-colors',
               fastOn
                 ? 'bg-[var(--sv-iris-strong)]/25 text-white ring-[var(--sv-iris)]/50'
                 : 'text-white/60 ring-white/10 hover:text-white'
@@ -632,7 +632,7 @@ export function LandingGenerator({
           <button
             type="submit"
             disabled={phase === 'rendering'}
-            className="sv-press ml-auto inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[14.5px] font-semibold text-white shadow-[var(--sv-iris-deep)]/30 shadow-lg hover:bg-[var(--sv-iris-deep)] disabled:cursor-wait"
+            className="sv-press ml-auto inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[14.5px] font-semibold text-white shadow-[var(--sv-iris-deep)]/30 shadow-lg hover:bg-[var(--sv-iris-deep)] disabled:cursor-wait lg:w-auto"
           >
             {phase === 'rendering' ? (
               <>
