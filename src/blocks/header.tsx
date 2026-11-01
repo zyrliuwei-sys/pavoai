@@ -21,9 +21,6 @@ export function Header() {
       ]}
       signInLabel={m['lp.nav.sign_in']()}
       signInHref="/sign-in"
-      ctaLabel={m['lp.nav.cta']()}
-      // P0-2: land on the in-page generator, not the sign-up wall.
-      ctaHref="/#generator"
     />
   );
 }

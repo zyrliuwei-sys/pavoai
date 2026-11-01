@@ -18,8 +18,9 @@ export interface LandingNavProps {
   links: NavLink[];
   signInLabel: string;
   signInHref: string;
-  ctaLabel: string;
-  ctaHref: string;
+  /** Optional primary CTA pill; omit when the page has its own entry point. */
+  ctaLabel?: string;
+  ctaHref?: string;
 }
 
 export function LandingNav({
@@ -115,12 +116,14 @@ export function LandingNav({
               {signInLabel}
             </Link>
           )}
-          <Link
-            href={ctaHref}
-            className="sv-press inline-flex h-10 items-center rounded-full bg-[var(--sv-iris-strong)] px-4 text-[13.5px] font-semibold text-white transition hover:bg-[var(--sv-iris-deep)]"
-          >
-            {ctaLabel}
-          </Link>
+          {ctaLabel && ctaHref ? (
+            <Link
+              href={ctaHref}
+              className="sv-press inline-flex h-10 items-center rounded-full bg-[var(--sv-iris-strong)] px-4 text-[13.5px] font-semibold text-white transition hover:bg-[var(--sv-iris-deep)]"
+            >
+              {ctaLabel}
+            </Link>
+          ) : null}
         </div>
 
         {/* Mobile toggle */}
@@ -182,13 +185,15 @@ export function LandingNav({
                   {signInLabel}
                 </Link>
               )}
-              <Link
-                href={ctaHref}
-                onClick={() => setOpen(false)}
-                className="sv-press inline-flex h-10 w-full items-center justify-center rounded-full bg-[var(--sv-iris-strong)] px-4 text-[13.5px] font-semibold text-white transition hover:bg-[var(--sv-iris-deep)]"
-              >
-                {ctaLabel}
-              </Link>
+              {ctaLabel && ctaHref ? (
+                <Link
+                  href={ctaHref}
+                  onClick={() => setOpen(false)}
+                  className="sv-press inline-flex h-10 w-full items-center justify-center rounded-full bg-[var(--sv-iris-strong)] px-4 text-[13.5px] font-semibold text-white transition hover:bg-[var(--sv-iris-deep)]"
+                >
+                  {ctaLabel}
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
