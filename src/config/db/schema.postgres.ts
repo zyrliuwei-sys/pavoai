@@ -43,6 +43,8 @@ export const user = table(
     country: text('country').notNull().default(''),
     // 'user' = a person; 'api' = an agent/service account (no login, keys only).
     type: text('type').notNull().default('user'),
+    // Guest sessions (better-auth anonymous plugin).
+    isAnonymous: boolean('is_anonymous').notNull().default(false),
   },
   (table) => [
     index('idx_user_name').on(table.name),

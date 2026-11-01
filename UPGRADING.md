@@ -525,3 +525,14 @@ grant_<orderNo>`, so the unique index allows one grant per order. Older
   `utm_source` filter (`users_sources` operation, `GET /api/admin/users/sources`,
   `users.read`). The subscriptions and credits list APIs now also return
   `userName` / `userImage`.
+
+## 2026-11-01 — Guest generation (anonymous auth) + landing paywall
+
+- `user` 表新增 `is_anonymous` 列（better-auth anonymous 插件）。D1 已应用迁移
+  `drizzle/0001_classy_zombie.sql`（`ALTER TABLE user ADD is_anonymous …`，加列，
+  无破坏性）。自建 PostgreSQL/MySQL 的部署需执行 `pnpm db:generate` + `pnpm db:migrate`。
+- better-auth 启用 anonymous 插件：落地页生成器首次点「生成」会为访客静默创建
+  匿名会话（`authClient.signIn.anonymous()`），匿名用户**不发放**注册赠积分
+  （`initial_credits` 仅发给正式注册用户），余额不足时原地弹付费面板。
+- Hero 生成器的 401/402 不再报错或跳转，改为打开付费面板（`PaywallDialog`），
+  支付回调 redirect 到 `/`，提示词通过 sessionStorage 恢复。

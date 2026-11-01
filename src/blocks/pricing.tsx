@@ -41,22 +41,8 @@ const ALL_PROVIDERS: PaymentProvider[] = [
   'wechat',
 ];
 
-export function Pricing({ title }: { title?: string } = {}) {
-  const router = useRouter();
-  const { data: session } = useSession();
-
-  const { data: configsData } = usePublicConfig();
-  const configs = configsData ?? {};
-  const [modalOpen, setModalOpen] = useState(false);
-  const [pendingPlan, setPendingPlan] = useState<PricingPlan | null>(null);
-  const [loadingProvider, setLoadingProvider] =
-    useState<PaymentProvider | null>(null);
-
-  const enabledProviders = useMemo<PaymentProvider[]>(
-    () => ALL_PROVIDERS.filter((p) => configs[`${p}_enabled`] === 'true'),
-    [configs]
-  );
-
+/** Plan grids (labels via i18n; prices mirror src/config/pricing.ts). */
+export function usePricingGroups(): PricingGroup[] {
   const starterFeatures = [
     { icon: Folder, label: m['landing.pricing.feature_1_project']() },
     { icon: Sparkles, label: m['landing.pricing.feature_5k_credits']() },
@@ -81,7 +67,7 @@ export function Pricing({ title }: { title?: string } = {}) {
     { icon: Puzzle, label: m['landing.pricing.feature_custom_integrations']() },
   ];
 
-  const groups: PricingGroup[] = [
+  return [
     {
       key: 'monthly',
       label: m['landing.pricing.monthly'](),
@@ -224,6 +210,28 @@ export function Pricing({ title }: { title?: string } = {}) {
       ],
     },
   ];
+}
+
+/**
+ * Shared checkout wiring for the pricing section and the landing paywall.
+ * `redirect` is where the provider drops the user after payment.
+ */
+export function usePricingCheckout({
+  redirect = '/settings/payments',
+}: { redirect?: string } = {}) {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { data: configsData } = usePublicConfig();
+  const configs = configsData ?? {};
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<PricingPlan | null>(null);
+  const [loadingProvider, setLoadingProvider] =
+    useState<PaymentProvider | null>(null);
+
+  const enabledProviders = useMemo<PaymentProvider[]>(
+    () => ALL_PROVIDERS.filter((p) => configs[`${p}_enabled`] === 'true'),
+    [configs]
+  );
 
   const checkoutMutation = useMutation({
     mutationFn: ({
@@ -245,8 +253,8 @@ export function Pricing({ title }: { title?: string } = {}) {
         credits: plan.credits,
         credits_valid_days: plan.creditsValidDays,
         payment_provider: provider,
-        // Land on the order list so the user sees the payment they just made.
-        redirect: '/settings/payments',
+        // Where the provider lands the user after paying.
+        redirect,
         locale: getLocale(),
       }),
     onSuccess: (data) => {
@@ -270,6 +278,8 @@ export function Pricing({ title }: { title?: string } = {}) {
 
   async function handleCheckout(plan: PricingPlan) {
     if (!session?.user) {
+      // Anonymous visitors get a guest session from the landing generator,
+      // but anyone hitting checkout without one still lands on sign-in.
       const callbackUrl = encodeURIComponent(currentPathWithQuery('/pricing'));
       router.push(`/sign-in?callbackUrl=${callbackUrl}`);
       return;
@@ -294,6 +304,35 @@ export function Pricing({ title }: { title?: string } = {}) {
     startCheckout(pendingPlan, provider);
   }
 
+  const providerModal = (
+    <PaymentProviderModal
+      open={modalOpen}
+      onOpenChange={(open: boolean) => {
+        setModalOpen(open);
+        if (!open) {
+          setPendingPlan(null);
+          setLoadingProvider(null);
+        }
+      }}
+      providers={enabledProviders.length ? enabledProviders : ['stripe']}
+      loadingProvider={loadingProvider}
+      onSelect={handleProviderSelect}
+      planName={pendingPlan?.name}
+      price={pendingPlan?.price}
+    />
+  );
+
+  return {
+    handleCheckout,
+    providerModal,
+    checkoutPending: checkoutMutation.isPending,
+  };
+}
+
+export function Pricing({ title }: { title?: string } = {}) {
+  const groups = usePricingGroups();
+  const { handleCheckout, providerModal } = usePricingCheckout();
+
   return (
     <section
       id="pricing"
@@ -311,21 +350,7 @@ export function Pricing({ title }: { title?: string } = {}) {
         <PricingTable groups={groups} onCheckout={handleCheckout} />
       </div>
 
-      <PaymentProviderModal
-        open={modalOpen}
-        onOpenChange={(open) => {
-          setModalOpen(open);
-          if (!open) {
-            setPendingPlan(null);
-            setLoadingProvider(null);
-          }
-        }}
-        providers={enabledProviders.length ? enabledProviders : ['stripe']}
-        loadingProvider={loadingProvider}
-        onSelect={handleProviderSelect}
-        planName={pendingPlan?.name}
-        price={pendingPlan?.price}
-      />
+      {providerModal}
     </section>
   );
 }

@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useRouter } from '@/core/i18n/navigation';
 import { ApiError, apiGet, apiPost } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { useTypewriter } from '@/components/landing/reveal';
@@ -80,6 +79,17 @@ export interface LandingGeneratorProps {
   playLabel: string;
   pauseLabel: string;
   onSignUp?: (prompt: string, tabId: string) => void;
+  /**
+   * Ensures the visitor has a session before generating — the block silently
+   * signs in an anonymous guest so generation never requires registration.
+   * Return false to abort the run quietly.
+   */
+  ensureSession?: () => Promise<boolean>;
+  /**
+   * Called when generation is blocked by auth (401) or credits (402) — the
+   * block opens the paywall panel instead of surfacing an error.
+   */
+  onPaywall?: (prompt: string, tabId: string) => void;
 }
 
 /** Poll cadence for the generation task. */
@@ -98,6 +108,14 @@ const ASPECT_WRAP: Record<string, string> = {
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Parks the prompt while the visitor pays, so it survives the redirect. */
+const PENDING_GEN_KEY = 'pavoai:pending-gen';
+function parkPendingGen(prompt: string, tabId: string) {
+  try {
+    sessionStorage.setItem(PENDING_GEN_KEY, JSON.stringify({ prompt, tabId }));
+  } catch {}
+}
 
 /** Toolbar chip group — option list with one active id (aspect/quality). */
 function ChipGroup({
@@ -156,8 +174,9 @@ export function LandingGenerator({
   playLabel,
   pauseLabel,
   onSignUp,
+  ensureSession,
+  onPaywall,
 }: LandingGeneratorProps) {
-  const router = useRouter();
   const [activeId, setActiveId] = useState(tabs[0]?.id ?? '');
   // null = visitor hasn't typed; the typewriter owns the placeholder.
   const [draft, setDraft] = useState<string | null>(null);
@@ -209,6 +228,22 @@ export function LandingGenerator({
       mountedRef.current = false;
       runIdRef.current += 1; // kills any in-flight poll loop
     };
+  }, []);
+
+  // Restore a prompt parked by the paywall flow: after paying, checkout
+  // redirects back here and the visitor finds their prompt back in the box.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PENDING_GEN_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(PENDING_GEN_KEY);
+      const pending = JSON.parse(raw) as { prompt?: string; tabId?: string };
+      if (pending.prompt && tabs.some((t) => t.id === pending.tabId)) {
+        setActiveId(String(pending.tabId));
+        setDraft(pending.prompt);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Stop the demo audio when the generator unmounts.
@@ -272,6 +307,10 @@ export function LandingGenerator({
     const tab = tabs.find((t) => t.id === tabId);
     if (!tab || phase === 'rendering') return;
 
+    // Guests generate without registering: the block opens an anonymous
+    // session first. If that fails, stop quietly (no error surface).
+    if (ensureSession && !(await ensureSession())) return;
+
     const modelId = modelByTab[tabId] || tab.models[0]?.id || '';
     const model = tab.models.find((m) => m.id === modelId)?.label ?? modelId;
     const quality = tab.qualities.find(
@@ -333,15 +372,14 @@ export function LandingGenerator({
       setPhase('idle');
       setResult(null);
       setProgress(0);
-      // Generation is paid: 401 → sign-up funnel (carries the prompt),
-      // 402 → no credits, send the visitor to the pricing page.
-      if (error instanceof ApiError && error.code === 401) {
-        onSignUp?.(prompt, tabId);
-        return;
-      }
-      if (error instanceof ApiError && error.code === 402) {
-        toast.error(error.message);
-        router.push('/pricing');
+      // Paid generation: 401 (no session) and 402 (no credits) both open the
+      // paywall panel — never an error toast, never a redirect away.
+      if (
+        error instanceof ApiError &&
+        (error.code === 401 || error.code === 402)
+      ) {
+        parkPendingGen(prompt, tabId);
+        onPaywall?.(prompt, tabId);
         return;
       }
       toast.error(error?.message || 'Generation failed');

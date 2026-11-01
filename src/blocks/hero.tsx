@@ -1,6 +1,11 @@
+import { useState } from 'react';
+
+import { authClient, useSession } from '@/core/auth/client';
 import { useRouter } from '@/core/i18n/navigation';
 import { m } from '@/paraglide/messages.js';
+import { usePricingCheckout, usePricingGroups } from '@/blocks/pricing';
 import { LandingHero } from '@/components/landing/hero';
+import { PaywallDialog } from '@/components/landing/paywall-dialog';
 
 const MODELS = [
   'Veo 3.1',
@@ -67,6 +72,39 @@ const IMAGE_QUALITIES = [
  */
 export function Hero() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
+
+  // Paywall plans come from the shared pricing grid (monthly group).
+  const groups = usePricingGroups();
+  const monthlyPlans = groups.find((g) => g.key === 'monthly')?.plans ?? [];
+  // After paying, land back on the generator instead of the payments page.
+  const { handleCheckout, providerModal } = usePricingCheckout({
+    redirect: '/',
+  });
+
+  // Visitors generate without registering: silently open an anonymous
+  // session on first Generate (better-auth anonymous plugin).
+  const ensureSession = async () => {
+    if (session?.user) return true;
+    const { data, error } = await authClient.signIn.anonymous();
+    return !error && !!data?.user;
+  };
+
+  const openPaywall = () => setPaywallOpen(true);
+
+  const onPaywallCheckout = async (planId: string) => {
+    const plan = monthlyPlans.find((p) => p.id === planId);
+    if (!plan) return;
+    setProcessingPlanId(planId);
+    try {
+      await handleCheckout(plan);
+    } finally {
+      setProcessingPlanId(null);
+    }
+  };
+
   const headline = m['lp.hero.headline']();
   const emphasized = m['lp.hero.emphasized']();
 
@@ -79,73 +117,101 @@ export function Hero() {
     }));
 
   return (
-    <LandingHero
-      eyebrow={m['lp.hero.eyebrow']()}
-      words={words}
-      subtitle={m['lp.hero.subtitle']()}
-      // The result-card CTA carries the visitor's prompt (and picked mode)
-      // into the sign-up flow instead of doing nothing.
-      onSignUp={(prompt, tab) => {
-        const params = new URLSearchParams({ mode: tab });
-        if (prompt.trim()) params.set('prompt', prompt.trim());
-        router.push(`/sign-up?${params.toString()}`);
-      }}
-      tabs={[
-        {
-          id: 'video',
-          label: m['lp.hero.tab_video'](),
-          placeholder: m['lp.hero.placeholder_video'](),
-          models: VIDEO_MODELS,
-          aspects: VIDEO_ASPECTS,
-          qualities: VIDEO_QUALITIES,
-        },
-        {
-          id: 'image',
-          label: m['lp.hero.tab_image'](),
-          placeholder: m['lp.hero.placeholder_image'](),
-          models: IMAGE_MODELS,
-          aspects: IMAGE_ASPECTS,
-          qualities: IMAGE_QUALITIES,
-        },
-      ]}
-      ctaLabel={m['lp.hero.cta']()}
-      examplesLabel={m['lp.hero.examples_label']()}
-      promptExamples={[
-        m['lp.hero.pe1'](),
-        m['lp.hero.pe2'](),
-        m['lp.hero.pe3'](),
-      ]}
-      trust={[
-        m['lp.hero.trust_1'](),
-        m['lp.hero.trust_2'](),
-        m['lp.hero.trust_3'](),
-        m['lp.hero.trust_4'](),
-      ]}
-      styleLabel={m['lp.hero.style']()}
-      fastLabel={m['lp.hero.fast']()}
-      stages={[
-        m['lp.hero.stage_1'](),
-        m['lp.hero.stage_2'](),
-        m['lp.hero.stage_3'](),
-        m['lp.hero.stage_4'](),
-      ]}
-      readyLabel={m['lp.hero.ready']()}
-      againLabel={m['lp.hero.again']()}
-      keepLabel={m['lp.hero.keep']()}
-      demoNote={m['lp.hero.demo_note']()}
-      playLabel={m['lp.hero.play']()}
-      pauseLabel={m['lp.hero.pause']()}
-      tiles={TILES.map(({ slug, duration }) => ({
-        src: `/imgs/generated/${slug}.jpg`,
-        alt: m['lp.hero.tile_alt'](),
-        kind: 'video' as const,
-        duration,
-      }))}
-      marquee={{
-        title: m['lp.hero.marquee_title'](),
-        models: MODELS,
-        pauseLabel: m['lp.hero.pause'](),
-      }}
-    />
+    <>
+      <LandingHero
+        eyebrow={m['lp.hero.eyebrow']()}
+        words={words}
+        subtitle={m['lp.hero.subtitle']()}
+        // The result-card CTA carries the visitor's prompt (and picked mode)
+        // into the sign-up flow instead of doing nothing.
+        onSignUp={(prompt, tab) => {
+          const params = new URLSearchParams({ mode: tab });
+          if (prompt.trim()) params.set('prompt', prompt.trim());
+          router.push(`/sign-up?${params.toString()}`);
+        }}
+        tabs={[
+          {
+            id: 'video',
+            label: m['lp.hero.tab_video'](),
+            placeholder: m['lp.hero.placeholder_video'](),
+            models: VIDEO_MODELS,
+            aspects: VIDEO_ASPECTS,
+            qualities: VIDEO_QUALITIES,
+          },
+          {
+            id: 'image',
+            label: m['lp.hero.tab_image'](),
+            placeholder: m['lp.hero.placeholder_image'](),
+            models: IMAGE_MODELS,
+            aspects: IMAGE_ASPECTS,
+            qualities: IMAGE_QUALITIES,
+          },
+        ]}
+        ensureSession={ensureSession}
+        onPaywall={openPaywall}
+        ctaLabel={m['lp.hero.cta']()}
+        examplesLabel={m['lp.hero.examples_label']()}
+        promptExamples={[
+          m['lp.hero.pe1'](),
+          m['lp.hero.pe2'](),
+          m['lp.hero.pe3'](),
+        ]}
+        trust={[
+          m['lp.hero.trust_1'](),
+          m['lp.hero.trust_2'](),
+          m['lp.hero.trust_3'](),
+          m['lp.hero.trust_4'](),
+        ]}
+        styleLabel={m['lp.hero.style']()}
+        fastLabel={m['lp.hero.fast']()}
+        stages={[
+          m['lp.hero.stage_1'](),
+          m['lp.hero.stage_2'](),
+          m['lp.hero.stage_3'](),
+          m['lp.hero.stage_4'](),
+        ]}
+        readyLabel={m['lp.hero.ready']()}
+        againLabel={m['lp.hero.again']()}
+        keepLabel={m['lp.hero.keep']()}
+        demoNote={m['lp.hero.demo_note']()}
+        playLabel={m['lp.hero.play']()}
+        pauseLabel={m['lp.hero.pause']()}
+        tiles={TILES.map(({ slug, duration }) => ({
+          src: `/imgs/generated/${slug}.jpg`,
+          alt: m['lp.hero.tile_alt'](),
+          kind: 'video' as const,
+          duration,
+        }))}
+        marquee={{
+          title: m['lp.hero.marquee_title'](),
+          models: MODELS,
+          pauseLabel: m['lp.hero.pause'](),
+        }}
+      />
+
+      {/* Paywall — opened when generation is blocked by credits/auth. Guests
+        pay against their anonymous session; no sign-up required. */}
+      <PaywallDialog
+        open={paywallOpen}
+        onOpenChange={setPaywallOpen}
+        title={m['lp.hero.paywall_title']()}
+        description={m['lp.hero.paywall_desc']()}
+        note={m['lp.hero.paywall_note']()}
+        plans={monthlyPlans.map((plan) => ({
+          id: plan.id,
+          name: plan.name,
+          price: plan.price,
+          interval: plan.interval,
+          description: plan.description,
+          featured: plan.featured,
+          featureLabels: plan.features.map((f) =>
+            typeof f === 'string' ? f : f.label
+          ),
+        }))}
+        onCheckout={onPaywallCheckout}
+        processingId={processingPlanId}
+      />
+      {providerModal}
+    </>
   );
 }

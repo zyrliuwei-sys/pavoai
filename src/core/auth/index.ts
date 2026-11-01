@@ -1,6 +1,7 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { oneTap } from 'better-auth/plugins';
+import { anonymous } from 'better-auth/plugins/anonymous';
 
 import { db } from '@/core/db';
 import { isCloudflareWorker, TCP_PROVIDERS } from '@/core/db/runtime';
@@ -156,8 +157,8 @@ function isEmailConfigured(configs: Record<string, string>): boolean {
 }
 
 function getAuthPlugins(configs: Record<string, string> | undefined) {
-  if (!configs) return [];
-  const plugins: any[] = [];
+  if (!configs) return [anonymous()];
+  const plugins: any[] = [anonymous()];
   if (configs.google_client_id && configs.google_one_tap_enabled === 'true') {
     plugins.push(oneTap());
   }
@@ -366,6 +367,11 @@ export function getAuth(configs?: Record<string, string>) {
               console.error('[auth] grant default role failed', error);
             }
 
+            if (createdUser.isAnonymous) {
+              // Guest sessions (landing generator) must start at 0 credits —
+              // free sign-up credits would bypass the paywall entirely.
+              return;
+            }
             try {
               await grantForNewUser({
                 userId: createdUser.id,
