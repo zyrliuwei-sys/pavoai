@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { apiGet, apiPost } from '@/lib/api-client';
+import { useRouter } from '@/core/i18n/navigation';
+import { ApiError, apiGet, apiPost } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { useTypewriter } from '@/components/landing/reveal';
 
@@ -156,6 +157,7 @@ export function LandingGenerator({
   pauseLabel,
   onSignUp,
 }: LandingGeneratorProps) {
+  const router = useRouter();
   const [activeId, setActiveId] = useState(tabs[0]?.id ?? '');
   // null = visitor hasn't typed; the typewriter owns the placeholder.
   const [draft, setDraft] = useState<string | null>(null);
@@ -328,10 +330,21 @@ export function LandingGenerator({
       }
     } catch (error: any) {
       if (stale()) return;
-      toast.error(error?.message || 'Generation failed');
       setPhase('idle');
       setResult(null);
       setProgress(0);
+      // Generation is paid: 401 → sign-up funnel (carries the prompt),
+      // 402 → no credits, send the visitor to the pricing page.
+      if (error instanceof ApiError && error.code === 401) {
+        onSignUp?.(prompt, tabId);
+        return;
+      }
+      if (error instanceof ApiError && error.code === 402) {
+        toast.error(error.message);
+        router.push('/pricing');
+        return;
+      }
+      toast.error(error?.message || 'Generation failed');
     }
   };
 

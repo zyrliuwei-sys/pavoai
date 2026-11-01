@@ -160,3 +160,34 @@ export async function findTask(taskId: string) {
     .limit(1);
   return result;
 }
+
+/**
+ * Attach provider-side info (e.g. the external task id) onto a task, merging
+ * with the existing taskInfo so the creditId kept for revocation survives.
+ */
+export async function attachTaskInfo(
+  taskId: string,
+  patch: Record<string, unknown>
+) {
+  const [task] = await db()
+    .select()
+    .from(aiTask)
+    .where(eq(aiTask.id, taskId))
+    .limit(1);
+  if (!task) throw new Error('Task not found');
+
+  const info: Record<string, unknown> = task.taskInfo
+    ? (() => {
+        try {
+          return JSON.parse(task.taskInfo as string);
+        } catch {
+          return {};
+        }
+      })()
+    : {};
+
+  await db()
+    .update(aiTask)
+    .set({ taskInfo: JSON.stringify({ ...info, ...patch }) })
+    .where(eq(aiTask.id, taskId));
+}

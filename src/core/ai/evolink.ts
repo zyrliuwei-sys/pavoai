@@ -23,6 +23,11 @@ export interface EvoModel {
   /** Quality chips the upstream accepts; others fall back to the default. */
   qualities: string[];
   defaultQuality: string;
+  /**
+   * Credits charged per generation, keyed by quality chip — the pricing knob
+   * for the paid generator (server-side only; the client never sends a price).
+   */
+  costCredits: Record<string, number>;
 }
 
 /**
@@ -36,6 +41,7 @@ export const EVO_MODELS: Record<string, EvoModel> = {
     model: 'gemini-3.1-flash-image-preview',
     qualities: ['1K', '2K', '4K'],
     defaultQuality: '2K',
+    costCredits: { '1K': 50, '2K': 80, '4K': 150 },
   },
   'seedream-4': {
     kind: 'image',
@@ -43,12 +49,14 @@ export const EVO_MODELS: Record<string, EvoModel> = {
     fastPromptPriority: true,
     qualities: ['1K', '2K', '4K'],
     defaultQuality: '2K',
+    costCredits: { '1K': 40, '2K': 60, '4K': 120 },
   },
   'wan-2-7': {
     kind: 'video',
     model: 'wan2.7-text-to-video',
     qualities: ['720p', '1080p'],
     defaultQuality: '720p',
+    costCredits: { '720p': 400, '1080p': 600 },
   },
   'seedance-2-0': {
     kind: 'video',
@@ -56,8 +64,16 @@ export const EVO_MODELS: Record<string, EvoModel> = {
     fastModel: 'seedance-2.0-fast-text-to-video',
     qualities: ['720p', '1080p'],
     defaultQuality: '720p',
+    costCredits: { '720p': 500, '1080p': 800 },
   },
 };
+
+/** Credits for one generation on this model at this quality chip. */
+export function evoCostCredits(model: EvoModel, quality: string): number {
+  return (
+    model.costCredits[quality] ?? model.costCredits[model.defaultQuality] ?? 0
+  );
+}
 
 /** Aspect ratios every catalog model accepts (sent as `size`/`aspect_ratio`). */
 export const EVO_ASPECTS = [
