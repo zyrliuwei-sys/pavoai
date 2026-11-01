@@ -1,14 +1,12 @@
-import { Fragment, useRef, useState, type CSSProperties } from 'react';
+import { Fragment, useState, type CSSProperties } from 'react';
 import { Play, Sparkles } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { useTypewriter } from '@/components/landing/reveal';
-
-export interface HeroTab {
-  id: string;
-  label: string;
-  placeholder: string;
-}
+import {
+  LandingGenerator,
+  type GeneratorAsset,
+  type GeneratorTab,
+} from '@/components/landing/generator';
 
 export interface HeroTile {
   src: string;
@@ -21,15 +19,25 @@ export interface LandingHeroProps {
   eyebrow: string;
   words: { text: string; emphasized?: boolean }[];
   subtitle: string;
-  tabs: HeroTab[];
+  tabs: GeneratorTab[];
   /** Example prompts cycled by the typewriter in the prompt bar. */
   promptExamples: string[];
   /** Label in front of the clickable example chips. */
   examplesLabel: string;
   ctaLabel: string;
-  /** Called with the submitted prompt + active tab id; wired by the block. */
-  onSubmitPrompt?: (prompt: string, tabId: string) => void;
+  /** Called with the finished prompt + mode from the result card CTA. */
+  onSignUp?: (prompt: string, tabId: string) => void;
   trust: string[];
+  /** Generator render-preview copy. */
+  stages: string[];
+  readyLabel: string;
+  againLabel: string;
+  keepLabel: string;
+  demoNote: string;
+  playLabel: string;
+  pauseLabel: string;
+  /** Demo results per tab id; keyword hits pick a themed match. */
+  assets: Record<string, GeneratorAsset[]>;
   tiles: HeroTile[];
   marquee: { title: string; models: string[]; pauseLabel: string };
 }
@@ -48,19 +56,21 @@ export function LandingHero({
   promptExamples,
   examplesLabel,
   ctaLabel,
-  onSubmitPrompt,
+  onSignUp,
   trust,
+  stages,
+  readyLabel,
+  againLabel,
+  keepLabel,
+  demoNote,
+  playLabel,
+  pauseLabel,
+  assets,
   tiles,
   marquee,
 }: LandingHeroProps) {
-  const [activeId, setActiveId] = useState(tabs[0]?.id ?? '');
   const [paused, setPaused] = useState(false);
-  // null = visitor hasn't typed; the typewriter owns the placeholder.
-  const [draft, setDraft] = useState<string | null>(null);
-  const typed = useTypewriter(promptExamples);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  const activeTab = tabs.find((tab) => tab.id === activeId) ?? tabs[0];
   const doubledModels = [...marquee.models, ...marquee.models];
   const tileBase = words.length + TILE_STAGGER_OFFSET;
 
@@ -76,7 +86,7 @@ export function LandingHero({
         </div>
 
         {/* Headline — masked rise, one gate per word. Scale tuned for the
-            long category H1 so the prompt bar stays in the first screen. */}
+            long category H1 so the generator stays in the first screen. */}
         <h1 className="sv-display mt-6 max-w-[17ch] text-[clamp(2.25rem,1rem+4.6vw,6.5rem)] leading-[0.94] tracking-[-0.01em] text-[#f4f6fb]">
           {words.map((word, index) => (
             <Fragment key={`${word.text}-${index}`}>
@@ -100,93 +110,23 @@ export function LandingHero({
           {subtitle}
         </p>
 
-        {/* Mode tabs */}
-        <div className="mt-8 inline-flex rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10">
-          {tabs.map((tab) => {
-            const active = tab.id === activeTab?.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setActiveId(tab.id)}
-                className={cn(
-                  'h-9 rounded-full px-4 text-sm font-medium text-white/70 hover:text-white',
-                  active && 'bg-[var(--sv-iris-strong)] text-white'
-                )}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Prompt bar — typewriter cycles example prompts until the visitor types */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSubmitPrompt?.(
-              draft ?? typed ?? '',
-              activeTab?.id ?? tabs[0]?.id ?? 'video'
-            );
-          }}
-          className="mt-4 flex h-[60px] w-full max-w-[640px] items-center rounded-[18px] bg-white/[0.07] py-1.5 pr-1.5 pl-4 ring-1 ring-white/10 transition-shadow duration-300 focus-within:ring-[var(--sv-iris)]"
-        >
-          <input
-            key={activeTab?.id}
-            ref={inputRef}
-            type="text"
-            value={draft ?? ''}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder={
-              draft === null && typed
-                ? `${typed}▍`
-                : (activeTab?.placeholder ?? '')
-            }
-            aria-label={activeTab?.placeholder}
-            className="sv-meta min-w-0 flex-1 bg-transparent text-[16px] text-white placeholder:text-white/45 focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="sv-press inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[15px] font-semibold text-white hover:bg-[var(--sv-iris-deep)]"
-          >
-            <Sparkles size={16} aria-hidden />
-            {ctaLabel}
-          </button>
-        </form>
-
-        {/* Trust line */}
-        <ul className="mt-4 flex flex-wrap items-center gap-2">
-          {trust.map((t) => (
-            <li
-              key={t}
-              className="rounded-full border border-white/15 px-3 py-1 text-[11.5px] text-white/70"
-            >
-              {t}
-            </li>
-          ))}
-        </ul>
-
-        {/* Example chips — one tap fills the prompt bar so the tool works on this page */}
-        <div className="mt-3 flex max-w-[640px] flex-wrap items-center justify-center gap-2">
-          <span className="sv-meta text-[11.5px] text-white/50">
-            {examplesLabel}
-          </span>
-          {promptExamples.map((example) => (
-            <button
-              key={example}
-              type="button"
-              title={example}
-              onClick={() => {
-                setDraft(example);
-                inputRef.current?.focus();
-              }}
-              className="max-w-[240px] truncate rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[11.5px] text-white/70 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
-            >
-              {example}
-            </button>
-          ))}
-        </div>
+        {/* Generator — mode tabs, prompt bar and the in-place render preview */}
+        <LandingGenerator
+          tabs={tabs}
+          promptExamples={promptExamples}
+          examplesLabel={examplesLabel}
+          generateLabel={ctaLabel}
+          trust={trust}
+          stages={stages}
+          readyLabel={readyLabel}
+          againLabel={againLabel}
+          keepLabel={keepLabel}
+          demoNote={demoNote}
+          playLabel={playLabel}
+          pauseLabel={pauseLabel}
+          assets={assets}
+          onSignUp={onSignUp}
+        />
 
         {/* Gallery */}
         <div className="mt-12 grid w-full grid-cols-2 gap-3 sm:grid-cols-4 lg:mt-16 lg:gap-4">

@@ -119,15 +119,22 @@ export function useCountUp(target: number, start: boolean, duration = 1400) {
 
 /**
  * Typewriter that cycles through phrases: types, holds, deletes, next.
- * Collapses to phrases[0] under prefers-reduced-motion.
+ * Collapses to phrases[0] under prefers-reduced-motion. Set `active: false`
+ * to freeze the cycle once the visitor has typed — stops the 55ms re-renders.
  */
 export function useTypewriter(
   phrases: string[],
   {
+    active = true,
     typeMs = 55,
     holdMs = 2100,
     eraseMs = 24,
-  }: { typeMs?: number; holdMs?: number; eraseMs?: number } = {}
+  }: {
+    active?: boolean;
+    typeMs?: number;
+    holdMs?: number;
+    eraseMs?: number;
+  } = {}
 ) {
   const [text, setText] = useState('');
   // Props arrays get a new identity every render; key the effect on content.
@@ -136,6 +143,7 @@ export function useTypewriter(
   const key = phrases.join('\u0000');
 
   useEffect(() => {
+    if (!active) return;
     const list = key.split('\u0000').filter(Boolean);
     if (list.length === 0) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -170,7 +178,7 @@ export function useTypewriter(
     };
     timer = setTimeout(step, 500);
     return () => clearTimeout(timer);
-  }, [key, typeMs, holdMs, eraseMs]);
+  }, [key, active, typeMs, holdMs, eraseMs]);
 
   return text;
 }
