@@ -1315,8 +1315,8 @@
   "lp.hero.style": "Style",
   "lp.hero.fast": "Fast",
   "lp.hero.paywall_title": "Unlock your generation",
-  "lp.hero.paywall_desc": "Generation runs on credits. Pick a plan to keep generating — no sign-up needed.",
-  "lp.hero.paywall_note": "Pay as a guest — credits land instantly and your prompt waits right here on this page.",
+  "lp.hero.paywall_desc": "Generation runs on credits. Pick a plan — your generation continues automatically after payment.",
+  "lp.hero.paywall_note": "Pay as a guest, no sign-up. Leave an email above and the finished video/image will also be sent there.",
   "lp.hero.examples_label": "Try one:",
   "lp.hero.trust_1": "25 PavoAI starter credits",
   "lp.hero.trust_2": "No card required",
@@ -1618,5 +1618,9 @@
   "lp.guide.b4": "Teams use PavoAI as their AI video generator for ads, social clips, product pages and pitch videos. Start with 25 starter PavoAI credits and no card; top up once, from $15, when a project needs volume. Credits never expire, so the balance you buy this quarter still ships next quarter.",
   "lp.hero.pe1": "A neon coupe drifting through rainy Tokyo at night",
   "lp.hero.pe2": "Slow push-in on a perfume bottle, gold splash frozen",
-  "lp.hero.pe3": "Anime rooftop at sunset, wind in her hair"
+  "lp.hero.pe3": "Anime rooftop at sunset, wind in her hair",
+  "lp.hero.paywall_email_label": "Email your result to (optional)",
+  "lp.hero.paywall_email_placeholder": "you@example.com",
+  "lp.gen.mail_subject": "Your {app} generation is ready",
+  "lp.gen.mail_body": "Hi there,\n\nYour generation just finished.\n\nPrompt: {prompt}\n\nView / download it here:\n{url}\n\n— {app}"
 }

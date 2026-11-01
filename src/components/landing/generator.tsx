@@ -80,11 +80,14 @@ export interface LandingGeneratorProps {
   pauseLabel: string;
   onSignUp?: (prompt: string, tabId: string) => void;
   /**
-   * Ensures the visitor has a session before generating — the block silently
-   * signs in an anonymous guest so generation never requires registration.
-   * Return false to abort the run quietly.
+   * Gate before the first attempt: the block opens an anonymous session for
+   * brand-new visitors and sends them straight to the paywall (guests start
+   * with 0 credits) — return 'blocked' to stop the run, 'run' to proceed.
    */
-  ensureSession?: () => Promise<boolean>;
+  onFirstGenerate?: (
+    prompt: string,
+    tabId: string
+  ) => Promise<'run' | 'blocked'>;
   /**
    * Called when generation is blocked by auth (401) or credits (402) — the
    * block opens the paywall panel instead of surfacing an error.
@@ -109,12 +112,36 @@ const ASPECT_WRAP: Record<string, string> = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Parks the prompt while the visitor pays, so it survives the redirect. */
+/**
+ * Parks the run while the visitor pays, so it survives the checkout
+ * redirect: the prompt is restored into the box and, when `auto` is set
+ * (the run was interrupted by the paywall), generation resumes on its own.
+ * `email` is the optional delivery address left in the paywall.
+ */
 const PENDING_GEN_KEY = 'pavoai:pending-gen';
-function parkPendingGen(prompt: string, tabId: string) {
+
+export interface PendingGeneration {
+  prompt: string;
+  tabId: string;
+  email?: string;
+  auto?: boolean;
+}
+
+export function parkPendingGen(pending: PendingGeneration) {
   try {
-    sessionStorage.setItem(PENDING_GEN_KEY, JSON.stringify({ prompt, tabId }));
+    sessionStorage.setItem(PENDING_GEN_KEY, JSON.stringify(pending));
   } catch {}
+}
+
+export function readPendingGen(): PendingGeneration | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_GEN_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PendingGeneration;
+    return parsed && typeof parsed.prompt === 'string' ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Toolbar chip group — option list with one active id (aspect/quality). */
@@ -174,7 +201,7 @@ export function LandingGenerator({
   playLabel,
   pauseLabel,
   onSignUp,
-  ensureSession,
+  onFirstGenerate,
   onPaywall,
 }: LandingGeneratorProps) {
   const [activeId, setActiveId] = useState(tabs[0]?.id ?? '');
@@ -213,6 +240,11 @@ export function LandingGenerator({
   // Bumped per run: stale polls from an earlier (or unmounted) run give up.
   const runIdRef = useRef(0);
   const mountedRef = useRef(true);
+  // Optional delivery address from the paywall; consumed when a run completes.
+  const deliverEmailRef = useRef('');
+  // One 402 retry for auto-resumed runs: credits land via webhook a beat
+  // after the payment redirect.
+  const autoRetriedRef = useRef(false);
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? tabs[0];
   const activeModelId = modelByTab[activeTab?.id ?? ''] ?? '';
@@ -230,19 +262,27 @@ export function LandingGenerator({
     };
   }, []);
 
-  // Restore a prompt parked by the paywall flow: after paying, checkout
-  // redirects back here and the visitor finds their prompt back in the box.
+  // Restore a run parked by the paywall: after paying, checkout redirects
+  // back here — the prompt returns to the box, and when the run was
+  // interrupted by the paywall (auto) generation resumes on its own.
   useEffect(() => {
+    const pending = readPendingGen();
+    if (!pending) return;
     try {
-      const raw = sessionStorage.getItem(PENDING_GEN_KEY);
-      if (!raw) return;
       sessionStorage.removeItem(PENDING_GEN_KEY);
-      const pending = JSON.parse(raw) as { prompt?: string; tabId?: string };
-      if (pending.prompt && tabs.some((t) => t.id === pending.tabId)) {
-        setActiveId(String(pending.tabId));
-        setDraft(pending.prompt);
-      }
     } catch {}
+    if (!pending.prompt || !tabs.some((t) => t.id === pending.tabId)) return;
+    setActiveId(pending.tabId);
+    setDraft(pending.prompt);
+    if (pending.email) deliverEmailRef.current = pending.email;
+    if (pending.auto) {
+      autoRetriedRef.current = false;
+      // A tick for the restored draft to settle, then roll.
+      window.setTimeout(
+        () => startRun(pending.prompt, pending.tabId, true),
+        700
+      );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -303,13 +343,21 @@ export function LandingGenerator({
     }
   }, [phase]);
 
-  const startRun = async (prompt: string, tabId: string) => {
+  const startRun = async (
+    prompt: string,
+    tabId: string,
+    auto = false
+  ): Promise<void> => {
     const tab = tabs.find((t) => t.id === tabId);
     if (!tab || phase === 'rendering') return;
 
-    // Guests generate without registering: the block opens an anonymous
-    // session first. If that fails, stop quietly (no error surface).
-    if (ensureSession && !(await ensureSession())) return;
+    // First-generate gate: the block signs in an anonymous guest and, for
+    // brand-new visitors (0 credits by design), opens the paywall directly —
+    // no wasted API round trip, no error surface.
+    if (onFirstGenerate) {
+      const gate = await onFirstGenerate(prompt, tabId);
+      if (gate === 'blocked') return;
+    }
 
     const modelId = modelByTab[tabId] || tab.models[0]?.id || '';
     const model = tab.models.find((m) => m.id === modelId)?.label ?? modelId;
@@ -336,13 +384,16 @@ export function LandingGenerator({
 
     const stale = () => runIdRef.current !== runId || !mountedRef.current;
 
-    try {
+    // Create the task, poll it to completion, then mail the result if the
+    // visitor left a delivery address in the paywall.
+    const attempt = async (): Promise<void> => {
       const { taskId } = await apiPost<{ taskId: string }>('/api/ai/generate', {
         prompt,
         model: modelId,
         aspect: aspectId ?? '16:9',
         quality: qualityByTab[tabId] ?? '',
         fast: fastOn,
+        email: deliverEmailRef.current || undefined,
       });
       if (stale()) return;
 
@@ -361,28 +412,55 @@ export function LandingGenerator({
           setResult((prev) => (prev ? { ...prev, url: st.url } : prev));
           setProgress(100);
           setPhase('done');
+
+          // Optional email delivery (best-effort, never blocks the result).
+          const deliverTo = deliverEmailRef.current;
+          if (deliverTo) {
+            deliverEmailRef.current = '';
+            apiPost('/api/ai/deliver', { taskId, email: deliverTo }).catch(
+              () => {}
+            );
+          }
           return;
         }
         if (st.status === 'failed') {
           throw new Error(st.error || 'Generation failed');
         }
       }
-    } catch (error: any) {
+    };
+
+    const blocked = (error: unknown): error is ApiError =>
+      error instanceof ApiError && (error.code === 401 || error.code === 402);
+
+    try {
+      await attempt();
+    } catch (error) {
       if (stale()) return;
+      // Auto-resumed runs get one retry: the payment webhook can land a beat
+      // after the checkout redirect, which surfaces as a transient 402. Wait
+      // past the create-rate window (10s) or the retry just eats a 429.
+      if (auto && !autoRetriedRef.current && blocked(error)) {
+        autoRetriedRef.current = true;
+        await sleep(11000);
+        if (stale()) return;
+        try {
+          await attempt();
+          return;
+        } catch (retryError) {
+          if (stale()) return;
+          error = retryError;
+        }
+      }
       setPhase('idle');
       setResult(null);
       setProgress(0);
       // Paid generation: 401 (no session) and 402 (no credits) both open the
       // paywall panel — never an error toast, never a redirect away.
-      if (
-        error instanceof ApiError &&
-        (error.code === 401 || error.code === 402)
-      ) {
-        parkPendingGen(prompt, tabId);
+      if (blocked(error)) {
         onPaywall?.(prompt, tabId);
         return;
       }
-      toast.error(error?.message || 'Generation failed');
+      toast.error((error as any)?.message || 'Generation failed');
     }
   };
 

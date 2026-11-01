@@ -28,6 +28,7 @@ import { respData, respErr, respJson } from '@/lib/resp';
  */
 
 const PROMPT_MAX = 2000;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TASK_ID_MAX = 64;
 const CREATE_INTERVAL_MS = 10_000;
 const POLL_INTERVAL_MS = 1_000;
@@ -81,6 +82,12 @@ async function POST({ request }: { request: Request }) {
     if (prompt.length > PROMPT_MAX)
       return respErr(`Prompt must be at most ${PROMPT_MAX} characters`);
 
+    // Optional delivery address the visitor left in the paywall (optional
+    // field; the finished media is mailed there once the task completes).
+    const emailRaw = typeof body.email === 'string' ? body.email.trim() : '';
+    const email =
+      emailRaw.length <= 200 && EMAIL_RE.test(emailRaw) ? emailRaw : '';
+
     // Look the model up in the server catalog; never trust the client string
     // (the price comes with it, not from the request).
     const entry = EVO_MODELS[String(body.model)];
@@ -123,7 +130,12 @@ async function POST({ request }: { request: Request }) {
         quality,
         fast,
       });
-      await attachTaskInfo(task.id, { evoTaskId: evoTask.taskId });
+      await attachTaskInfo(
+        task.id,
+        email
+          ? { evoTaskId: evoTask.taskId, guestEmail: email }
+          : { evoTaskId: evoTask.taskId }
+      );
     } catch (error: any) {
       await updateTask({
         taskId: task.id,

@@ -1,4 +1,4 @@
-import { Check, Loader2, Sparkles } from 'lucide-react';
+import { Check, Loader2, Mail, Sparkles } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import {
@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 export interface PaywallPlan {
   id: string;
@@ -31,6 +32,11 @@ export interface PaywallDialogProps {
   onCheckout: (planId: string) => void;
   /** Plan id currently starting a checkout (shows a spinner on that row). */
   processingId?: string | null;
+  /** Optional delivery address: the finished media is mailed there. */
+  emailLabel: string;
+  emailPlaceholder: string;
+  email: string;
+  onEmailChange: (value: string) => void;
 }
 
 /**
@@ -47,6 +53,10 @@ export function PaywallDialog({
   plans,
   onCheckout,
   processingId,
+  emailLabel,
+  emailPlaceholder,
+  email,
+  onEmailChange,
 }: PaywallDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,6 +72,25 @@ export function PaywallDialog({
           </DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+
+        {/* Optional delivery address — where the finished media is sent */}
+        <label className="mt-3 block">
+          <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-white/80">
+            <Mail
+              size={13}
+              className="text-[var(--sv-iris-bright)]"
+              aria-hidden
+            />
+            {emailLabel}
+          </span>
+          <Input
+            type="email"
+            value={email}
+            placeholder={emailPlaceholder}
+            onChange={(e) => onEmailChange(e.target.value)}
+            className="mt-1.5 h-10 rounded-xl border-white/15 bg-white/[0.05] text-[13.5px] text-white placeholder:text-white/35 focus-visible:ring-[var(--sv-iris)]"
+          />
+        </label>
 
         <div className="mt-2 flex flex-col gap-2.5">
           {plans.map((plan) => {

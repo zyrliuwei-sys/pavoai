@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useSession } from '@/core/auth/client';
+import { authClient, useSession } from '@/core/auth/client';
 import { useRouter } from '@/core/i18n/navigation';
 import { apiPost } from '@/lib/api-client';
 import { currentPathWithQuery } from '@/lib/redirect';
@@ -277,9 +277,11 @@ export function usePricingCheckout({
   }
 
   async function handleCheckout(plan: PricingPlan) {
-    if (!session?.user) {
-      // Anonymous visitors get a guest session from the landing generator,
-      // but anyone hitting checkout without one still lands on sign-in.
+    // Fresh session check: the cached useSession snapshot can lag behind a
+    // just-created anonymous session (landing paywall) and would wrongly
+    // bounce a paying guest to the sign-in page.
+    const fresh = await authClient.getSession();
+    if (!fresh.data?.user && !session?.user) {
       const callbackUrl = encodeURIComponent(currentPathWithQuery('/pricing'));
       router.push(`/sign-in?callbackUrl=${callbackUrl}`);
       return;

@@ -1315,8 +1315,8 @@
   "lp.hero.style": "风格",
   "lp.hero.fast": "极速",
   "lp.hero.paywall_title": "解锁生成",
-  "lp.hero.paywall_desc": "生成消耗积分。选择套餐继续生成——无需注册登录。",
-  "lp.hero.paywall_note": "支持访客支付——积分即时到账,提示词已保留在本页,支付回来即可继续生成。",
+  "lp.hero.paywall_desc": "生成消耗积分。选择套餐,支付完成后自动继续生成。",
+  "lp.hero.paywall_note": "访客支付,无需注册。上方填写邮箱后,完成的视频/图片还会发送到该邮箱。",
   "lp.hero.examples_label": "试一个:",
   "lp.hero.trust_1": "25 个 PavoAI 新人积分",
   "lp.hero.trust_2": "无需绑卡",
@@ -1618,5 +1618,9 @@
   "lp.guide.b4": "团队把 PavoAI 当作广告、社交短视频、产品页和提案视频的 AI 视频生成器。25 新人积分开跑,不用绑卡;需要量的时候 $15 起一次性充值。积分永不过期,这季度买的余额,下季度照样出片。",
   "lp.hero.pe1": "霓虹跑车在雨夜东京街头漂移",
   "lp.hero.pe2": "香水特写缓缓推近,金色飞溅定格",
-  "lp.hero.pe3": "黄金日落下的动画天台,发丝随风"
+  "lp.hero.pe3": "黄金日落下的动画天台,发丝随风",
+  "lp.hero.paywall_email_label": "成片发送到邮箱(可选)",
+  "lp.hero.paywall_email_placeholder": "you@example.com",
+  "lp.gen.mail_subject": "你的 {app} 生成结果已就绪",
+  "lp.gen.mail_body": "你好,\n\n你的生成刚完成。\n\n提示词:{prompt}\n\n查看 / 下载成片:\n{url}\n\n— {app}"
 }

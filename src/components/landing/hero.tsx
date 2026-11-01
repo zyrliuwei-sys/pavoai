@@ -26,8 +26,11 @@ export interface LandingHeroProps {
   ctaLabel: string;
   /** Called with the finished prompt + mode from the result card CTA. */
   onSignUp?: (prompt: string, tabId: string) => void;
-  /** See LandingGeneratorProps — guest session + paywall hooks. */
-  ensureSession?: () => Promise<boolean>;
+  /** See LandingGeneratorProps — first-generate gate + paywall hook. */
+  onFirstGenerate?: (
+    prompt: string,
+    tabId: string
+  ) => Promise<'run' | 'blocked'>;
   onPaywall?: (prompt: string, tabId: string) => void;
   trust: string[];
   /** Generator composer labels (toggles). */
@@ -60,7 +63,7 @@ export function LandingHero({
   examplesLabel,
   ctaLabel,
   onSignUp,
-  ensureSession,
+  onFirstGenerate,
   onPaywall,
   trust,
   styleLabel,
@@ -133,7 +136,7 @@ export function LandingHero({
           playLabel={playLabel}
           pauseLabel={pauseLabel}
           onSignUp={onSignUp}
-          ensureSession={ensureSession}
+          onFirstGenerate={onFirstGenerate}
           onPaywall={onPaywall}
         />
 

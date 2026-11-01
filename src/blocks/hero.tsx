@@ -1,11 +1,18 @@
 import { useState } from 'react';
 
-import { authClient, useSession } from '@/core/auth/client';
+import { authClient } from '@/core/auth/client';
 import { useRouter } from '@/core/i18n/navigation';
 import { m } from '@/paraglide/messages.js';
 import { usePricingCheckout, usePricingGroups } from '@/blocks/pricing';
+import {
+  parkPendingGen,
+  readPendingGen,
+  type PendingGeneration,
+} from '@/components/landing/generator';
 import { LandingHero } from '@/components/landing/hero';
 import { PaywallDialog } from '@/components/landing/paywall-dialog';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const MODELS = [
   'Veo 3.1',
@@ -72,9 +79,10 @@ const IMAGE_QUALITIES = [
  */
 export function Hero() {
   const router = useRouter();
-  const { data: session } = useSession();
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
+  // Optional delivery address from the paywall (where results are mailed).
+  const [paywallEmail, setPaywallEmail] = useState('');
 
   // Paywall plans come from the shared pricing grid (monthly group).
   const groups = usePricingGroups();
@@ -84,19 +92,42 @@ export function Hero() {
     redirect: '/',
   });
 
-  // Visitors generate without registering: silently open an anonymous
-  // session on first Generate (better-auth anonymous plugin).
-  const ensureSession = async () => {
-    if (session?.user) return true;
-    const { data, error } = await authClient.signIn.anonymous();
-    return !error && !!data?.user;
+  // Brand-new visitors go straight to the paywall: they have no session,
+  // and guests intentionally start with 0 credits — calling the API first
+  // would only produce a guaranteed 402. An anonymous session is opened
+  // (silently, fresh-checked) so checkout works without registration.
+  const onFirstGenerate = async (
+    prompt: string,
+    tabId: string
+  ): Promise<'run' | 'blocked'> => {
+    const fresh = await authClient.getSession();
+    if (fresh.data?.user) return 'run';
+    const { error } = await authClient.signIn.anonymous();
+    if (error) return 'run'; // let the API path handle it (401 → paywall)
+    parkPendingGen({ prompt, tabId, auto: true });
+    setPaywallOpen(true);
+    return 'blocked';
   };
 
-  const openPaywall = () => setPaywallOpen(true);
+  // 401/402 mid-run (e.g. credits ran out): park the run and re-show the
+  // paywall — generation auto-resumes after payment.
+  const openPaywall = (prompt: string, tabId: string) => {
+    parkPendingGen({ prompt, tabId, auto: true });
+    setPaywallOpen(true);
+  };
 
   const onPaywallCheckout = async (planId: string) => {
     const plan = monthlyPlans.find((p) => p.id === planId);
     if (!plan) return;
+    // Merge the optional delivery email into the parked run before paying.
+    const pending = readPendingGen();
+    if (pending) {
+      const email = paywallEmail.trim();
+      parkPendingGen({
+        ...pending,
+        email: EMAIL_RE.test(email) ? email : '',
+      });
+    }
     setProcessingPlanId(planId);
     try {
       await handleCheckout(plan);
@@ -147,7 +178,7 @@ export function Hero() {
             qualities: IMAGE_QUALITIES,
           },
         ]}
-        ensureSession={ensureSession}
+        onFirstGenerate={onFirstGenerate}
         onPaywall={openPaywall}
         ctaLabel={m['lp.hero.cta']()}
         examplesLabel={m['lp.hero.examples_label']()}
@@ -210,6 +241,10 @@ export function Hero() {
         }))}
         onCheckout={onPaywallCheckout}
         processingId={processingPlanId}
+        emailLabel={m['lp.hero.paywall_email_label']()}
+        emailPlaceholder={m['lp.hero.paywall_email_placeholder']()}
+        email={paywallEmail}
+        onEmailChange={setPaywallEmail}
       />
       {providerModal}
     </>
