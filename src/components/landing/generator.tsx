@@ -491,20 +491,20 @@ export function LandingGenerator({
             {refs.map((r) => (
               <span
                 key={r.id}
-                className="group relative h-9 w-9 overflow-hidden rounded-lg ring-1 ring-white/15"
+                className="relative h-9 w-9 rounded-lg ring-1 ring-white/15"
               >
                 <img
                   src={r.url}
                   alt=""
-                  className="h-full w-full object-cover"
+                  className="h-full w-full rounded-lg object-cover"
                 />
                 <button
                   type="button"
                   aria-label="Remove"
                   onClick={() => removeRef(r.id)}
-                  className="absolute inset-0 flex items-center justify-center bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute -top-1.5 -right-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-black/75 text-white ring-1 ring-white/30 transition-colors hover:bg-black"
                 >
-                  <X size={13} aria-hidden />
+                  <X size={10} aria-hidden />
                 </button>
               </span>
             ))}

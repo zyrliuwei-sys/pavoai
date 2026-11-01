@@ -1,6 +1,8 @@
 import type { ComponentType } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
+import { getAuth } from '@/core/auth';
+import { hasPermission } from '@/modules/rbac/service';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
 
@@ -55,8 +57,21 @@ function OpsPlaybookPage() {
   );
 }
 
+// Internal admin knowledge base. The doc is bundled at build time, so SSR
+// would ship it to anyone unless the route itself gates server-side — the
+// admin layout's permission check only runs client-side. Same session +
+// permission checks the admin APIs use.
 export const Route = createFileRoute('/admin/ops-playbook')({
-  loader: (): LoaderData => {
+  loader: async ({ request }): Promise<LoaderData> => {
+    const auth = getAuth();
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session?.user) {
+      throw redirect({ href: '/sign-in' });
+    }
+    const allowed = await hasPermission(session.user.id, 'admin.*');
+    if (!allowed) {
+      throw redirect({ href: '/settings' });
+    }
     const locale = getLocale();
     const doc = loadDoc(locale);
     return { title: doc?.meta.title ?? m['admin.ops_playbook.title']() };
