@@ -74,7 +74,7 @@ const IMAGE_QUALITIES = [
 ];
 
 /**
- * Hero — the PavoAI opening section: headline and the interactive generator
+ * Hero — the Pavo AI opening section: headline and the interactive generator
  * (mode tabs, prompt bar, in-place render preview) over video tiles.
  */
 export function Hero() {

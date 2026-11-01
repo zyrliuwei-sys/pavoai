@@ -48,7 +48,7 @@ const ITEMS = [
 ] as const;
 
 /**
- * Gallery — masonry of clips "made on PavoAI", with model tags.
+ * Gallery — masonry of clips "made on Pavo AI", with model tags.
  */
 export function Gallery() {
   return (

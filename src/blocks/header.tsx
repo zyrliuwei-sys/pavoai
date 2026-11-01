@@ -3,7 +3,7 @@ import { m } from '@/paraglide/messages.js';
 import { LandingNav } from '@/components/landing/nav';
 
 /**
- * Site header — wraps the PavoAI landing nav with i18n content.
+ * Site header — wraps the Pavo AI landing nav with i18n content.
  * Used by the homepage, /pricing and /blog routes.
  */
 export function Header() {

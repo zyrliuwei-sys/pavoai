@@ -3,7 +3,7 @@ import { m } from '@/paraglide/messages.js';
 import { LandingComparison } from '@/components/landing/comparison';
 
 /**
- * Comparison — 15 subscriptions vs one PavoAI balance.
+ * Comparison — 15 subscriptions vs one Pavo AI balance.
  */
 export function Comparison() {
   return (

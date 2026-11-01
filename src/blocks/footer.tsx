@@ -12,7 +12,7 @@ import { m } from '@/paraglide/messages.js';
 import { LandingFooter } from '@/components/landing/footer';
 
 /**
- * Site footer — wraps the PavoAI landing footer with i18n content.
+ * Site footer — wraps the Pavo AI landing footer with i18n content.
  * Used by the homepage, /pricing and /blog routes.
  */
 export function Footer() {

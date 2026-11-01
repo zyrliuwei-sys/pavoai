@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Font families — PavoAI brand stack:
+/* Font families — Pavo AI brand stack:
    display: Anton (Latin) / Noto Sans SC (CJK) — cinema-poster headings
    body:    Inter Tight / Noto Sans SC
    mono:    IBM Plex Mono — timecodes & camera metadata only */
@@ -65,7 +65,7 @@
 }
 
 @layer base {
-  /* PavoAI brand palette — "night stage / paper spec".
+  /* Pavo AI brand palette — "night stage / paper spec".
      Iris: desaturated peacock teal, the single programmatic accent.
      Gold: warm feather-eye highlight, reserved for live markers only. */
   :root {
@@ -435,7 +435,7 @@
 }
 
 /* ---------------------------------------------------------------------------
- * PavoAI landing design system — extracted from kenerateai.com
+ * Pavo AI landing design system — extracted from kenerateai.com
  * Night sections (#05060a) alternate with white sections; blue-500 accent.
  * ------------------------------------------------------------------------- */
 :root {

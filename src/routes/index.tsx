@@ -20,7 +20,7 @@ import { UseCases } from '@/blocks/use-cases';
 import { WhatsNew } from '@/blocks/whats-new';
 
 /**
- * PavoAI landing page — pure composition of i18n blocks.
+ * Pavo AI landing page — pure composition of i18n blocks.
  * Section rhythm mirrors the reference design: dark → white alternating.
  */
 function HomePage() {
