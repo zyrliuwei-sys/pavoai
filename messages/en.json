@@ -330,6 +330,7 @@
   "admin.stats.open_tickets_hint": "Awaiting reply",
   "admin.nav.agent": "Agent API",
   "admin.ops_playbook.title": "AI Refined Operations Playbook",
+  "admin.ops_playbook.denied": "Sign in as an admin to read this playbook.",
   "admin.nav.ops_playbook": "Ops Playbook",
   "admin.agent.title": "Agent API",
   "admin.agent.description": "Let agents operate this admin panel through Skills or MCP.",

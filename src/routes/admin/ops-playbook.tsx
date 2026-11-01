@@ -1,83 +1,66 @@
-import type { ComponentType } from 'react';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
 
-import { getAuth } from '@/core/auth';
-import { hasPermission } from '@/modules/rbac/service';
+import { apiGet } from '@/lib/api-client';
 import { m } from '@/paraglide/messages.js';
-import { getLocale } from '@/paraglide/runtime.js';
+import { MarkdownContent, markdownStyles } from '@/components/markdown-content';
 
-type DocModule = {
-  default: ComponentType;
-  meta: { title?: string; description?: string; updated_at?: string };
+type OpsDoc = {
+  title: string;
+  description: string;
+  updated_at: string;
+  markdown: string;
 };
 
-// Internal admin knowledge base (not public content) — gated by the admin
-// layout's `admin.*` permission check, so no extra permission code here.
-const docs = import.meta.glob<DocModule>('/src/content/admin/*.mdx', {
-  eager: true,
-});
-
-function loadDoc(locale: string): DocModule | null {
-  return (
-    docs[`/src/content/admin/ops-playbook.${locale}.mdx`] ??
-    docs['/src/content/admin/ops-playbook.mdx'] ??
-    null
-  );
-}
-
-type LoaderData = { title: string };
-
 function OpsPlaybookPage() {
-  const locale = getLocale();
-  const doc = loadDoc(locale);
-  if (!doc) return null;
-  const Content = doc.default;
+  const {
+    data: doc,
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ['admin-ops-playbook'],
+    queryFn: () => apiGet<OpsDoc>('/api/admin/ops-playbook'),
+    // Content only changes on deploy; no need to refetch.
+    staleTime: Infinity,
+    retry: false,
+  });
 
   return (
     <article>
       <header className="border-border mb-6 border-b pb-5">
         <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
-          {doc.meta.title ?? m['admin.ops_playbook.title']()}
+          {doc?.title ?? m['admin.ops_playbook.title']()}
         </h1>
-        {doc.meta.description ? (
+        {doc?.description ? (
           <p className="text-muted-foreground mt-2 text-sm">
-            {doc.meta.description}
+            {doc.description}
           </p>
         ) : null}
-        {doc.meta.updated_at ? (
+        {doc?.updated_at ? (
           <p className="text-muted-foreground mt-2 text-xs">
-            {m['common.pages.last_updated']()}: {doc.meta.updated_at}
+            {m['common.pages.last_updated']()}: {doc.updated_at}
           </p>
         ) : null}
       </header>
-      <div className="text-foreground/90 [&_img]:ring-border text-[15px] leading-7 [&_img]:rounded-lg [&_img]:ring-1">
-        <Content />
-      </div>
+
+      {isPending ? (
+        <p className="text-muted-foreground text-sm">Loading…</p>
+      ) : isError ? (
+        <p className="text-muted-foreground text-sm">
+          {m['admin.ops_playbook.denied']()}
+        </p>
+      ) : (
+        <div className={markdownStyles}>
+          <MarkdownContent content={doc.markdown} />
+        </div>
+      )}
     </article>
   );
 }
 
-// Internal admin knowledge base. The doc is bundled at build time, so SSR
-// would ship it to anyone unless the route itself gates server-side — the
-// admin layout's permission check only runs client-side. Same session +
-// permission checks the admin APIs use.
 export const Route = createFileRoute('/admin/ops-playbook')({
-  loader: async ({ request }): Promise<LoaderData> => {
-    const auth = getAuth();
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session?.user) {
-      throw redirect({ href: '/sign-in' });
-    }
-    const allowed = await hasPermission(session.user.id, 'admin.*');
-    if (!allowed) {
-      throw redirect({ href: '/settings' });
-    }
-    const locale = getLocale();
-    const doc = loadDoc(locale);
-    return { title: doc?.meta.title ?? m['admin.ops_playbook.title']() };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData ? [{ title: loaderData.title }] : [],
+  head: () => ({
+    meta: [{ title: m['admin.ops_playbook.title']() }],
   }),
   component: OpsPlaybookPage,
 });
