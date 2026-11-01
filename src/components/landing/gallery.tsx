@@ -20,11 +20,18 @@ export interface LandingGalleryProps {
   cta: { label: string; href: string };
 }
 
+/** "aspect-[4/5]" or "4/5" → CSS aspect-ratio "4 / 5" (default 4/5). */
+function aspectRatioCss(aspect?: string): string {
+  const match = aspect?.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/);
+  return match ? `${match[1]} / ${match[2]}` : '4 / 5';
+}
+
 /** Intrinsic size matching the card aspect ratio, for CLS-free rendering. */
 function intrinsicSize(aspect?: string): { width: number; height: number } {
-  const [w, h] = (aspect ?? '4/5').split('/').map(Number);
+  const ratio = aspectRatioCss(aspect);
+  const [w, h] = ratio.split('/').map(Number);
   const width = 800;
-  return { width, height: Math.round((width * (h || 5)) / (w || 4)) };
+  return { width, height: Math.round((width * h) / w) };
 }
 
 export function LandingGallery({
@@ -55,7 +62,7 @@ export function LandingGallery({
               <figure
                 key={`${item.src}-${i}`}
                 className="sv-hover-lift group relative mb-4 break-inside-avoid overflow-hidden rounded-[16px] ring-1 ring-white/[0.07]"
-                style={{ aspectRatio: item.aspect ?? '4/5' }}
+                style={{ aspectRatio: aspectRatioCss(item.aspect) }}
               >
                 <img
                   src={item.src}

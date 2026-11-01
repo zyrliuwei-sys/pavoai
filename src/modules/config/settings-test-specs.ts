@@ -229,6 +229,25 @@ export const testSpecs: Record<string, TestSpec> = {
       },
     ],
   },
+  evolink: {
+    group: 'evolink',
+    fields: [
+      {
+        name: 'model',
+        label: 'Model',
+        type: 'text',
+        defaultValue: 'deepseek-v4.1-flash',
+        required: true,
+      },
+      {
+        name: 'prompt',
+        label: 'Prompt',
+        type: 'textarea',
+        defaultValue: 'Reply with a short greeting.',
+        required: true,
+      },
+    ],
+  },
   // Notify: no inputs. The settings group sends a sample paid order and a
   // sample ticket to every configured bot; channel groups test just that bot.
   notify_settings: { group: 'notify_settings', fields: [] },

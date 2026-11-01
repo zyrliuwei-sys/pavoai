@@ -141,6 +141,7 @@ export function isMaskedConfigValue(value: string): boolean {
 const ENDPOINT_SECRETS: Record<string, string[]> = {
   openai_base_url: ['openai_api_key'],
   anthropic_base_url: ['anthropic_api_key'],
+  evolink_base_url: ['evolink_api_key'],
   r2_endpoint: ['r2_secret_key'],
   telegram_api_base: ['telegram_bot_token'],
   notify_webhook_url: ['notify_webhook_token'],

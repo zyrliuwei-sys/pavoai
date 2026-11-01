@@ -207,6 +207,12 @@ export function getSettingGroups(): SettingGroup[] {
       tab: 'ai',
     },
     { name: 'fal', title: 'Fal', description: 'Fal AI API', tab: 'ai' },
+    {
+      name: 'evolink',
+      title: 'EvoLink',
+      description: 'EvoLink AI API (OpenAI-compatible, 170+ models)',
+      tab: 'ai',
+    },
 
     // Analytics
     {
@@ -1026,6 +1032,26 @@ export function getSettings(): Setting[] {
       type: 'password',
       placeholder: 'xxx',
       group: 'fal',
+      tab: 'ai',
+    },
+
+    // ─── AI / EvoLink ───────────────────────────────────────────────
+    {
+      name: 'evolink_base_url',
+      title: 'Base URL',
+      type: 'text',
+      placeholder: 'https://api.evolink.ai/v1',
+      tip: 'OpenAI-compatible endpoint; leave default unless you have a dedicated one',
+      group: 'evolink',
+      tab: 'ai',
+    },
+    {
+      name: 'evolink_api_key',
+      title: 'API Key',
+      type: 'password',
+      placeholder: 'xxx',
+      tip: 'Create a key at https://evolink.ai/dashboard/keys',
+      group: 'evolink',
       tab: 'ai',
     },
 
