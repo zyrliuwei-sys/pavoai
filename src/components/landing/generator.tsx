@@ -3,7 +3,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type KeyboardEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
 import {
   ArrowRight,
@@ -19,7 +19,9 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
+import { apiGet, apiPost } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { useTypewriter } from '@/components/landing/reveal';
 
@@ -40,25 +42,23 @@ export interface GeneratorTab {
   qualities: GeneratorOption[];
 }
 
-export interface GeneratorAsset {
-  /** Lowercase keywords (en + zh) matched against the prompt to theme the result. */
-  keywords: string[];
-  src: string;
-  poster?: string;
-  /** Fallback model badge when no model is picked; per-tab picks win. */
-  model: string;
-  /** Short spec hint, e.g. "0:08 · 640×360". */
-  meta?: string;
-}
-
 /** What a finished run produced, and from which settings. */
 interface RunResult {
-  asset: GeneratorAsset;
   prompt: string;
   tabId: string;
   model: string;
+  /** Generated media URL ("" while the task is still rendering). */
+  url: string;
   meta: string;
   aspectId?: string;
+}
+
+/** Task state returned by /api/ai/generate. */
+interface GenStatus {
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  url: string;
+  error: string;
 }
 
 export interface LandingGeneratorProps {
@@ -74,7 +74,7 @@ export interface LandingGeneratorProps {
   /** Toggle chips. */
   styleLabel: string;
   fastLabel: string;
-  /** Stage labels cycled while the render preview runs. */
+  /** Stage labels cycled while the render runs. */
   stages: string[];
   readyLabel: string;
   againLabel: string;
@@ -83,14 +83,11 @@ export interface LandingGeneratorProps {
   demoNote: string;
   playLabel: string;
   pauseLabel: string;
-  /** Demo results per tab id; keyword hits pick a themed match. */
-  assets: Record<string, GeneratorAsset[]>;
   onSignUp?: (prompt: string, tabId: string) => void;
 }
 
-/** Fake render duration: standard vs Fast mode. */
-const RENDER_MS = 4800;
-const RENDER_FAST_MS = 2200;
+/** Poll cadence for the generation task. */
+const POLL_MS = 2500;
 
 /** Max client-side reference images (matches the reference design's 6). */
 const MAX_REFS = 6;
@@ -107,38 +104,7 @@ const ASPECT_WRAP: Record<string, string> = {
   '1:1': 'max-w-[460px]',
 };
 
-/** djb2 — stable per prompt, so the same prompt always "renders" the same clip. */
-function hashPrompt(text: string): number {
-  let h = 5381;
-  for (let i = 0; i < text.length; i++) {
-    h = ((h << 5) + h + text.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h);
-}
-
-/** Keyword-scored pick: themed match when the prompt hits, deterministic otherwise. */
-function pickAsset(
-  pool: GeneratorAsset[],
-  prompt: string,
-  attempt: number
-): GeneratorAsset | undefined {
-  if (!pool || pool.length === 0) return undefined;
-  const lower = prompt.toLowerCase();
-  const hits = pool.map((asset, index) => ({
-    index,
-    score: asset.keywords.reduce(
-      (n, k) => n + (k && lower.includes(k.toLowerCase()) ? 1 : 0),
-      0
-    ),
-  }));
-  const best = Math.max(...hits.map((h) => h.score));
-  const candidates =
-    best > 0
-      ? hits.filter((h) => h.score === best).map((h) => h.index)
-      : hits.map((h) => h.index);
-  const seed = hashPrompt(prompt) + attempt;
-  return pool[candidates[seed % candidates.length]];
-}
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Toolbar chip group — option list with one active id (aspect/quality). */
 function ChipGroup({
@@ -178,8 +144,8 @@ function ChipGroup({
  * panel holding mode tabs, a multiline prompt, reference images and a
  * toolbar (model dropdown, aspect, quality, Style/Fast toggles) with a
  * large Generate button — then an in-place render preview that finishes
- * with a playable demo result. Pure component — all copy and assets arrive
- * via props from the hero block.
+ * with the real generated image/video. Pure component — all copy arrives
+ * via props from the hero block; only the generation API call lives here.
  */
 export function LandingGenerator({
   tabs,
@@ -198,7 +164,6 @@ export function LandingGenerator({
   demoNote,
   playLabel,
   pauseLabel,
-  assets,
   onSignUp,
 }: LandingGeneratorProps) {
   const [activeId, setActiveId] = useState(tabs[0]?.id ?? '');
@@ -238,8 +203,9 @@ export function LandingGenerator({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  // Bumped per run so regenerating the same prompt rotates the demo clip.
-  const attemptRef = useRef(0);
+  // Bumped per run: stale polls from an earlier (or unmounted) run give up.
+  const runIdRef = useRef(0);
+  const mountedRef = useRef(true);
 
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? tabs[0];
   const activeModelId = modelByTab[activeTab?.id ?? ''] ?? '';
@@ -248,6 +214,14 @@ export function LandingGenerator({
     activeTab?.models[0];
   const activeAspectId = aspectByTab[activeTab?.id ?? ''] ?? '';
   const activeQualityId = qualityByTab[activeTab?.id ?? ''] ?? '';
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      runIdRef.current += 1; // kills any in-flight poll loop
+    };
+  }, []);
 
   // Stop the demo audio when the generator unmounts and drop ref previews.
   const refsRef = useRef(refs);
@@ -278,33 +252,16 @@ export function LandingGenerator({
     };
   }, [modelsOpen]);
 
-  // Drive the fake render: eased 0→100, then flip to the result.
+  // Idle-time animation while the real task runs: creep toward ~90 so the
+  // bar always moves; server-side progress (set by the poll loop) can push
+  // past it, and completion snaps to 100.
   useEffect(() => {
     if (phase !== 'rendering') return;
-    const duration = fastOn ? RENDER_FAST_MS : RENDER_MS;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const t = window.setTimeout(() => {
-        setProgress(100);
-        setPhase('done');
-      }, 600);
-      return () => window.clearTimeout(t);
-    }
-    const t0 = performance.now();
     const timer = window.setInterval(() => {
-      const elapsed = performance.now() - t0;
-      // Ease-out: fast start, trickle near 100 like a real render queue.
-      const value = Math.min(
-        100,
-        Math.round(100 * (1 - Math.pow(1 - elapsed / duration, 2.4)))
-      );
-      setProgress(value);
-      if (value >= 100) {
-        window.clearInterval(timer);
-        setPhase('done');
-      }
-    }, 90);
+      setProgress((p) => Math.min(90, p + 0.8));
+    }, 400);
     return () => window.clearInterval(timer);
-  }, [phase, fastOn]);
+  }, [phase]);
 
   // Autoplay audio results once the run finishes (the Generate click is the
   // user gesture browsers need); fall back to the manual play button.
@@ -326,32 +283,73 @@ export function LandingGenerator({
     }
   }, [phase]);
 
-  const startRun = (prompt: string, tabId: string) => {
+  const startRun = async (prompt: string, tabId: string) => {
     const tab = tabs.find((t) => t.id === tabId);
-    const asset = pickAsset(assets[tabId] ?? [], prompt, attemptRef.current);
-    if (!asset) return;
-    attemptRef.current += 1;
-    audioRef.current?.pause();
-    setAudioPlaying(false);
-    const model =
-      tab?.models.find((m) => m.id === (modelByTab[tabId] ?? ''))?.label ??
-      asset.model;
-    const quality = tab?.qualities.find(
+    if (!tab || phase === 'rendering') return;
+
+    const modelId = modelByTab[tabId] || tab.models[0]?.id || '';
+    const model = tab.models.find((m) => m.id === modelId)?.label ?? modelId;
+    const quality = tab.qualities.find(
       (q) => q.id === (qualityByTab[tabId] ?? '')
     )?.label;
-    const meta = [asset.meta, quality, styleOn ? styleLabel : '']
+    const aspectId = aspectByTab[tabId] || undefined;
+    const meta = [
+      quality,
+      aspectId,
+      styleOn ? styleLabel : '',
+      fastOn ? fastLabel : '',
+    ]
       .filter(Boolean)
       .join(' · ');
-    setResult({
-      asset,
-      prompt,
-      tabId,
-      model,
-      meta,
-      aspectId: aspectByTab[tabId] || undefined,
-    });
+
+    runIdRef.current += 1;
+    const runId = runIdRef.current;
+    audioRef.current?.pause();
+    setAudioPlaying(false);
+    setResult({ prompt, tabId, model, url: '', meta, aspectId });
     setProgress(0);
     setPhase('rendering');
+
+    const stale = () => runIdRef.current !== runId || !mountedRef.current;
+
+    try {
+      const { taskId } = await apiPost<{ taskId: string }>('/api/ai/generate', {
+        prompt,
+        model: modelId,
+        aspect: aspectId ?? '16:9',
+        quality: qualityByTab[tabId] ?? '',
+        fast: fastOn,
+      });
+      if (stale()) return;
+
+      // Poll the task until it completes, fails, or a newer run takes over.
+      for (;;) {
+        await sleep(POLL_MS);
+        if (stale()) return;
+        const st = await apiGet<GenStatus>(
+          `/api/ai/generate?taskId=${encodeURIComponent(taskId)}`
+        );
+        if (stale()) return;
+
+        setProgress((p) => Math.max(p, st.progress));
+        if (st.status === 'completed') {
+          if (!st.url) throw new Error('Generation returned no result');
+          setResult((prev) => (prev ? { ...prev, url: st.url } : prev));
+          setProgress(100);
+          setPhase('done');
+          return;
+        }
+        if (st.status === 'failed') {
+          throw new Error(st.error || 'Generation failed');
+        }
+      }
+    } catch (error: any) {
+      if (stale()) return;
+      toast.error(error?.message || 'Generation failed');
+      setPhase('idle');
+      setResult(null);
+      setProgress(0);
+    }
   };
 
   const submit = () => {
@@ -368,6 +366,7 @@ export function LandingGenerator({
     setDraft(null); // tab placeholders differ; let the typewriter take over
     setModelsOpen(false);
     if (phase !== 'idle') {
+      runIdRef.current += 1; // cancel any in-flight run
       setPhase('idle');
       setResult(null);
       setProgress(0);
@@ -396,7 +395,7 @@ export function LandingGenerator({
     setRefs((list) => list.filter((r) => r.id !== id));
   };
 
-  const onTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const onTextareaKeyDown = (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (phase !== 'rendering') submit();
@@ -612,7 +611,8 @@ export function LandingGenerator({
             {styleLabel}
           </button>
 
-          {/* Fast toggle — really shortens the render preview */}
+          {/* Fast toggle — picks the provider's fast lane (model variant or
+              prompt priority) on the server. */}
           <button
             type="button"
             aria-pressed={fastOn}
@@ -665,14 +665,6 @@ export function LandingGenerator({
           >
             {phase === 'rendering' ? (
               <>
-                {result.asset.poster && !isAudioResult && (
-                  <img
-                    src={result.asset.poster}
-                    alt=""
-                    aria-hidden
-                    className="h-full w-full object-cover opacity-25 blur-[2px]"
-                  />
-                )}
                 <div className="sv-scan absolute inset-0" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
                   <span className="sv-meta rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[11px] text-white/75 backdrop-blur">
@@ -686,7 +678,7 @@ export function LandingGenerator({
                     {stageLabel}
                   </p>
                   <div className="text-[32px] leading-none font-semibold text-white tabular-nums">
-                    {progress}%
+                    {Math.round(progress)}%
                   </div>
                 </div>
                 <p className="sv-meta absolute inset-x-3 top-3 truncate rounded-full bg-black/50 px-2.5 py-1 text-[11px] text-white/70 backdrop-blur">
@@ -701,9 +693,8 @@ export function LandingGenerator({
               </>
             ) : result.tabId === 'video' ? (
               <video
-                key={result.asset.src}
-                src={result.asset.src}
-                poster={result.asset.poster}
+                key={result.url}
+                src={result.url}
                 controls
                 autoPlay
                 muted
@@ -713,7 +704,7 @@ export function LandingGenerator({
               />
             ) : result.tabId === 'image' ? (
               <img
-                src={result.asset.src}
+                src={result.url}
                 alt={result.prompt}
                 className="sv-kenburns h-full w-full object-cover"
                 style={{ '--sv-kb-d': '30s' } as CSSProperties}
@@ -723,7 +714,7 @@ export function LandingGenerator({
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-8">
                 <audio
                   ref={audioRef}
-                  src={result.asset.src}
+                  src={result.url}
                   loop
                   onPlay={() => setAudioPlaying(true)}
                   onPause={() => setAudioPlaying(false)}
@@ -793,7 +784,7 @@ export function LandingGenerator({
             )}
           </div>
 
-          {/* Caption row — actions + demo disclosure */}
+          {/* Caption row — actions + disclosure */}
           {phase === 'done' && (
             <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
               <p className="sv-meta text-[11px] text-white/40">{demoNote}</p>

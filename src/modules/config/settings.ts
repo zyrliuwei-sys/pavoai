@@ -210,7 +210,7 @@ export function getSettingGroups(): SettingGroup[] {
     {
       name: 'evolink',
       title: 'EvoLink',
-      description: 'EvoLink AI API (OpenAI-compatible, 170+ models)',
+      description: 'EvoLink AI API',
       tab: 'ai',
     },
 
@@ -1041,7 +1041,6 @@ export function getSettings(): Setting[] {
       title: 'Base URL',
       type: 'text',
       placeholder: 'https://api.evolink.ai/v1',
-      tip: 'OpenAI-compatible endpoint; leave default unless you have a dedicated one',
       group: 'evolink',
       tab: 'ai',
     },
@@ -1050,7 +1049,7 @@ export function getSettings(): Setting[] {
       title: 'API Key',
       type: 'password',
       placeholder: 'xxx',
-      tip: 'Create a key at https://evolink.ai/dashboard/keys',
+      tip: 'evolink.ai/dashboard/keys',
       group: 'evolink',
       tab: 'ai',
     },

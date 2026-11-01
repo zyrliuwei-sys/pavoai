@@ -4,7 +4,6 @@ import { Play, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   LandingGenerator,
-  type GeneratorAsset,
   type GeneratorTab,
 } from '@/components/landing/generator';
 
@@ -41,8 +40,6 @@ export interface LandingHeroProps {
   demoNote: string;
   playLabel: string;
   pauseLabel: string;
-  /** Demo results per tab id; keyword hits pick a themed match. */
-  assets: Record<string, GeneratorAsset[]>;
   tiles: HeroTile[];
   marquee: { title: string; models: string[]; pauseLabel: string };
 }
@@ -74,7 +71,6 @@ export function LandingHero({
   demoNote,
   playLabel,
   pauseLabel,
-  assets,
   tiles,
   marquee,
 }: LandingHeroProps) {
@@ -137,7 +133,6 @@ export function LandingHero({
           demoNote={demoNote}
           playLabel={playLabel}
           pauseLabel={pauseLabel}
-          assets={assets}
           onSignUp={onSignUp}
         />
 
