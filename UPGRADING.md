@@ -46,6 +46,16 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-02: Fix IndexNow submissions on Cloudflare Workers
+
+Take `src/modules/indexnow/service.ts` and `tests/indexnow.test.ts` together,
+then rebuild and redeploy the Worker. Workers rejects `redirect: 'error'`
+before any request leaves the server; the resulting exception was reported
+as a network error for every IndexNow endpoint. Submissions now use
+`redirect: 'manual'`, which is supported by Workers and keeps the ownership
+key from being forwarded to redirect targets. No database, key, or permission
+changes are needed.
+
 ## 2026-11-02: Distinct prices for monthly, annual and one-time purchases
 
 Take `src/config/pricing.ts` and the pricing regression tests together.

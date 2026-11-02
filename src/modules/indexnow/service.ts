@@ -141,7 +141,9 @@ export async function submitUrls(
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body,
-        redirect: 'error',
+        // Workers rejects redirect: 'error' before sending the request.
+        // Keep redirects manual so the key is never forwarded to another host.
+        redirect: 'manual',
         signal: AbortSignal.timeout(10_000),
       });
       status = response.status;

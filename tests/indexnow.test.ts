@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
@@ -186,7 +187,7 @@ test('submission deduplicates URLs, removes fragments, and stops after HTTP 202'
       assert.equal(body.host, 'indexnow.example.com');
       assert.equal(body.keyLocation, `${origin}/${key}.txt`);
       assert.deepEqual(body.urlList, [`${origin}/page`]);
-      assert.equal(options?.redirect, 'error');
+      assert.equal(options?.redirect, 'manual');
       assert.ok(options?.signal);
       return new Response('', { status: 202 });
     }
@@ -201,6 +202,69 @@ test('submission deduplicates URLs, removes fragments, and stops after HTTP 202'
   assert.deepEqual(normalizeIndexNowUrls([` ${origin}/zh/page `]), [
     `${origin}/zh/page`,
   ]);
+});
+
+test('submission request options work in Workers and do not forward the key on redirects', async (t) => {
+  let requestInit: RequestInit | undefined;
+  const fetchMock = t.mock.method(
+    globalThis,
+    'fetch',
+    async (_url: RequestInfo | URL, options?: RequestInit) => {
+      requestInit = options;
+      return new Response(null, { status: 202 });
+    }
+  );
+  await submitUrls(key, [origin]);
+  fetchMock.mock.restore();
+  assert.ok(requestInit);
+
+  // Use Wrangler's actual runtime, not Node's more permissive Request.
+  const require = createRequire(import.meta.url);
+  const { Miniflare, convertV4MiniflareOptions } = createRequire(
+    require.resolve('wrangler/package.json')
+  )('miniflare');
+  const outboundHosts: string[] = [];
+  const runtime = new Miniflare(
+    convertV4MiniflareOptions({
+      modules: true,
+      compatibilityDate: '2026-10-01',
+      script: `export default {
+        async fetch(request) {
+          const options = await request.json();
+          const response = await fetch('https://api.indexnow.org/indexnow', {
+            ...options,
+            signal: AbortSignal.timeout(10_000),
+          });
+          return Response.json({ status: response.status });
+        },
+      }`,
+      outboundService: async (request: Request) => {
+        outboundHosts.push(new URL(request.url).host);
+        return new Response(null, {
+          status: 302,
+          headers: { Location: 'https://untrusted.example/collect' },
+        });
+      },
+    })
+  );
+  try {
+    const response = await runtime.dispatchFetch('https://test.invalid/', {
+      method: 'POST',
+      body: JSON.stringify({
+        method: requestInit.method,
+        headers: requestInit.headers,
+        body: requestInit.body,
+        redirect: requestInit.redirect,
+      }),
+    });
+    const body = await response.text();
+    assert.equal(response.status, 200, body);
+    assert.deepEqual(JSON.parse(body), { status: 302 });
+    // A followed redirect would forward the ownership token to this other host.
+    assert.deepEqual(outboundHosts, ['api.indexnow.org']);
+  } finally {
+    await runtime.dispose();
+  }
 });
 
 test('provider retries are bounded and never expose its response body', async (t) => {
