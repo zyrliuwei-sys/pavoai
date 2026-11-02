@@ -12,6 +12,7 @@ import {
 import { createServerFn } from '@tanstack/react-start';
 import { ThemeProvider } from 'next-themes';
 
+import { Link } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import {
   APPEARANCE_CONFIG_KEYS,
@@ -248,9 +249,9 @@ function NotFound() {
     <div className="bg-background text-foreground flex min-h-screen flex-col items-center justify-center gap-4">
       <h1 className="text-6xl font-bold">404</h1>
       <p className="text-muted-foreground">Page not found</p>
-      <a href="/" className="text-sm underline underline-offset-4">
+      <Link href="/" className="text-sm underline underline-offset-4">
         Back to home
-      </a>
+      </Link>
     </div>
   );
 }

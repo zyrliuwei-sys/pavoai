@@ -89,7 +89,7 @@ async function POST({ request }: { request: Request }) {
     const appName = configs.app_name || envConfigs.app_name;
     const subject = m['lp.gen.mail_subject']({ app: appName }, { locale });
     const text = m['lp.gen.mail_body'](
-      { prompt: task.prompt, url },
+      { prompt: task.prompt, url, app: appName },
       { locale }
     );
 

@@ -1,13 +1,13 @@
-import { useState } from 'react';
-
 import { RevealSection } from '@/components/landing/reveal';
+import {
+  VideoPreview,
+  type PreviewVideo,
+} from '@/components/landing/video-preview';
 
 export interface StepData {
   title: string;
   description: string;
-  /** Real generated frame for the step; renders a numeral frame while missing. */
-  image?: string;
-  alt?: string;
+  video: PreviewVideo;
 }
 
 export interface LandingHowItWorksProps {
@@ -15,40 +15,8 @@ export interface LandingHowItWorksProps {
   title: string;
   subtitle?: string;
   steps: StepData[];
-}
-
-function StepFrame({
-  index,
-  image,
-  alt,
-}: {
-  index: number;
-  image?: string;
-  alt?: string;
-}) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#080b11] ring-1 ring-black/10">
-      {/* Fallback layer: oversized numeral, revealed until the frame loads */}
-      <span
-        aria-hidden
-        className="sv-display absolute inset-0 flex items-center justify-center text-[clamp(2.5rem,1.4rem+2vw,4rem)] text-white/12"
-      >
-        {String(index + 1).padStart(2, '0')}
-      </span>
-      {image && !failed ? (
-        <img
-          src={image}
-          alt={alt ?? ''}
-          width={640}
-          height={360}
-          loading="lazy"
-          onError={() => setFailed(true)}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-      ) : null}
-    </div>
-  );
+  playLabel: string;
+  pauseLabel: string;
 }
 
 export function LandingHowItWorks({
@@ -56,6 +24,8 @@ export function LandingHowItWorks({
   title,
   subtitle,
   steps,
+  playLabel,
+  pauseLabel,
 }: LandingHowItWorksProps) {
   return (
     <RevealSection className="bg-white py-20 sm:py-28 lg:py-32">
@@ -75,7 +45,14 @@ export function LandingHowItWorks({
         <div className="sv-rv sv-rv-cards sv-rv-zoom mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {steps.map((step, index) => (
             <div key={step.title}>
-              <StepFrame index={index} image={step.image} alt={step.alt} />
+              <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#080b11] ring-1 ring-black/10">
+                <VideoPreview
+                  video={step.video}
+                  alt={step.title}
+                  playLabel={playLabel}
+                  pauseLabel={pauseLabel}
+                />
+              </div>
               <div className="mt-4 flex items-baseline gap-2.5">
                 <span className="sv-meta text-[11px] font-medium text-[var(--sv-iris-strong)]">
                   {String(index + 1).padStart(2, '0')}

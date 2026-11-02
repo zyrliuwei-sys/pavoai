@@ -1,0 +1,962 @@
+{
+  "date": "2026-11-02",
+  "scope": "普通用户视角的公开页面、登录注册、用户中心与访问限制检查；保留 pavoai.net 现有文案，只添加内容。",
+  "copy": {
+    "source": "https://pavoai.net/",
+    "publicBaselineFile": "tests/fixtures/public-copy.json",
+    "publicKeysPerLocale": 379,
+    "verification": {
+      "en": {
+        "liveEntriesCompared": 1512,
+        "liveDifferences": [],
+        "previousValuesChanged": []
+      },
+      "zh": {
+        "liveEntriesCompared": 1512,
+        "liveDifferences": [],
+        "previousValuesChanged": []
+      }
+    }
+  },
+  "environment": {
+    "data": "隔离的本地 SQLite 测试副本",
+    "productionDataModified": false,
+    "deployed": false,
+    "realPaymentsMade": false,
+    "realGenerationTasksCreated": false
+  },
+  "fixed": [
+    "关于、联系、招聘和更新日志原来统一跳到博客；补充对应的中英文页面并修正入口。",
+    "退款和授权原来跳错位置；保留链接名称，定位到现有条款对应章节。",
+    "营销区块及 MDX 内链使用语言感知导航，中文页面的点击路径保留语言。",
+    "公开导航增加语言切换；手机菜单关闭时的隐藏链接不再进入键盘焦点。",
+    "视频／图片入口会切换生成模式，切换时保留用户提示词。",
+    "图片模式使用其原有的图片提示文案，而非视频示例占位文字。",
+    "图片画质 ID 与服务端的 1K／2K／4K 保持一致。",
+    "恢复生成草稿时保留模型、画质、画幅；关闭付费提示后刷新不会自动生成。",
+    "生成和结账在异步请求前加锁，连续触发三次仅发出一次请求。",
+    "匿名访客可以进入登录、注册页，登录后返回原目标页面。",
+    "资料查询不再改变共享 user-info 缓存结构；保存后刷新会话，侧栏立即显示新姓名。",
+    "侧栏链接移除嵌套按钮结构；链接只保留一个交互目标。",
+    "修复博客作者头像引用不存在的 logo.png。",
+    "通过悬浮支持入口提交工单后刷新工单列表；打开另一工单时清除前一条未发送的回复。",
+    "投稿关闭时新建页面不再展示支付编辑器；不存在的稿件显示错误及返回入口，不再无限加载。",
+    "独立定价页使用 h1，页面显示文字不变。",
+    "未接入的工具保留原有名称与描述，追加规划中说明；Style 保留原标签并标为不可用。"
+  ],
+  "browserInteractions": {
+    "internalHomepageLinks": 53,
+    "internalLinkFailures": 0,
+    "externalLinks": [
+      {
+        "label": "X",
+        "url": "https://x.com/",
+        "title": "X。尽是新鲜事 / X"
+      },
+      {
+        "label": "YouTube",
+        "url": "https://www.youtube.com/",
+        "title": "YouTube"
+      },
+      {
+        "label": "GitHub",
+        "url": "https://github.com/",
+        "title": "GitHub · Change is constant. GitHub keeps you ahead. · GitHub · GitHub"
+      }
+    ],
+    "registration": "本地注册成功；不一致密码被拦截。",
+    "guestRecovery": "Seedream 4／4K／9:16 与提示词全部恢复；刷新后生成请求数为 0，付费弹窗未再次打开。",
+    "authentication": "匿名会话可以打开注册表单；登录后正确返回 /settings/credits。",
+    "profile": "保存后侧栏立即更新；侧栏 a button 嵌套数为 0。",
+    "tickets": "本地创建、回复、关闭流程通过。",
+    "duplicateClicks": {
+      "simulatedBackendRejection": true,
+      "clicks": 3,
+      "checkoutRequests": 1,
+      "generationRequests": 1
+    },
+    "disabledGuestPosts": "新建页显示原有关闭提示，付款按钮数为 0；不存在的稿件显示 Not found 与返回链接。",
+    "mobile": "390px：视频／图片菜单操作成功且点击后收起；记录的中英文页面均无横向溢出。",
+    "language": "通过新增切换入口进入 /zh，随后博客链接进入 /zh/blog。"
+  },
+  "mobilePages": [
+    {
+      "path": "/pricing",
+      "url": "/pricing",
+      "title": "Pricing",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false,
+      "h1": "Pricing"
+    },
+    {
+      "path": "/blog",
+      "url": "/blog",
+      "title": "Blog | Pavo AI",
+      "h1": "Blog",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/blog/veo-3-1-vs-kling-3-0",
+      "url": "/blog/veo-3-1-vs-kling-3-0",
+      "title": "Veo 3.1 vs Kling 3.0: Which Model Should You Use? | Pavo AI",
+      "h1": "Veo 3.1 vs Kling 3.0: Which Model Should You Use?",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/blog/how-to-write-cinematic-video-prompts",
+      "url": "/blog/how-to-write-cinematic-video-prompts",
+      "title": "How to Write Video Prompts That Look Cinematic | Pavo AI",
+      "h1": "How to Write Video Prompts That Look Cinematic",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/blog/ugc-ads-with-ai-prompts",
+      "url": "/blog/ugc-ads-with-ai-prompts",
+      "title": "UGC Ads with AI: 10 Prompts That Convert | Pavo AI",
+      "h1": "UGC Ads with AI: 10 Prompts That Convert",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/privacy-policy",
+      "url": "/privacy-policy",
+      "title": "Privacy Policy",
+      "h1": "Privacy Policy",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/terms-of-service",
+      "url": "/terms-of-service",
+      "title": "Terms of Service",
+      "h1": "Terms of Service",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/about",
+      "url": "/about",
+      "title": "About Pavo AI",
+      "h1": "About Pavo AI",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/contact",
+      "url": "/contact",
+      "title": "Contact Pavo AI",
+      "h1": "Contact Pavo AI",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/careers",
+      "url": "/careers",
+      "title": "Careers",
+      "h1": "Careers",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/changelog",
+      "url": "/changelog",
+      "title": "Changelog",
+      "h1": "Changelog",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/guest-post",
+      "url": "/guest-post",
+      "title": "Guest Post",
+      "h1": "Guest Post",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/settings",
+      "url": "/settings",
+      "title": "Pavo AI",
+      "h1": "Overview",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/settings/profile",
+      "url": "/settings/profile",
+      "title": "Pavo AI",
+      "h1": "Profile",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/settings/credits",
+      "url": "/settings/credits",
+      "title": "Pavo AI",
+      "h1": "Credits",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/settings/billing",
+      "url": "/settings/billing",
+      "title": "Pavo AI",
+      "h1": "Billing",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/settings/payments",
+      "url": "/settings/payments",
+      "title": "Pavo AI",
+      "h1": "Payments",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/settings/tickets",
+      "url": "/settings/tickets",
+      "title": "Pavo AI",
+      "h1": "Support Tickets",
+      "viewport": 390,
+      "width": 390,
+      "overflow": false
+    },
+    {
+      "path": "/zh",
+      "url": "/zh",
+      "h1": "Pavo AI:一站式 AI 视频生成器 — 文生视频、图生视频与 AI 剪辑",
+      "overflow": false
+    },
+    {
+      "path": "/zh/pricing",
+      "url": "/zh/pricing",
+      "overflow": false,
+      "h1": "价格"
+    },
+    {
+      "path": "/zh/blog",
+      "url": "/zh/blog",
+      "h1": "博客",
+      "overflow": false
+    },
+    {
+      "path": "/zh/blog/veo-3-1-vs-kling-3-0",
+      "url": "/zh/blog/veo-3-1-vs-kling-3-0",
+      "h1": "Veo 3.1 对比 Kling 3.0：该用哪个模型？",
+      "overflow": false
+    },
+    {
+      "path": "/zh/blog/how-to-write-cinematic-video-prompts",
+      "url": "/zh/blog/how-to-write-cinematic-video-prompts",
+      "h1": "怎么写提示词，AI 视频才有电影感",
+      "overflow": false
+    },
+    {
+      "path": "/zh/blog/ugc-ads-with-ai-prompts",
+      "url": "/zh/blog/ugc-ads-with-ai-prompts",
+      "h1": "AI 做 UGC 广告：10 条能转化的提示词",
+      "overflow": false
+    },
+    {
+      "path": "/zh/privacy-policy",
+      "url": "/zh/privacy-policy",
+      "h1": "隐私政策",
+      "overflow": false
+    },
+    {
+      "path": "/zh/terms-of-service",
+      "url": "/zh/terms-of-service",
+      "h1": "服务条款",
+      "overflow": false
+    },
+    {
+      "path": "/zh/about",
+      "url": "/zh/about",
+      "h1": "关于 Pavo AI",
+      "overflow": false
+    },
+    {
+      "path": "/zh/contact",
+      "url": "/zh/contact",
+      "h1": "联系 Pavo AI",
+      "overflow": false
+    },
+    {
+      "path": "/zh/careers",
+      "url": "/zh/careers",
+      "h1": "招贤纳士",
+      "overflow": false
+    },
+    {
+      "path": "/zh/changelog",
+      "url": "/zh/changelog",
+      "h1": "更新日志",
+      "overflow": false
+    },
+    {
+      "path": "/zh/settings",
+      "url": "/zh/settings",
+      "h1": "概览",
+      "overflow": false
+    },
+    {
+      "path": "/zh/settings/profile",
+      "url": "/zh/settings/profile",
+      "h1": "个人资料",
+      "overflow": false
+    },
+    {
+      "path": "/zh/settings/credits",
+      "url": "/zh/settings/credits",
+      "h1": "积分",
+      "overflow": false
+    },
+    {
+      "path": "/zh/settings/billing",
+      "url": "/zh/settings/billing",
+      "h1": "账单",
+      "overflow": false
+    },
+    {
+      "path": "/zh/settings/payments",
+      "url": "/zh/settings/payments",
+      "h1": "付款记录",
+      "overflow": false
+    },
+    {
+      "path": "/zh/settings/tickets",
+      "url": "/zh/settings/tickets",
+      "h1": "工单支持",
+      "overflow": false
+    }
+  ],
+  "accessChecks": [
+    {
+      "path": "/admin",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/users",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/invite-codes",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/roles",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/permissions",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/payments",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/subscriptions",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/credits",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/categories",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/posts",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/guest-posts",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/tickets",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/agent",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/settings",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/footer-badges",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/indexnow",
+      "destination": "/settings"
+    },
+    {
+      "path": "/admin/ops-playbook",
+      "destination": "/settings"
+    },
+    {
+      "path": "/settings/apikeys",
+      "url": "/settings"
+    },
+    {
+      "path": "/settings/guest-posts",
+      "url": "/settings/guest-posts"
+    },
+    {
+      "path": "/settings/guest-posts/new",
+      "url": "/settings/guest-posts/new"
+    },
+    {
+      "path": "/settings/guest-posts/not-a-real-post",
+      "url": "/settings/guest-posts/not-a-real-post"
+    },
+    {
+      "path": "/redeem-invite",
+      "url": "/settings"
+    },
+    {
+      "path": "/auth-callback",
+      "url": "/"
+    },
+    {
+      "path": "/reset-password",
+      "url": "/reset-password"
+    },
+    {
+      "path": "/verify-email",
+      "url": "/"
+    },
+    {
+      "path": "/missing-audit-page",
+      "url": "/missing-audit-page"
+    }
+  ],
+  "homepageLinkChecks": [
+    {
+      "label": "Pavo AI",
+      "href": "/",
+      "url": "/",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Video",
+      "href": "/?mode=video#generator",
+      "url": "/?mode=video#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Image",
+      "href": "/?mode=image#generator",
+      "url": "/?mode=image#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Tools",
+      "href": "/#tools",
+      "url": "/#tools",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Models",
+      "href": "/#whats-new",
+      "url": "/#whats-new",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing",
+      "url": "/pricing",
+      "title": "Pricing",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Blog",
+      "href": "/blog",
+      "url": "/blog",
+      "title": "Blog | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "All 20+ models",
+      "href": "/#tools",
+      "url": "/#tools",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Make yours on Pavo AI",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Start now",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Compare tools",
+      "href": "/#tools",
+      "url": "/#tools",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Short films\n\nScript a scene in Pavo AI, keep your cast consistent.",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "AI Product Ads Generator\n\nImage to video on Pavo AI: one photo in, a studio-grade spin out.",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "AI UGC Ads Generator\n\nCreator-style Pavo AI clips that actually convert.",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Music videos\n\nBeat-synced cuts made with Pavo AI, any aesthetic.",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Anime\n\nYour stories in authentic anime styles.",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Social reels\n\nVertical, punchy, ready to post from Pavo AI.",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Talking avatars\n\nAny script, any language, any face.",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Trailers\n\nEpic opens for games and launches, made with Pavo AI.",
+      "href": "/#generator",
+      "url": "/#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Open",
+      "href": "/?mode=video#generator",
+      "url": "/?mode=video#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Read the guide",
+      "href": "/blog/how-to-write-cinematic-video-prompts",
+      "url": "/blog/how-to-write-cinematic-video-prompts",
+      "title": "How to Write Video Prompts That Look Cinematic | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Open",
+      "href": "/?mode=image#generator",
+      "url": "/?mode=image#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Read the guide",
+      "href": "/blog/how-to-write-cinematic-video-prompts",
+      "url": "/blog/how-to-write-cinematic-video-prompts",
+      "title": "How to Write Video Prompts That Look Cinematic | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Read the guide",
+      "href": "/blog/how-to-write-cinematic-video-prompts",
+      "url": "/blog/how-to-write-cinematic-video-prompts",
+      "title": "How to Write Video Prompts That Look Cinematic | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Read the guide",
+      "href": "/blog/how-to-write-cinematic-video-prompts",
+      "url": "/blog/how-to-write-cinematic-video-prompts",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "All articles",
+      "href": "/blog",
+      "url": "/blog",
+      "title": "Blog | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Model drops\nNov 1, 2026\nVeo 3.1 vs Kling 3.0: Which Model Should You Use?\n\nWe generated 60 identical prompts on both models. Here is when each one wins.\n\nRead article",
+      "href": "/blog/veo-3-1-vs-kling-3-0",
+      "url": "/blog/veo-3-1-vs-kling-3-0",
+      "title": "Veo 3.1 vs Kling 3.0: Which Model Should You Use? | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Guides\nOct 28, 2026\nHow to Write Video Prompts That Look Cinematic\n\nCamera, light, motion, mood: the four-part formula behind clips that don't look AI-generated.\n\nRead article",
+      "href": "/blog/how-to-write-cinematic-video-prompts",
+      "url": "/blog/how-to-write-cinematic-video-prompts",
+      "title": "How to Write Video Prompts That Look Cinematic | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Recipes\nOct 21, 2026\nUGC Ads with AI: 10 Prompts That Convert\n\nCreator-style ads from one product photo. Copy the prompts and go.\n\nRead article",
+      "href": "/blog/ugc-ads-with-ai-prompts",
+      "url": "/blog/ugc-ads-with-ai-prompts",
+      "title": "UGC Ads with AI: 10 Prompts That Convert | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Text to Video",
+      "href": "/?mode=video#generator",
+      "url": "/?mode=video#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Image to Video",
+      "href": "/#use-cases",
+      "url": "/#use-cases",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Video Editor",
+      "href": "/#tools",
+      "url": "/#tools",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Avatars",
+      "href": "/#tools",
+      "url": "/#tools",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Image Studio",
+      "href": "/?mode=image#generator",
+      "url": "/?mode=image#generator",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Restyle",
+      "href": "/#tools",
+      "url": "/#tools",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Upscaler",
+      "href": "/#tools",
+      "url": "/#tools",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Backgrounds",
+      "href": "/#use-cases",
+      "url": "/#use-cases",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Blog",
+      "href": "/blog",
+      "url": "/blog",
+      "title": "Blog | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Prompt recipes",
+      "href": "/blog/how-to-write-cinematic-video-prompts",
+      "url": "/blog/how-to-write-cinematic-video-prompts",
+      "title": "How to Write Video Prompts That Look Cinematic | Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Model guide",
+      "href": "/#whats-new",
+      "url": "/#whats-new",
+      "title": "Pavo AI: All-in-One AI Video Generator — Text to Video AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Changelog",
+      "href": "/changelog",
+      "url": "/changelog",
+      "title": "Changelog",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing",
+      "url": "/pricing",
+      "title": "Pricing",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "About",
+      "href": "/about",
+      "url": "/about",
+      "title": "About Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Contact",
+      "href": "/contact",
+      "url": "/contact",
+      "title": "Contact Pavo AI",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Careers",
+      "href": "/careers",
+      "url": "/careers",
+      "title": "Careers",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Privacy Policy",
+      "href": "/privacy-policy",
+      "url": "/privacy-policy",
+      "title": "Privacy Policy",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Terms of Service",
+      "href": "/terms-of-service",
+      "url": "/terms-of-service",
+      "title": "Terms of Service",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Refund Policy",
+      "href": "/terms-of-service#billing",
+      "url": "/terms-of-service#billing",
+      "title": "Terms of Service",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "License",
+      "href": "/terms-of-service#content-rights",
+      "url": "/terms-of-service#content-rights",
+      "title": "Terms of Service",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Privacy Policy",
+      "href": "/privacy-policy",
+      "url": "/privacy-policy",
+      "title": "Privacy Policy",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Terms of Service",
+      "href": "/terms-of-service",
+      "url": "/terms-of-service",
+      "title": "Terms of Service",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "Refund Policy",
+      "href": "/terms-of-service#billing",
+      "url": "/terms-of-service#billing",
+      "title": "Terms of Service",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    },
+    {
+      "label": "License",
+      "href": "/terms-of-service#content-rights",
+      "url": "/terms-of-service#content-rights",
+      "title": "Terms of Service",
+      "error": false,
+      "hashTarget": true,
+      "brokenImages": []
+    }
+  ],
+  "validation": {
+    "build": "pnpm build passed",
+    "typecheck": "pnpm exec tsc --noEmit --pretty false passed",
+    "diff": "git diff --check passed",
+    "tests": {
+      "passed": 44,
+      "failed": 0,
+      "command": "node --import tsx --test tests/public-copy.test.ts tests/generator-state.test.ts tests/ai-pricing.test.ts tests/pricing-display.test.ts tests/guest-posts.test.ts tests/guest-post-notify.test.ts"
+    }
+  },
+  "remaining": [
+    {
+      "issue": "社交图标仍指向 X／YouTube／GitHub 平台首页。",
+      "reason": "三个地址均可打开，但仓库和线上页面未提供正式品牌账号 URL，未擅自替换。"
+    },
+    {
+      "issue": "源站部分宣传语与当前已接入的功能范围不一致，包括模型数量、免费额度和后期制作能力。",
+      "reason": "按用户要求保留原文；未擅自修改免费额度、付费权益或实现全套未接入工具。"
+    },
+    {
+      "issue": "真实扣款、OAuth 回调、邮件投递与付费模型出片未作端到端验证。",
+      "reason": "本轮使用隔离数据与拒绝响应验证流程，未产生真实付款、付费生成或对外邮件。"
+    }
+  ]
+}

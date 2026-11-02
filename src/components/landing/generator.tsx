@@ -5,6 +5,7 @@ import {
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
+import { useLocation } from '@tanstack/react-router';
 import {
   ArrowRight,
   Check,
@@ -20,8 +21,19 @@ import {
 import { toast } from 'sonner';
 
 import { ApiError, apiGet, apiPost } from '@/lib/api-client';
+import {
+  parsePendingGeneration,
+  shouldResumeGeneration,
+  type GenerationSelection,
+  type PendingGeneration,
+} from '@/lib/generator-state';
 import { cn } from '@/lib/utils';
 import { useTypewriter } from '@/components/landing/reveal';
+
+export type {
+  GenerationSelection,
+  PendingGeneration,
+} from '@/lib/generator-state';
 
 export interface GeneratorOption {
   id: string;
@@ -86,13 +98,18 @@ export interface LandingGeneratorProps {
    */
   onFirstGenerate?: (
     prompt: string,
-    tabId: string
+    tabId: string,
+    selection: GenerationSelection
   ) => Promise<'run' | 'blocked'>;
   /**
    * Called when generation is blocked by auth (401) or credits (402) — the
    * block opens the paywall panel instead of surfacing an error.
    */
-  onPaywall?: (prompt: string, tabId: string) => void;
+  onPaywall?: (
+    prompt: string,
+    tabId: string,
+    selection: GenerationSelection
+  ) => void;
 }
 
 /** Poll cadence for the generation task. */
@@ -120,13 +137,6 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 const PENDING_GEN_KEY = 'pavoai:pending-gen';
 
-export interface PendingGeneration {
-  prompt: string;
-  tabId: string;
-  email?: string;
-  auto?: boolean;
-}
-
 export function parkPendingGen(pending: PendingGeneration) {
   try {
     sessionStorage.setItem(PENDING_GEN_KEY, JSON.stringify(pending));
@@ -137,8 +147,7 @@ export function readPendingGen(): PendingGeneration | null {
   try {
     const raw = sessionStorage.getItem(PENDING_GEN_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as PendingGeneration;
-    return parsed && typeof parsed.prompt === 'string' ? parsed : null;
+    return parsePendingGeneration(raw);
   } catch {
     return null;
   }
@@ -211,6 +220,9 @@ export function LandingGenerator({
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<RunResult | null>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const inFlightRef = useRef(false);
+  const searchStr = useLocation({ select: (location) => location.searchStr });
 
   // Toolbar selections, kept per tab id.
   const [modelByTab, setModelByTab] = useState<Record<string, string>>(() =>
@@ -222,7 +234,6 @@ export function LandingGenerator({
   const [qualityByTab, setQualityByTab] = useState<Record<string, string>>(() =>
     Object.fromEntries(tabs.map((tab) => [tab.id, tab.qualities[0]?.id ?? '']))
   );
-  const [styleOn, setStyleOn] = useState(false);
   const [fastOn, setFastOn] = useState(false);
 
   // Model dropdown (open one at a time).
@@ -274,17 +285,54 @@ export function LandingGenerator({
     if (!pending.prompt || !tabs.some((t) => t.id === pending.tabId)) return;
     setActiveId(pending.tabId);
     setDraft(pending.prompt);
+    if (pending.selection) {
+      setModelByTab((value) => ({
+        ...value,
+        [pending.tabId]: pending.selection!.modelId,
+      }));
+      setQualityByTab((value) => ({
+        ...value,
+        [pending.tabId]: pending.selection!.quality,
+      }));
+      setAspectByTab((value) => ({
+        ...value,
+        [pending.tabId]: pending.selection!.aspect,
+      }));
+      setFastOn(pending.selection.fast);
+    }
     if (pending.email) deliverEmailRef.current = pending.email;
-    if (pending.auto) {
+    if (shouldResumeGeneration(pending, window.location.search)) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('checkout');
+      window.history.replaceState(window.history.state, '', cleanUrl);
       autoRetriedRef.current = false;
       // A tick for the restored draft to settle, then roll.
-      window.setTimeout(
-        () => startRun(pending.prompt, pending.tabId, true),
+      const timer = window.setTimeout(
+        () => startRun(pending.prompt, pending.tabId, true, pending.selection),
         700
       );
+      return () => window.clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Navigation links can open a mode/model without a full-page reload.
+  useEffect(() => {
+    if (inFlightRef.current) return;
+    const params = new URLSearchParams(searchStr);
+    const tab = tabs.find((item) => item.id === params.get('mode'));
+    if (!tab) return;
+    setActiveId(tab.id);
+    const model = params.get('model');
+    if (model && tab.models.some((item) => item.id === model)) {
+      setModelByTab((previous) => ({ ...previous, [tab.id]: model }));
+    }
+    const prompt = params.get('prompt');
+    if (prompt) setDraft(prompt.slice(0, 2000));
+    setModelsOpen(false);
+    // The URL changes drive this effect; tabs carry translated labels.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchStr]);
 
   // Stop the demo audio when the generator unmounts.
   useEffect(
@@ -343,34 +391,36 @@ export function LandingGenerator({
     }
   }, [phase]);
 
-  const startRun = async (
+  const runGeneration = async (
     prompt: string,
     tabId: string,
-    auto = false
+    auto = false,
+    restoredSelection?: GenerationSelection
   ): Promise<void> => {
     const tab = tabs.find((t) => t.id === tabId);
     if (!tab || phase === 'rendering') return;
+    const selection: GenerationSelection = restoredSelection ?? {
+      modelId: modelByTab[tabId] || tab.models[0]?.id || '',
+      quality: qualityByTab[tabId] ?? '',
+      aspect: aspectByTab[tabId] || '16:9',
+      fast: fastOn,
+    };
 
     // First-generate gate: the block signs in an anonymous guest and, for
     // brand-new visitors (0 credits by design), opens the paywall directly —
     // no wasted API round trip, no error surface.
     if (onFirstGenerate) {
-      const gate = await onFirstGenerate(prompt, tabId);
-      if (gate === 'blocked') return;
+      const gate = await onFirstGenerate(prompt, tabId, selection);
+      if (gate === 'blocked' || !mountedRef.current) return;
     }
 
-    const modelId = modelByTab[tabId] || tab.models[0]?.id || '';
+    const modelId = selection.modelId;
     const model = tab.models.find((m) => m.id === modelId)?.label ?? modelId;
     const quality = tab.qualities.find(
-      (q) => q.id === (qualityByTab[tabId] ?? '')
+      (q) => q.id === selection.quality
     )?.label;
-    const aspectId = aspectByTab[tabId] || undefined;
-    const meta = [
-      quality,
-      aspectId,
-      styleOn ? styleLabel : '',
-      fastOn ? fastLabel : '',
-    ]
+    const aspectId = selection.aspect;
+    const meta = [quality, aspectId, selection.fast ? fastLabel : '']
       .filter(Boolean)
       .join(' · ');
 
@@ -391,8 +441,8 @@ export function LandingGenerator({
         prompt,
         model: modelId,
         aspect: aspectId ?? '16:9',
-        quality: qualityByTab[tabId] ?? '',
-        fast: fastOn,
+        quality: selection.quality,
+        fast: selection.fast,
         email: deliverEmailRef.current || undefined,
       });
       if (stale()) return;
@@ -457,15 +507,36 @@ export function LandingGenerator({
       // Paid generation: 401 (no session) and 402 (no credits) both open the
       // paywall panel — never an error toast, never a redirect away.
       if (blocked(error)) {
-        onPaywall?.(prompt, tabId);
+        onPaywall?.(prompt, tabId, selection);
         return;
       }
       toast.error((error as any)?.message || 'Generation failed');
     }
   };
 
+  // Claim before the asynchronous session gate so rapid clicks create one task.
+  const startRun = async (
+    prompt: string,
+    tabId: string,
+    auto = false,
+    selection?: GenerationSelection
+  ) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    setStarting(true);
+    try {
+      await runGeneration(prompt, tabId, auto, selection);
+    } catch (error) {
+      if (mountedRef.current)
+        toast.error((error as Error)?.message || 'Generation failed');
+    } finally {
+      inFlightRef.current = false;
+      if (mountedRef.current) setStarting(false);
+    }
+  };
+
   const submit = () => {
-    const prompt = (draft ?? typed ?? '').trim() || promptExamples[0] || '';
+    const prompt = (draft ?? '').trim();
     if (!prompt) {
       textareaRef.current?.focus();
       return;
@@ -475,7 +546,7 @@ export function LandingGenerator({
 
   const switchTab = (tabId: string) => {
     setActiveId(tabId);
-    setDraft(null); // tab placeholders differ; let the typewriter take over
+    // Keep the user's draft when switching between video and image.
     setModelsOpen(false);
     if (phase !== 'idle') {
       runIdRef.current += 1; // cancel any in-flight run
@@ -514,184 +585,184 @@ export function LandingGenerator({
         }}
         className="mt-8 w-full max-w-[1040px] rounded-[22px] bg-white/[0.055] p-3 ring-1 ring-white/10 backdrop-blur-md sm:p-4"
       >
-        {/* Mode tabs — inside the panel, per the reference layout */}
-        <div className="inline-flex rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10">
-          {tabs.map((tab) => {
-            const active = tab.id === activeTab?.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => switchTab(tab.id)}
-                className={cn(
-                  'h-8 rounded-full px-4 text-[13px] font-medium text-white/65 transition-colors hover:text-white',
-                  active && 'bg-[var(--sv-iris-strong)] text-white'
-                )}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Prompt textarea — Enter generates, Shift+Enter breaks a line */}
-        <textarea
-          ref={textareaRef}
-          rows={3}
-          value={draft ?? ''}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={onTextareaKeyDown}
-          placeholder={
-            draft === null && typed
-              ? `${typed}▍`
-              : (activeTab?.placeholder ?? '')
-          }
-          aria-label={activeTab?.placeholder}
-          disabled={phase === 'rendering'}
-          className="sv-meta mt-3 min-h-[92px] w-full resize-none rounded-xl bg-transparent px-2 py-1.5 text-[15.5px] leading-relaxed text-white placeholder:text-white/40 focus:outline-none disabled:opacity-60"
-        />
-
-        {/* Toolbar: settings + Generate */}
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {/* Model dropdown */}
-          <div ref={modelMenuRef} className="relative">
-            <button
-              type="button"
-              aria-haspopup="listbox"
-              aria-expanded={modelsOpen}
-              onClick={() => setModelsOpen((v) => !v)}
-              className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/[0.06] px-2.5 text-[12px] text-white/75 ring-1 ring-white/10 transition-colors hover:text-white"
-            >
-              <Sparkles
-                size={13}
-                className="text-[var(--sv-iris-bright)]"
-                aria-hidden
-              />
-              {activeModel?.label}
-              <ChevronDown
-                size={13}
-                className={cn(
-                  'transition-transform',
-                  modelsOpen && 'rotate-180'
-                )}
-                aria-hidden
-              />
-            </button>
-            {modelsOpen && (
-              <div
-                role="listbox"
-                className="absolute bottom-11 left-0 z-20 max-h-64 min-w-[190px] overflow-auto rounded-2xl bg-[#101720] p-1.5 shadow-2xl ring-1 shadow-black/50 ring-white/15"
-              >
-                {activeTab?.models.map((model) => {
-                  const active = model.id === activeModel?.id;
-                  return (
-                    <button
-                      key={model.id}
-                      type="button"
-                      role="option"
-                      aria-selected={active}
-                      onClick={() => {
-                        setModelByTab((prev) => ({
-                          ...prev,
-                          [activeTab.id]: model.id,
-                        }));
-                        setModelsOpen(false);
-                      }}
-                      className={cn(
-                        'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[12.5px] text-white/75 transition-colors hover:bg-white/[0.07] hover:text-white',
-                        active && 'text-white'
-                      )}
-                    >
-                      {model.label}
-                      {active && (
-                        <Check
-                          size={13}
-                          className="text-[var(--sv-iris-bright)]"
-                          aria-hidden
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        <fieldset
+          disabled={starting || phase === 'rendering'}
+          className="min-w-0"
+        >
+          {/* Mode tabs — inside the panel, per the reference layout */}
+          <div className="inline-flex rounded-full bg-white/[0.06] p-1 ring-1 ring-white/10">
+            {tabs.map((tab) => {
+              const active = tab.id === activeTab?.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => switchTab(tab.id)}
+                  className={cn(
+                    'h-8 rounded-full px-4 text-[13px] font-medium text-white/65 transition-colors hover:text-white',
+                    active && 'bg-[var(--sv-iris-strong)] text-white'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Aspect chips (video/image only) */}
-          {activeTab?.aspects && (
-            <ChipGroup
-              options={activeTab.aspects}
-              value={activeAspectId}
-              onChange={(id) =>
-                setAspectByTab((prev) => ({ ...prev, [activeTab.id]: id }))
-              }
-            />
-          )}
+          {/* Prompt textarea — Enter generates, Shift+Enter breaks a line */}
+          <textarea
+            ref={textareaRef}
+            rows={3}
+            maxLength={2000}
+            value={draft ?? ''}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={onTextareaKeyDown}
+            placeholder={
+              activeTab?.id === 'video' && draft === null && typed
+                ? `${typed}▍`
+                : (activeTab?.placeholder ?? '')
+            }
+            aria-label={activeTab?.placeholder}
+            disabled={starting || phase === 'rendering'}
+            className="sv-meta mt-3 min-h-[92px] w-full resize-none rounded-xl bg-transparent px-2 py-1.5 text-[15.5px] leading-relaxed text-white placeholder:text-white/40 focus:outline-none disabled:opacity-60"
+          />
 
-          {/* Quality chips */}
-          {activeTab && (
-            <ChipGroup
-              options={activeTab.qualities}
-              value={activeQualityId}
-              onChange={(id) =>
-                setQualityByTab((prev) => ({ ...prev, [activeTab.id]: id }))
-              }
-            />
-          )}
+          {/* Toolbar: settings + Generate */}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {/* Model dropdown */}
+            <div ref={modelMenuRef} className="relative">
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={modelsOpen}
+                onClick={() => setModelsOpen((v) => !v)}
+                className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/[0.06] px-2.5 text-[12px] text-white/75 ring-1 ring-white/10 transition-colors hover:text-white"
+              >
+                <Sparkles
+                  size={13}
+                  className="text-[var(--sv-iris-bright)]"
+                  aria-hidden
+                />
+                {activeModel?.label}
+                <ChevronDown
+                  size={13}
+                  className={cn(
+                    'transition-transform',
+                    modelsOpen && 'rotate-180'
+                  )}
+                  aria-hidden
+                />
+              </button>
+              {modelsOpen && (
+                <div
+                  role="listbox"
+                  className="absolute bottom-11 left-0 z-20 max-h-64 min-w-[190px] overflow-auto rounded-2xl bg-[#101720] p-1.5 shadow-2xl ring-1 shadow-black/50 ring-white/15"
+                >
+                  {activeTab?.models.map((model) => {
+                    const active = model.id === activeModel?.id;
+                    return (
+                      <button
+                        key={model.id}
+                        type="button"
+                        role="option"
+                        aria-selected={active}
+                        onClick={() => {
+                          setModelByTab((prev) => ({
+                            ...prev,
+                            [activeTab.id]: model.id,
+                          }));
+                          setModelsOpen(false);
+                        }}
+                        className={cn(
+                          'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-[12.5px] text-white/75 transition-colors hover:bg-white/[0.07] hover:text-white',
+                          active && 'text-white'
+                        )}
+                      >
+                        {model.label}
+                        {active && (
+                          <Check
+                            size={13}
+                            className="text-[var(--sv-iris-bright)]"
+                            aria-hidden
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-          {/* Style toggle */}
-          <button
-            type="button"
-            aria-pressed={styleOn}
-            onClick={() => setStyleOn((v) => !v)}
-            className={cn(
-              'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-[12px] ring-1 transition-colors',
-              styleOn
-                ? 'bg-[var(--sv-iris-strong)]/25 text-white ring-[var(--sv-iris)]/50'
-                : 'text-white/60 ring-white/10 hover:text-white'
+            {/* Aspect chips (video/image only) */}
+            {activeTab?.aspects && (
+              <ChipGroup
+                options={activeTab.aspects}
+                value={activeAspectId}
+                onChange={(id) =>
+                  setAspectByTab((prev) => ({ ...prev, [activeTab.id]: id }))
+                }
+              />
             )}
-          >
-            <Palette size={13} aria-hidden />
-            {styleLabel}
-          </button>
 
-          {/* Fast toggle — picks the provider's fast lane (model variant or
+            {/* Quality chips */}
+            {activeTab && (
+              <ChipGroup
+                options={activeTab.qualities}
+                value={activeQualityId}
+                onChange={(id) =>
+                  setQualityByTab((prev) => ({ ...prev, [activeTab.id]: id }))
+                }
+              />
+            )}
+
+            {/* Preserve the original copy for the style control. */}
+            <button
+              type="button"
+              disabled
+              className="sv-meta inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-xl px-2.5 text-[12px] text-white/40 ring-1 ring-white/10"
+            >
+              <Palette size={13} aria-hidden />
+              {styleLabel}
+            </button>
+
+            {/* Fast toggle — picks the provider's fast lane (model variant or
               prompt priority) on the server. */}
-          <button
-            type="button"
-            aria-pressed={fastOn}
-            onClick={() => setFastOn((v) => !v)}
-            className={cn(
-              'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-[12px] ring-1 transition-colors',
-              fastOn
-                ? 'bg-[var(--sv-iris-strong)]/25 text-white ring-[var(--sv-iris)]/50'
-                : 'text-white/60 ring-white/10 hover:text-white'
-            )}
-          >
-            <FastForward size={13} aria-hidden />
-            {fastLabel}
-          </button>
+            <button
+              type="button"
+              aria-pressed={fastOn}
+              onClick={() => setFastOn((v) => !v)}
+              className={cn(
+                'sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-[12px] ring-1 transition-colors',
+                fastOn
+                  ? 'bg-[var(--sv-iris-strong)]/25 text-white ring-[var(--sv-iris)]/50'
+                  : 'text-white/60 ring-white/10 hover:text-white'
+              )}
+            >
+              <FastForward size={13} aria-hidden />
+              {fastLabel}
+            </button>
 
-          {/* Generate — the panel's primary action, bottom right */}
-          <button
-            type="submit"
-            disabled={phase === 'rendering'}
-            className="sv-press ml-auto inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[14.5px] font-semibold text-white shadow-[var(--sv-iris-deep)]/30 shadow-lg hover:bg-[var(--sv-iris-deep)] disabled:cursor-wait lg:w-auto"
-          >
-            {phase === 'rendering' ? (
-              <>
-                <Loader2 size={16} className="animate-spin" aria-hidden />
-                <span className="tabular-nums">{progress}%</span>
-              </>
-            ) : (
-              <>
-                <Sparkles size={16} aria-hidden />
-                {generateLabel}
-              </>
-            )}
-          </button>
-        </div>
+            {/* Generate — the panel's primary action, bottom right */}
+            <button
+              type="submit"
+              disabled={starting || phase === 'rendering'}
+              className="sv-press ml-auto inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[14.5px] font-semibold text-white shadow-[var(--sv-iris-deep)]/30 shadow-lg hover:bg-[var(--sv-iris-deep)] disabled:cursor-wait lg:w-auto"
+            >
+              {starting || phase === 'rendering' ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" aria-hidden />
+                  <span className="tabular-nums">{progress}%</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={16} aria-hidden />
+                  {generateLabel}
+                </>
+              )}
+            </button>
+          </div>
+        </fieldset>
       </form>
 
       {/* Render monitor / result card */}

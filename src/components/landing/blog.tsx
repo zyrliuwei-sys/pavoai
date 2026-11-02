@@ -1,14 +1,19 @@
 import type { CSSProperties } from 'react';
 import { ArrowRight } from 'lucide-react';
 
+import { Link } from '@/core/i18n/navigation';
 import { RevealSection } from '@/components/landing/reveal';
+import {
+  VideoPreview,
+  type PreviewVideo,
+} from '@/components/landing/video-preview';
 
 export interface BlogCardItem {
   title: string;
   excerpt: string;
   category: string;
   date: string;
-  image: string;
+  video: PreviewVideo;
   href: string;
 }
 
@@ -18,6 +23,8 @@ export interface LandingBlogProps {
   link?: { label: string; href: string };
   posts: BlogCardItem[];
   readLabel: string;
+  playLabel: string;
+  pauseLabel: string;
 }
 
 export function LandingBlog({
@@ -26,6 +33,8 @@ export function LandingBlog({
   link,
   posts,
   readLabel,
+  playLabel,
+  pauseLabel,
 }: LandingBlogProps) {
   return (
     <RevealSection className="sv-night relative py-20 sm:py-28 lg:py-32">
@@ -38,31 +47,33 @@ export function LandingBlog({
             </h2>
           </div>
           {link && (
-            <a
+            <Link
               href={link.href}
               className="text-sm font-medium text-[var(--sv-iris-bright)] transition hover:underline"
             >
               {link.label}
-            </a>
+            </Link>
           )}
         </div>
 
         <div className="sv-rv sv-rv-cards sv-rv-zoom mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post, i) => (
-            <a
+            <article
               key={post.title}
-              href={post.href}
               className="sv-enter sv-hover-lift group relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-[16px] ring-1 ring-white/[0.07]"
               style={{ '--i': i } as CSSProperties}
             >
-              <img
-                src={post.image}
-                alt=""
-                loading="lazy"
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              <VideoPreview
+                video={post.video}
+                alt={post.title}
+                playLabel={playLabel}
+                pauseLabel={pauseLabel}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-              <div className="relative p-5">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+              <Link
+                href={post.href}
+                className="relative p-5 focus-visible:outline-2 focus-visible:outline-white"
+              >
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-white/80 backdrop-blur">
                     {post.category}
@@ -82,8 +93,8 @@ export function LandingBlog({
                     className="transition-transform group-hover:translate-x-0.5"
                   />
                 </span>
-              </div>
-            </a>
+              </Link>
+            </article>
           ))}
         </div>
       </div>

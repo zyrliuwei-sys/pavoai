@@ -1,0 +1,326 @@
+{
+  "reference": "https://pavoai.net/",
+  "checkedOn": "2026-11-02",
+  "localOrigin": "http://localhost:3004",
+  "result": "All checked non-pricing public wording matches the live reference.",
+  "allowedPricingSection": "#pricing",
+  "comparisonMethod": "Rendered headers, page text, footers, form placeholders and metadata are compared with layout whitespace normalized. Icons, hidden decorative elements and video duration badges are not prose. Existing translation values are also checked character-for-character against the reference fixture.",
+  "protectedMessageCounts": {
+    "en": 380,
+    "zh": 380
+  },
+  "pages": [
+    {
+      "path": "/blog",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 1447,
+      "liveCopySha256": "629b70a7f6c49770618f9bee059d24b5b9720684a8a0f28f7096ccbe67d2ce91",
+      "localCopySha256": "629b70a7f6c49770618f9bee059d24b5b9720684a8a0f28f7096ccbe67d2ce91",
+      "differences": []
+    },
+    {
+      "path": "/blog/veo-3-1-vs-kling-3-0",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 3492,
+      "liveCopySha256": "e4d38cb03386bd6185490d25b06b50046b7ec6a0bdc0367bf078f335d1e41720",
+      "localCopySha256": "e4d38cb03386bd6185490d25b06b50046b7ec6a0bdc0367bf078f335d1e41720",
+      "differences": []
+    },
+    {
+      "path": "/pricing",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 681,
+      "liveCopySha256": "7975c2c935abf2630af9407756622f1daf62278a2cdc050ff67aa8528e68c48a",
+      "localCopySha256": "7975c2c935abf2630af9407756622f1daf62278a2cdc050ff67aa8528e68c48a",
+      "differences": []
+    },
+    {
+      "path": "/blog/how-to-write-cinematic-video-prompts",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 3408,
+      "liveCopySha256": "32709b19292d8f8775978a4b964020d1e15645cb445ccd86502fa4fb0344ff35",
+      "localCopySha256": "32709b19292d8f8775978a4b964020d1e15645cb445ccd86502fa4fb0344ff35",
+      "differences": []
+    },
+    {
+      "path": "/privacy-policy",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 3533,
+      "liveCopySha256": "f201f55c65d1556d6541ab67aff893b59e263d28adc28882590386f4d91e8478",
+      "localCopySha256": "f201f55c65d1556d6541ab67aff893b59e263d28adc28882590386f4d91e8478",
+      "differences": []
+    },
+    {
+      "path": "/blog/ugc-ads-with-ai-prompts",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 3803,
+      "liveCopySha256": "9da46f2ea56ef9613f8844fbaa0d9b3105f6aebac342d83e6363fc1e417f9deb",
+      "localCopySha256": "9da46f2ea56ef9613f8844fbaa0d9b3105f6aebac342d83e6363fc1e417f9deb",
+      "differences": []
+    },
+    {
+      "path": "/terms-of-service",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 4058,
+      "liveCopySha256": "7a2cc8490b25751998a95047b2b480e4867d18fa03f25017b75daf560c78c4b7",
+      "localCopySha256": "7a2cc8490b25751998a95047b2b480e4867d18fa03f25017b75daf560c78c4b7",
+      "differences": []
+    },
+    {
+      "path": "/zh/pricing",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 272,
+      "liveCopySha256": "e461333334b272c99928cc5739292d9b9fcb149c4a7bc581b49846fe2f2563d3",
+      "localCopySha256": "e461333334b272c99928cc5739292d9b9fcb149c4a7bc581b49846fe2f2563d3",
+      "differences": []
+    },
+    {
+      "path": "/zh/blog",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 617,
+      "liveCopySha256": "e6ed5717fa7e907c87744751d7be59ed9f42db1c4f42b90fa517f769fae35624",
+      "localCopySha256": "e6ed5717fa7e907c87744751d7be59ed9f42db1c4f42b90fa517f769fae35624",
+      "differences": []
+    },
+    {
+      "path": "/zh/blog/how-to-write-cinematic-video-prompts",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 1157,
+      "liveCopySha256": "f3f95045e05ecfdfea89d192e69ac2730f00b4aeb3ce0ca44b959b7dc939ba86",
+      "localCopySha256": "f3f95045e05ecfdfea89d192e69ac2730f00b4aeb3ce0ca44b959b7dc939ba86",
+      "differences": []
+    },
+    {
+      "path": "/zh/blog/veo-3-1-vs-kling-3-0",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 1322,
+      "liveCopySha256": "22b0b5c4e2659ca21508a33df7222ea9050ed9d3167dc11802512cae20584991",
+      "localCopySha256": "22b0b5c4e2659ca21508a33df7222ea9050ed9d3167dc11802512cae20584991",
+      "differences": []
+    },
+    {
+      "path": "/zh/blog/ugc-ads-with-ai-prompts",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 1398,
+      "liveCopySha256": "4b36729fb1c95e6381dceae0f58227b84b78e7fe395872b99a6c55785a492c9f",
+      "localCopySha256": "4b36729fb1c95e6381dceae0f58227b84b78e7fe395872b99a6c55785a492c9f",
+      "differences": []
+    },
+    {
+      "path": "/zh/terms-of-service",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 1282,
+      "liveCopySha256": "14fbc11fff4bf13d2959c5746020da0b409f844663a451b29582dfc64844a7f4",
+      "localCopySha256": "14fbc11fff4bf13d2959c5746020da0b409f844663a451b29582dfc64844a7f4",
+      "differences": []
+    },
+    {
+      "path": "/zh/privacy-policy",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 1227,
+      "liveCopySha256": "3a387695a44ff00d0ce88a0681ce38326583d982a0d76a2d457e13bd60c1a36b",
+      "localCopySha256": "3a387695a44ff00d0ce88a0681ce38326583d982a0d76a2d457e13bd60c1a36b",
+      "differences": []
+    },
+    {
+      "path": "/",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 8958,
+      "liveCopySha256": "ccb7a0d0bc59118e0447fd237d3b2f775dbb2e647f0a11d0b010a0294a4ff200",
+      "localCopySha256": "ccb7a0d0bc59118e0447fd237d3b2f775dbb2e647f0a11d0b010a0294a4ff200",
+      "differences": []
+    },
+    {
+      "path": "/zh",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 3746,
+      "liveCopySha256": "77fe23a164d8b78eee1ff7979b692475e0a9a4f2d4939c9b7d36b107bf54563f",
+      "localCopySha256": "77fe23a164d8b78eee1ff7979b692475e0a9a4f2d4939c9b7d36b107bf54563f",
+      "differences": []
+    },
+    {
+      "path": "/sign-up",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 93,
+      "liveCopySha256": "6ab41d7024ea4af4cb2d07eb488ed4f61c575fc8f87fd1b471c66eac869884ea",
+      "localCopySha256": "6ab41d7024ea4af4cb2d07eb488ed4f61c575fc8f87fd1b471c66eac869884ea",
+      "differences": []
+    },
+    {
+      "path": "/zh/sign-in",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 31,
+      "liveCopySha256": "f8eff6aaad1e9fdc4f8e516b88d6b1334c3a11865949f4e4393db03673ec34ab",
+      "localCopySha256": "f8eff6aaad1e9fdc4f8e516b88d6b1334c3a11865949f4e4393db03673ec34ab",
+      "differences": []
+    },
+    {
+      "path": "/zh/sign-up",
+      "locale": "zh",
+      "matching": true,
+      "comparedCharacters": 36,
+      "liveCopySha256": "b82f2f39d7f90f9eb78a593cd3cd850a5d09a1c8f89f87d0186d194d5a34798b",
+      "localCopySha256": "b82f2f39d7f90f9eb78a593cd3cd850a5d09a1c8f89f87d0186d194d5a34798b",
+      "differences": []
+    },
+    {
+      "path": "/sign-in",
+      "locale": "en",
+      "matching": true,
+      "comparedCharacters": 71,
+      "liveCopySha256": "2bc390e5f1aa1740cd7ba1faefddb2e6afc05700ef18acfbcd9eb16eaa16261a",
+      "localCopySha256": "2bc390e5f1aa1740cd7ba1faefddb2e6afc05700ef18acfbcd9eb16eaa16261a",
+      "differences": []
+    }
+  ],
+  "interactiveStates": [
+    {
+      "locale": "en",
+      "state": "tools0",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "tools1",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "tools2",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "tools3",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "faq0",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "faq1",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "faq2",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "faq3",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "faq4",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "faq5",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "faq6",
+      "matches": true
+    },
+    {
+      "locale": "en",
+      "state": "faq7",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "tools0",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "tools1",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "tools2",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "tools3",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "faq0",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "faq1",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "faq2",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "faq3",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "faq4",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "faq5",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "faq6",
+      "matches": true
+    },
+    {
+      "locale": "zh",
+      "state": "faq7",
+      "matches": true
+    }
+  ],
+  "mobileMenus": {
+    "en": true,
+    "zh": true
+  },
+  "preserved": {
+    "localVideoPlacements": 29,
+    "uniqueLocalVideos": 29,
+    "monthlyEquivalentForAnnualPlans": true,
+    "fullAnnualCheckoutAmounts": true
+  }
+}

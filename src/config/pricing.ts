@@ -9,6 +9,7 @@
  */
 
 import { PaymentInterval, PaymentType } from '@/core/payment/types';
+import { purchasedCredits } from '@/config/ai-pricing';
 
 export type PricingPlanInfo = {
   name: string;
@@ -44,7 +45,7 @@ export type PricingProduct = {
 };
 
 /**
- * Default demo catalog. Replace with your real products when launching.
+ * Pavo AI packages use the same credit value across every billing interval.
  * Keys MUST match what the pricing UI sends as product_id.
  */
 export const pricingCatalog: Record<string, PricingProduct> = {
@@ -54,9 +55,9 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     planName: 'Starter',
     description: 'Starter Monthly',
     type: PaymentType.SUBSCRIPTION,
-    priceInCents: 600,
+    priceInCents: 499,
     currency: 'usd',
-    credits: 5000,
+    credits: purchasedCredits(499),
     plan: {
       name: 'Starter',
       interval: PaymentInterval.MONTH,
@@ -69,9 +70,9 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     planName: 'Pro',
     description: 'Pro Monthly',
     type: PaymentType.SUBSCRIPTION,
-    priceInCents: 1900,
+    priceInCents: 1499,
     currency: 'usd',
-    credits: 50000,
+    credits: purchasedCredits(1499),
     plan: { name: 'Pro', interval: PaymentInterval.MONTH, intervalCount: 1 },
   },
   enterprise_monthly: {
@@ -80,9 +81,9 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     planName: 'Enterprise',
     description: 'Enterprise Monthly',
     type: PaymentType.SUBSCRIPTION,
-    priceInCents: 6900,
+    priceInCents: 3999,
     currency: 'usd',
-    credits: 500000,
+    credits: purchasedCredits(3999),
     plan: {
       name: 'Enterprise',
       interval: PaymentInterval.MONTH,
@@ -95,9 +96,9 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     planName: 'Starter',
     description: 'Starter Yearly',
     type: PaymentType.SUBSCRIPTION,
-    priceInCents: 5900,
+    priceInCents: 399 * 12,
     currency: 'usd',
-    credits: 60000,
+    credits: purchasedCredits(399 * 12),
     plan: { name: 'Starter', interval: PaymentInterval.YEAR, intervalCount: 1 },
   },
   pro_yearly: {
@@ -106,9 +107,9 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     planName: 'Pro',
     description: 'Pro Yearly',
     type: PaymentType.SUBSCRIPTION,
-    priceInCents: 17900,
+    priceInCents: 1199 * 12,
     currency: 'usd',
-    credits: 600000,
+    credits: purchasedCredits(1199 * 12),
     plan: { name: 'Pro', interval: PaymentInterval.YEAR, intervalCount: 1 },
   },
   enterprise_yearly: {
@@ -117,9 +118,9 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     planName: 'Enterprise',
     description: 'Enterprise Yearly',
     type: PaymentType.SUBSCRIPTION,
-    priceInCents: 64900,
+    priceInCents: 3199 * 12,
     currency: 'usd',
-    credits: 6000000,
+    credits: purchasedCredits(3199 * 12),
     plan: {
       name: 'Enterprise',
       interval: PaymentInterval.YEAR,
@@ -129,32 +130,32 @@ export const pricingCatalog: Record<string, PricingProduct> = {
   starter_lifetime: {
     productId: 'starter_lifetime',
     productName: 'Starter',
-    planName: 'Starter Lifetime',
-    description: 'Starter Lifetime',
+    planName: 'Starter Credit Pack',
+    description: 'Starter Credit Pack',
     type: PaymentType.ONE_TIME,
-    priceInCents: 14900,
+    priceInCents: 999,
     currency: 'usd',
-    credits: 100000,
+    credits: purchasedCredits(999),
   },
   pro_lifetime: {
     productId: 'pro_lifetime',
     productName: 'Pro',
-    planName: 'Pro Lifetime',
-    description: 'Pro Lifetime',
+    planName: 'Pro Credit Pack',
+    description: 'Pro Credit Pack',
     type: PaymentType.ONE_TIME,
-    priceInCents: 49900,
+    priceInCents: 2999,
     currency: 'usd',
-    credits: 1000000,
+    credits: purchasedCredits(2999),
   },
   enterprise_lifetime: {
     productId: 'enterprise_lifetime',
     productName: 'Enterprise',
-    planName: 'Enterprise Lifetime',
-    description: 'Enterprise Lifetime',
+    planName: 'Enterprise Credit Pack',
+    description: 'Enterprise Credit Pack',
     type: PaymentType.ONE_TIME,
-    priceInCents: 199900,
+    priceInCents: 7999,
     currency: 'usd',
-    credits: 10000000,
+    credits: purchasedCredits(7999),
   },
 
   // Guest posts (see src/modules/guest-posts). Published permanently, every

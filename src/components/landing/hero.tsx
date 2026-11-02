@@ -5,13 +5,16 @@ import { cn } from '@/lib/utils';
 import {
   LandingGenerator,
   type GeneratorTab,
+  type LandingGeneratorProps,
 } from '@/components/landing/generator';
+import {
+  VideoPreview,
+  type PreviewVideo,
+} from '@/components/landing/video-preview';
 
 export interface HeroTile {
-  src: string;
+  video: PreviewVideo;
   alt: string;
-  kind?: 'video';
-  duration?: string;
 }
 
 export interface LandingHeroProps {
@@ -27,11 +30,8 @@ export interface LandingHeroProps {
   /** Called with the finished prompt + mode from the result card CTA. */
   onSignUp?: (prompt: string, tabId: string) => void;
   /** See LandingGeneratorProps — first-generate gate + paywall hook. */
-  onFirstGenerate?: (
-    prompt: string,
-    tabId: string
-  ) => Promise<'run' | 'blocked'>;
-  onPaywall?: (prompt: string, tabId: string) => void;
+  onFirstGenerate?: LandingGeneratorProps['onFirstGenerate'];
+  onPaywall?: LandingGeneratorProps['onPaywall'];
   trust: string[];
   /** Generator composer labels (toggles). */
   styleLabel: string;
@@ -144,30 +144,20 @@ export function LandingHero({
         <div className="mt-12 grid w-full grid-cols-2 gap-3 sm:grid-cols-4 lg:mt-16 lg:gap-4">
           {tiles.map((tile, index) => (
             <div
-              key={`${tile.src}-${index}`}
+              key={`${tile.video.src}-${index}`}
               className="sv-enter sv-hover-lift relative aspect-video overflow-hidden rounded-[14px] ring-1 ring-white/[0.07] transition-[box-shadow] duration-500 hover:ring-[var(--sv-iris)]/50"
               style={{ '--i': index + tileBase } as CSSProperties}
             >
-              <img
-                src={tile.src}
+              <VideoPreview
+                video={tile.video}
                 alt={tile.alt}
-                width={640}
-                height={360}
-                loading="lazy"
-                className="sv-kenburns h-full w-full object-cover"
-                style={
-                  {
-                    '--sv-kb-d': `${24 + (index % 3) * 6}s`,
-                    '--sv-kb-delay': `${index * -7}s`,
-                  } as CSSProperties
-                }
+                playLabel={playLabel}
+                pauseLabel={pauseLabel}
               />
-              {tile.kind === 'video' && (
-                <span className="sv-meta absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10.5px] font-medium text-white backdrop-blur">
-                  <Play size={10} fill="currentColor" aria-hidden />
-                  {tile.duration}
-                </span>
-              )}
+              <span className="sv-meta absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10.5px] font-medium text-white backdrop-blur">
+                <Play size={10} fill="currentColor" aria-hidden />
+                {tile.video.duration}
+              </span>
             </div>
           ))}
         </div>

@@ -46,6 +46,60 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-02: Distinct prices for monthly, annual and one-time purchases
+
+Take `src/config/pricing.ts` and the pricing regression tests together.
+Monthly prices remain $4.99 / $14.99 / $39.99; annual monthly equivalents are
+$3.99 / $11.99 / $31.99, charged as $47.88 / $143.88 / $383.88 per year.
+One-time packs cost $9.99 / $29.99 / $79.99. Every purchase still grants
+1,000 credits per USD paid. The three existing purchase-price references in
+the comparison, FAQ and guide change only their dollar amounts.
+
+Redeploy to apply these prices to new checkouts. No schema migration is
+needed; existing orders, balances and subscription snapshots are not rewritten.
+
+## 2026-11-02: User journey and navigation fixes
+
+Take the landing navigation, locale-aware marketing links, static information
+pages, sidebar, profile form, auth pages, generator and `lib/generator-state.ts`
+together. The generator checkout return now includes `?checkout=returned`;
+restoring a saved draft without that marker never starts a paid generation.
+Image quality identifiers now use the catalog's uppercase `1K`/`2K`/`4K` values.
+Anonymous visitors can open sign-in and sign-up instead of being sent home.
+
+No schema migration is required. Existing Pavo AI public wording is captured
+from https://pavoai.net/ in `tests/fixtures/public-copy.json`. Run
+`node --import tsx --test tests/public-copy.test.ts tests/generator-state.test.ts`
+when changing the related pages. Preserve existing wording; add new content
+through new translation keys. Replace the generic social-platform destinations
+only when the project's actual profile URLs are available.
+
+## 2026-11-02: Annual plan cards show monthly comparison prices
+
+Take `src/lib/pricing-display.ts`, the pricing block, `PricingTable`, and both
+translation files together. Annual cards show the annual catalog total divided
+by twelve, with the full annual amount beneath it. Payment-provider selection
+shows `checkoutPrice`; checkout continues to use the catalog's full annual
+amount and yearly subscription interval. No schema or pricing migration is needed.
+
+## 2026-11-02: Pavo AI pricing uses verified EvoLink base fees
+
+Take `src/config/ai-pricing.ts`, the EvoLink provider, generation API,
+pricing catalog, pricing block, generator/paywall changes and both translation
+files together. New packages sell 1,000 Pavo credits per USD; generation
+charges use eight times the verified upstream base fee. See
+`docs/research/evolink-pricing.md` for the rates, variable-token caveat and
+expired Fast promotion. The pricing page and generator paywall now use the
+checkout catalog directly. One-time products retain their existing product
+IDs but are labeled as finite credit packs.
+
+No schema migration is needed. Redeploy to apply the new catalog and
+generation rates. Existing balances, paid orders and subscription snapshots
+are not rewritten; new generation requests use the new charges immediately.
+Existing subscriptions continue their recorded provider price and credit
+allocation. Any migration of existing subscriptions or balances needs a
+separate customer transition plan. Open checkouts retain their saved terms.
+
 ## 2026-10-31: Share D1 between local development and Workers
 
 The Node-based Vite dev server now resolves the configured D1 binding when

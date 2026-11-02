@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { useSession } from '@/core/auth/client';
 import { apiPatch } from '@/lib/api-client';
 import { m } from '@/paraglide/messages.js';
 import { TextField } from '@/components/form-field';
@@ -34,6 +35,7 @@ export function SettingsForm({
 }) {
   const [image, setImage] = useState(initialImage);
   const queryClient = useQueryClient();
+  const { refetch: refetchSession } = useSession();
 
   const saveMutation = useMutation({
     mutationFn: (values: { name: string; image: string }) =>
@@ -41,6 +43,7 @@ export function SettingsForm({
     onSuccess: () => {
       toast.success(m['settings.profile.saved']());
       queryClient.invalidateQueries({ queryKey: ['user-info'] });
+      void refetchSession({ query: { disableCookieCache: true } });
     },
     onError: (err: any) => {
       toast.error(err?.message || m['settings.profile.save_failed']());

@@ -1,34 +1,37 @@
+import { landingVideos } from '@/config/landing-media';
 import { m } from '@/paraglide/messages.js';
 import { LandingHowItWorks } from '@/components/landing/how-it-works';
 
 /**
- * How it works — four steps, each illustrated by a real generated frame.
+ * How it works — four steps, illustrated with licensed workflow clips.
  */
 export function HowItWorks() {
   return (
     <LandingHowItWorks
       label={m['lp.how.label']()}
       title={m['lp.how.title']()}
+      playLabel={m['lp.hero.play']()}
+      pauseLabel={m['lp.hero.pause']()}
       steps={[
         {
           title: m['lp.how.s1'](),
           description: m['lp.how.s1d'](),
-          image: '/imgs/generated/how-mode.jpg',
+          video: landingVideos['digital-world'],
         },
         {
           title: m['lp.how.s2'](),
           description: m['lp.how.s2d'](),
-          image: '/imgs/generated/how-prompt.jpg',
+          video: landingVideos.typing,
         },
         {
           title: m['lp.how.s3'](),
           description: m['lp.how.s3d'](),
-          image: '/imgs/generated/how-compare.jpg',
+          video: landingVideos.editing,
         },
         {
           title: m['lp.how.s4'](),
           description: m['lp.how.s4d'](),
-          image: '/imgs/generated/how-export.jpg',
+          video: landingVideos.forest,
         },
       ]}
     />

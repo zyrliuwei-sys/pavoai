@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ComponentType, type SVGProps } from 'react';
+import { useRef, useState, type ComponentType, type SVGProps } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Check } from 'lucide-react';
 
@@ -21,6 +21,9 @@ export interface PricingPlan {
   name: string;
   description?: string;
   price: string;
+  /** Actual amount due, before converting an annual price to a monthly display. */
+  checkoutPrice?: string;
+  billingNote?: string;
   originalPrice?: string;
   currency?: string;
   interval?: string;
@@ -52,10 +55,11 @@ export function PricingTable({
   onCheckout,
 }: {
   groups: PricingGroup[];
-  onCheckout?: (plan: PricingPlan) => void;
+  onCheckout?: (plan: PricingPlan) => void | Promise<unknown>;
 }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.key || '');
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const startingCheckout = useRef(false);
 
   const currentGroup = groups.find((g) => g.key === activeGroup) || groups[0];
 
@@ -88,7 +92,8 @@ export function PricingTable({
     },
   });
 
-  function handleCheckout(plan: PricingPlan) {
+  async function handleCheckout(plan: PricingPlan) {
+    if (startingCheckout.current) return;
     // Shows in the admin user timeline; ignored for signed-out visitors.
     track('plan_selected', {
       plan: plan.id,
@@ -96,7 +101,16 @@ export function PricingTable({
       interval: plan.plan?.interval ?? plan.interval ?? null,
     });
     if (onCheckout) {
-      onCheckout(plan);
+      startingCheckout.current = true;
+      setLoadingId(plan.id);
+      try {
+        await onCheckout(plan);
+      } catch {
+        // The checkout hook reports its provider error to the visitor.
+      } finally {
+        startingCheckout.current = false;
+        setLoadingId(null);
+      }
       return;
     }
 
@@ -111,16 +125,18 @@ export function PricingTable({
       {/* Group tabs — pill toggle */}
       {groups.length > 1 && (
         <div className="flex justify-center">
-          <div className="border-border bg-muted/40 inline-flex items-center rounded-full border p-1">
+          <div className="border-border bg-muted inline-flex items-center rounded-full border p-1">
             {groups.map((group) => (
               <button
                 key={group.key}
+                type="button"
+                aria-pressed={activeGroup === group.key}
                 onClick={() => setActiveGroup(group.key)}
                 className={cn(
-                  'rounded-full px-5 py-1.5 text-sm font-medium transition-colors',
+                  'focus-visible:ring-ring focus-visible:ring-offset-muted rounded-full px-5 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                   activeGroup === group.key
                     ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-foreground/80 hover:bg-background/60 hover:text-foreground'
                 )}
               >
                 {group.label}
@@ -174,6 +190,11 @@ export function PricingTable({
                 {plan.originalPrice}
               </span>
             )}
+            {plan.billingNote && (
+              <p className="text-muted-foreground mb-4 text-sm">
+                {plan.billingNote}
+              </p>
+            )}
 
             {/* Description */}
             {plan.description && (
@@ -185,9 +206,12 @@ export function PricingTable({
             {/* CTA — full-width pill */}
             <Button
               variant={plan.featured ? 'default' : 'outline'}
-              className="h-10 w-full rounded-full text-sm font-medium"
+              className={cn(
+                'h-10 w-full rounded-full text-sm font-medium',
+                !plan.featured && 'text-foreground'
+              )}
               onClick={() => handleCheckout(plan)}
-              disabled={loadingId === plan.id}
+              disabled={loadingId !== null}
             >
               {loadingId === plan.id
                 ? m['common.pricing.processing']()

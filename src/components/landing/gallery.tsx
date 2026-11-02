@@ -1,15 +1,18 @@
 import { Play } from 'lucide-react';
 
+import { Link } from '@/core/i18n/navigation';
 import { RevealSection } from '@/components/landing/reveal';
+import {
+  VideoPreview,
+  type PreviewVideo,
+} from '@/components/landing/video-preview';
 
 export interface GalleryItem {
-  src: string;
+  video: PreviewVideo;
   alt: string;
   caption?: string;
-  model?: string;
+  tag?: string;
   aspect?: string;
-  kind?: 'video';
-  duration?: string;
 }
 
 export interface LandingGalleryProps {
@@ -17,6 +20,8 @@ export interface LandingGalleryProps {
   title: string;
   subtitle: string;
   items: GalleryItem[];
+  playLabel: string;
+  pauseLabel: string;
   cta: { label: string; href: string };
 }
 
@@ -26,19 +31,13 @@ function aspectRatioCss(aspect?: string): string {
   return match ? `${match[1]} / ${match[2]}` : '4 / 5';
 }
 
-/** Intrinsic size matching the card aspect ratio, for CLS-free rendering. */
-function intrinsicSize(aspect?: string): { width: number; height: number } {
-  const ratio = aspectRatioCss(aspect);
-  const [w, h] = ratio.split('/').map(Number);
-  const width = 800;
-  return { width, height: Math.round((width * h) / w) };
-}
-
 export function LandingGallery({
   label,
   title,
   subtitle,
   items,
+  playLabel,
+  pauseLabel,
   cta,
 }: LandingGalleryProps) {
   return (
@@ -56,55 +55,48 @@ export function LandingGallery({
         </p>
 
         <div className="sv-rv sv-rv-cards sv-rv-zoom mt-12 columns-2 gap-4 lg:columns-3 [&>*]:mb-4">
-          {items.map((item, i) => {
-            const size = intrinsicSize(item.aspect);
-            return (
-              <figure
-                key={`${item.src}-${i}`}
-                className="sv-hover-lift group relative mb-4 break-inside-avoid overflow-hidden rounded-[16px] ring-1 ring-white/[0.07]"
-                style={{ aspectRatio: aspectRatioCss(item.aspect) }}
-              >
-                <img
-                  src={item.src}
-                  alt={item.alt}
-                  width={size.width}
-                  height={size.height}
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
-                {item.kind === 'video' && (
-                  <span className="sv-meta absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10.5px] font-medium text-white backdrop-blur">
-                    <Play size={10} />
-                    {item.duration}
-                  </span>
-                )}
-                {(item.caption || item.model) && (
-                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4">
-                    {item.caption && (
-                      <figcaption className="text-[13px] font-medium text-white">
-                        {item.caption}
-                      </figcaption>
-                    )}
-                    {item.model && (
-                      <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] text-white/80 backdrop-blur">
-                        {item.model}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </figure>
-            );
-          })}
+          {items.map((item, i) => (
+            <figure
+              key={`${item.video.src}-${i}`}
+              className="sv-hover-lift group relative mb-4 break-inside-avoid overflow-hidden rounded-[16px] ring-1 ring-white/[0.07]"
+              style={{ aspectRatio: aspectRatioCss(item.aspect) }}
+            >
+              <VideoPreview
+                video={item.video}
+                alt={item.alt}
+                playLabel={playLabel}
+                pauseLabel={pauseLabel}
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0" />
+              <span className="sv-meta pointer-events-none absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10.5px] font-medium text-white backdrop-blur">
+                <Play size={10} />
+                {item.video.duration}
+              </span>
+              {(item.caption || item.tag) && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4">
+                  {item.caption && (
+                    <figcaption className="text-[13px] font-medium text-white">
+                      {item.caption}
+                    </figcaption>
+                  )}
+                  {item.tag && (
+                    <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] text-white/80 backdrop-blur">
+                      {item.tag}
+                    </span>
+                  )}
+                </div>
+              )}
+            </figure>
+          ))}
         </div>
 
         <div className="mt-8 flex justify-center">
-          <a
+          <Link
             href={cta.href}
             className="sv-press inline-flex h-11 items-center rounded-full px-6 text-sm font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/[0.06]"
           >
             {cta.label}
-          </a>
+          </Link>
         </div>
       </div>
     </RevealSection>

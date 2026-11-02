@@ -50,7 +50,7 @@ function SignInPage() {
   // back here) → go home. The auth pages never gate themselves, so this can't loop.
   useEffect(() => {
     if (sessionPending || navigatingRef.current) return;
-    if (session?.user) {
+    if (session?.user && !session.user.isAnonymous) {
       navigatingRef.current = true;
       router.push('/');
     }

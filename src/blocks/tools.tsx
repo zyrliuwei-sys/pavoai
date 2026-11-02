@@ -62,9 +62,9 @@ function tool(
     features: [1, 2, 3].map((f) => tDynamic(`lp.tools.t${i}f${f}`)),
     openLabel: m['lp.tools.open'](),
     guideLabel: m['lp.tools.guide'](),
-    // P0-2 interim: try the generator on this page; once each studio gets
-    // its own route (P1-5), point these at the real feature pages.
-    href: '/#generator',
+    href: `/?mode=${i === 2 ? 'image' : 'video'}#generator`,
+    guideHref: '/blog/how-to-write-cinematic-video-prompts',
+    available: i <= 2,
   };
 }
 

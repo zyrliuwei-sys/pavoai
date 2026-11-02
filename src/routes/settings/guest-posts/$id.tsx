@@ -182,16 +182,33 @@ function GuestPostEditorPage() {
     },
   });
 
-  if (!isNew && (detail.isPending || !loaded)) {
+  if ((!isNew && detail.isError) || (isNew && info.isError)) {
+    return (
+      <div className="space-y-3 p-6" role="alert">
+        <p className="text-muted-foreground">
+          {(isNew ? info.error : detail.error)?.message}
+        </p>
+        <Link href="/settings/guest-posts" className="text-sm underline">
+          {m['guest_posts.back']()}
+        </Link>
+      </div>
+    );
+  }
+  if ((isNew && info.isPending) || (!isNew && (detail.isPending || !loaded))) {
     return (
       <div className="text-muted-foreground p-6">
         {m['guest_posts.loading']()}
       </div>
     );
   }
-  if (!isNew && detail.isError) {
+  if (isNew && !info.data?.enabled) {
     return (
-      <div className="text-muted-foreground p-6">{detail.error.message}</div>
+      <div className="space-y-3 p-6">
+        <p className="text-muted-foreground">{m['guest_posts.closed']()}</p>
+        <Link href="/settings/guest-posts" className="text-sm underline">
+          {m['guest_posts.back']()}
+        </Link>
+      </div>
     );
   }
 

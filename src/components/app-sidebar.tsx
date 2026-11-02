@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 
 import { Link, usePathname } from '@/core/i18n/navigation';
-import { localizeHref } from '@/paraglide/runtime.js';
 import {
   Sidebar,
   SidebarContent,
@@ -240,15 +239,14 @@ export function AppSidebar({
                   // Plain link.
                   return (
                     <SidebarMenuItem key={item.href}>
-                      <Link href={item.href}>
-                        <SidebarMenuButton
-                          tooltip={item.label}
-                          isActive={isActiveHref(item.href)}
-                        >
-                          <Icon />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </Link>
+                      <SidebarMenuButton
+                        render={<Link href={item.href} />}
+                        tooltip={item.label}
+                        isActive={isActiveHref(item.href)}
+                      >
+                        <Icon />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
                 })}
@@ -269,25 +267,23 @@ export function AppSidebar({
                   ? pathname === '/'
                   : pathname.startsWith(item.href);
               const button = (
-                <SidebarMenuButton tooltip={item.label} isActive={isActive}>
+                <SidebarMenuButton
+                  render={
+                    <Link
+                      href={item.href}
+                      target={item.newTab ? '_blank' : undefined}
+                      rel={item.newTab ? 'noopener noreferrer' : undefined}
+                    />
+                  }
+                  tooltip={item.label}
+                  isActive={isActive}
+                >
                   <Icon />
                   <span>{item.label}</span>
                 </SidebarMenuButton>
               );
               return (
-                <SidebarMenuItem key={item.href}>
-                  {item.newTab ? (
-                    <a
-                      href={localizeHref(item.href)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {button}
-                    </a>
-                  ) : (
-                    <Link href={item.href}>{button}</Link>
-                  )}
-                </SidebarMenuItem>
+                <SidebarMenuItem key={item.href}>{button}</SidebarMenuItem>
               );
             })}
           </SidebarMenu>

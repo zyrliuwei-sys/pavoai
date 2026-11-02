@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { LifeBuoy, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -30,6 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
  * Requires login — unauthenticated users get a sign-in prompt instead.
  */
 export function SupportWidget() {
+  const queryClient = useQueryClient();
   const { data: session, isPending } = useSession();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -48,6 +50,7 @@ export function SupportWidget() {
     setSubmitting(true);
     try {
       await apiPost('/api/tickets', { title, content, attachments });
+      void queryClient.invalidateQueries({ queryKey: ['user-tickets'] });
       toast.success(m['common.support.success']());
       setOpen(false);
       setTitle('');

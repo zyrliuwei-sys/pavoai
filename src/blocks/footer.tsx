@@ -21,8 +21,8 @@ export function Footer() {
   const legal = [
     { label: m['lp.footer.l51'](), href: '/privacy-policy' },
     { label: m['lp.footer.l52'](), href: '/terms-of-service' },
-    { label: m['lp.footer.l53'](), href: '/pricing' },
-    { label: m['lp.footer.l54'](), href: '/terms-of-service' },
+    { label: m['lp.footer.l53'](), href: '/terms-of-service#billing' },
+    { label: m['lp.footer.l54'](), href: '/terms-of-service#content-rights' },
   ];
 
   return (
@@ -52,7 +52,7 @@ export function Footer() {
         {
           title: m['lp.footer.col1'](),
           links: [
-            { label: m['lp.footer.l11'](), href: '/#gallery' },
+            { label: m['lp.footer.l11'](), href: '/?mode=video#generator' },
             { label: m['lp.footer.l12'](), href: '/#use-cases' },
             { label: m['lp.footer.l13'](), href: '/#tools' },
             { label: m['lp.footer.l14'](), href: '/#tools' },
@@ -61,7 +61,7 @@ export function Footer() {
         {
           title: m['lp.footer.col2'](),
           links: [
-            { label: m['lp.footer.l21'](), href: '/#tools' },
+            { label: m['lp.footer.l21'](), href: '/?mode=image#generator' },
             { label: m['lp.footer.l22'](), href: '/#tools' },
             { label: m['lp.footer.l23'](), href: '/#tools' },
             { label: m['lp.footer.l24'](), href: '/#use-cases' },
@@ -71,18 +71,21 @@ export function Footer() {
           title: m['lp.footer.col3'](),
           links: [
             { label: m['lp.footer.l31'](), href: '/blog' },
-            { label: m['lp.footer.l32'](), href: '/blog' },
+            {
+              label: m['lp.footer.l32'](),
+              href: '/blog/how-to-write-cinematic-video-prompts',
+            },
             { label: m['lp.footer.l33'](), href: '/#whats-new' },
-            { label: m['lp.footer.l34'](), href: '/blog' },
+            { label: m['lp.footer.l34'](), href: '/changelog' },
           ],
         },
         {
           title: m['lp.footer.col4'](),
           links: [
             { label: m['lp.footer.l41'](), href: '/pricing' },
-            { label: m['lp.footer.l42'](), href: '/blog' },
-            { label: m['lp.footer.l43'](), href: '/blog' },
-            { label: m['lp.footer.l44'](), href: '/blog' },
+            { label: m['lp.footer.l42'](), href: '/about' },
+            { label: m['lp.footer.l43'](), href: '/contact' },
+            { label: m['lp.footer.l44'](), href: '/careers' },
           ],
         },
         { title: m['lp.footer.col5'](), links: legal },

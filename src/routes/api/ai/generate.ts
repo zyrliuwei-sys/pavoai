@@ -5,6 +5,7 @@ import {
   EVO_MODELS,
   evoCostCredits,
   evoCreateTask,
+  evoQuality,
   evoQueryTask,
 } from '@/core/ai/evolink';
 import { getAuth } from '@/core/auth';
@@ -22,7 +23,7 @@ import { respData, respErr, respJson } from '@/lib/resp';
 /**
  * Landing-page generator backed by EvoLink. Generation is a paid feature:
  * every call requires a signed-in user and consumes credits (see the
- * costCredits map in the EvoLink catalog). New users start with 0 credits,
+ * verified upstream rates in the EvoLink catalog). New users start with 0 credits,
  * so they must buy a plan before generating. Credits are charged when the
  * task is created and auto-revoked if it fails.
  */
@@ -96,9 +97,7 @@ async function POST({ request }: { request: Request }) {
     const aspect = EVO_ASPECTS.includes(String(body.aspect))
       ? String(body.aspect)
       : '16:9';
-    const quality = entry.qualities.includes(String(body.quality))
-      ? String(body.quality)
-      : entry.defaultQuality;
+    const quality = evoQuality(entry, String(body.quality));
     const fast = body.fast === true;
 
     const configs = await readEvoConfigs();
@@ -113,7 +112,7 @@ async function POST({ request }: { request: Request }) {
         provider: 'evolink',
         model: entry.model,
         prompt,
-        costCredits: evoCostCredits(entry, quality),
+        costCredits: evoCostCredits(entry, quality, fast),
       });
     } catch (error: any) {
       if (String(error?.message || '').includes('Insufficient credits'))

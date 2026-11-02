@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Menu, X } from 'lucide-react';
 
 import { useSession } from '@/core/auth/client';
@@ -18,6 +18,8 @@ export interface LandingNavProps {
   links: NavLink[];
   signInLabel: string;
   signInHref: string;
+  menuLabel: string;
+  localeSelector?: ReactNode;
   /** Optional primary CTA pill; omit when the page has its own entry point. */
   ctaLabel?: string;
   ctaHref?: string;
@@ -29,6 +31,8 @@ export function LandingNav({
   links,
   signInLabel,
   signInHref,
+  menuLabel,
+  localeSelector,
   ctaLabel,
   ctaHref,
 }: LandingNavProps) {
@@ -37,7 +41,7 @@ export function LandingNav({
   // Hide on scroll down, reveal on scroll up (not while the menu is open).
   const [hidden, setHidden] = useState(false);
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user?.isAnonymous ? null : session?.user;
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -102,6 +106,7 @@ export function LandingNav({
 
         {/* Desktop actions */}
         <div className="hidden items-center gap-1 lg:flex">
+          {localeSelector}
           {user ? (
             <SiteUserMenu
               name={user.name || 'User'}
@@ -130,7 +135,7 @@ export function LandingNav({
         <button
           type="button"
           aria-expanded={open}
-          aria-label="Toggle navigation menu"
+          aria-label={menuLabel}
           onClick={() => setOpen((v) => !v)}
           className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/[0.06] lg:hidden"
         >
@@ -144,6 +149,8 @@ export function LandingNav({
 
       {/* Mobile menu panel — grid-rows animation */}
       <div
+        inert={!open}
+        aria-hidden={!open}
         className={cn(
           'grid transition-[grid-template-rows] duration-300 ease-out lg:hidden',
           open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
@@ -170,6 +177,7 @@ export function LandingNav({
               ))}
             </nav>
             <div className="mt-3 flex flex-col gap-2">
+              {localeSelector}
               {user ? (
                 <SiteUserMenu
                   name={user.name || 'User'}

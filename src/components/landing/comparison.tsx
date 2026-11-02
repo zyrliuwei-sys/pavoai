@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 
+import { Link } from '@/core/i18n/navigation';
 import { RevealSection } from '@/components/landing/reveal';
 
 export interface CompareItem {
@@ -106,18 +107,18 @@ export function LandingComparison({
                 <span className="font-semibold text-white">{newWay.price}</span>
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <a
+                <Link
                   href={newWay.cta.href}
                   className="sv-press inline-flex h-11 items-center rounded-full bg-[var(--sv-iris-strong)] px-5 text-sm font-semibold text-white transition hover:bg-[var(--sv-iris-deep)]"
                 >
                   {newWay.cta.label}
-                </a>
-                <a
+                </Link>
+                <Link
                   href={newWay.secondary.href}
                   className="inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-white/85 ring-1 ring-white/20 transition hover:bg-white/[0.06]"
                 >
                   {newWay.secondary.label}
-                </a>
+                </Link>
               </div>
             </div>
           </div>

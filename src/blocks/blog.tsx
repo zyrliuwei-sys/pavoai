@@ -1,4 +1,5 @@
 import { tDynamic } from '@/core/i18n/dynamic';
+import { landingVideos } from '@/config/landing-media';
 import { m } from '@/paraglide/messages.js';
 import { LandingBlog } from '@/components/landing/blog';
 
@@ -12,6 +13,12 @@ const FEATURED_SLUGS = [
   'ugc-ads-with-ai-prompts',
 ] as const;
 
+const FEATURED_VIDEOS = [
+  landingVideos['user-supercar'],
+  landingVideos['sunset-couple'],
+  landingVideos.creator,
+];
+
 export function Blog() {
   return (
     <LandingBlog
@@ -23,10 +30,12 @@ export function Blog() {
         excerpt: tDynamic(`lp.blog.p${i}x`),
         category: tDynamic(`lp.blog.p${i}c`),
         date: tDynamic(`lp.blog.p${i}d`),
-        image: `/imgs/generated/blog-${['models', 'prompt', 'ugc'][i - 1]}.jpg`,
+        video: FEATURED_VIDEOS[i - 1],
         href: `/blog/${FEATURED_SLUGS[i - 1]}`,
       }))}
       readLabel={m['lp.blog.read']()}
+      playLabel={m['lp.hero.play']()}
+      pauseLabel={m['lp.hero.pause']()}
     />
   );
 }

@@ -2,11 +2,14 @@ import { useState } from 'react';
 
 import { authClient } from '@/core/auth/client';
 import { useRouter } from '@/core/i18n/navigation';
+import { EVO_MODELS, evoCostCredits } from '@/config/ai-pricing';
+import { landingVideos } from '@/config/landing-media';
 import { m } from '@/paraglide/messages.js';
 import { usePricingCheckout, usePricingGroups } from '@/blocks/pricing';
 import {
   parkPendingGen,
   readPendingGen,
+  type GenerationSelection,
   type PendingGeneration,
 } from '@/components/landing/generator';
 import { LandingHero } from '@/components/landing/hero';
@@ -30,15 +33,15 @@ const MODELS = [
 ];
 
 const TILES = [
-  { slug: 'hero-peacock', duration: '0:08' },
-  { slug: 'hero-neon-car', duration: '0:06' },
-  { slug: 'hero-anime', duration: '0:10' },
-  { slug: 'hero-perfume', duration: '0:05' },
-  { slug: 'hero-astronaut', duration: '0:09' },
-  { slug: 'hero-dragon', duration: '0:12' },
-  { slug: 'hero-dancer', duration: '0:07' },
-  { slug: 'hero-city', duration: '0:11' },
-];
+  'user-neon-drive',
+  'user-astronaut',
+  'user-watch',
+  'user-dragon',
+  'user-pixel-run',
+  'user-couture',
+  'user-sky-train',
+  'user-crystal-whale',
+] as const;
 
 /**
  * Composer toolbar options per mode. Model ids are the EvoLink catalog keys
@@ -68,9 +71,9 @@ const VIDEO_QUALITIES = [
   { id: '1080p', label: '1080p' },
 ];
 const IMAGE_QUALITIES = [
-  { id: '1k', label: '1K' },
-  { id: '2k', label: '2K' },
-  { id: '4k', label: '4K' },
+  { id: '1K', label: '1K' },
+  { id: '2K', label: '2K' },
+  { id: '4K', label: '4K' },
 ];
 
 /**
@@ -80,6 +83,7 @@ const IMAGE_QUALITIES = [
 export function Hero() {
   const router = useRouter();
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [requiredCredits, setRequiredCredits] = useState(0);
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
   // Optional delivery address from the paywall (where results are mailed).
   const [paywallEmail, setPaywallEmail] = useState('');
@@ -89,7 +93,7 @@ export function Hero() {
   const monthlyPlans = groups.find((g) => g.key === 'monthly')?.plans ?? [];
   // After paying, land back on the generator instead of the payments page.
   const { handleCheckout, providerModal } = usePricingCheckout({
-    redirect: '/',
+    redirect: '/?checkout=returned#generator',
   });
 
   // Brand-new visitors go straight to the paywall: they have no session,
@@ -98,21 +102,29 @@ export function Hero() {
   // (silently, fresh-checked) so checkout works without registration.
   const onFirstGenerate = async (
     prompt: string,
-    tabId: string
+    tabId: string,
+    selection: GenerationSelection
   ): Promise<'run' | 'blocked'> => {
     const fresh = await authClient.getSession();
     if (fresh.data?.user) return 'run';
     const { error } = await authClient.signIn.anonymous();
     if (error) return 'run'; // let the API path handle it (401 → paywall)
-    parkPendingGen({ prompt, tabId, auto: true });
-    setPaywallOpen(true);
+    openPaywall(prompt, tabId, selection);
     return 'blocked';
   };
 
   // 401/402 mid-run (e.g. credits ran out): park the run and re-show the
   // paywall — generation auto-resumes after payment.
-  const openPaywall = (prompt: string, tabId: string) => {
-    parkPendingGen({ prompt, tabId, auto: true });
+  const openPaywall = (
+    prompt: string,
+    tabId: string,
+    selection: GenerationSelection
+  ) => {
+    const model = EVO_MODELS[selection.modelId];
+    setRequiredCredits(
+      model ? evoCostCredits(model, selection.quality, selection.fast) : 0
+    );
+    parkPendingGen({ prompt, tabId, auto: true, selection });
     setPaywallOpen(true);
   };
 
@@ -207,11 +219,9 @@ export function Hero() {
         demoNote={m['lp.hero.demo_note']()}
         playLabel={m['lp.hero.play']()}
         pauseLabel={m['lp.hero.pause']()}
-        tiles={TILES.map(({ slug, duration }) => ({
-          src: `/imgs/generated/${slug}.jpg`,
+        tiles={TILES.map((slug) => ({
+          video: landingVideos[slug],
           alt: m['lp.hero.tile_alt'](),
-          kind: 'video' as const,
-          duration,
         }))}
         marquee={{
           title: m['lp.hero.marquee_title'](),
@@ -228,17 +238,19 @@ export function Hero() {
         title={m['lp.hero.paywall_title']()}
         description={m['lp.hero.paywall_desc']()}
         note={m['lp.hero.paywall_note']()}
-        plans={monthlyPlans.map((plan) => ({
-          id: plan.id,
-          name: plan.name,
-          price: plan.price,
-          interval: plan.interval,
-          description: plan.description,
-          featured: plan.featured,
-          featureLabels: plan.features.map((f) =>
-            typeof f === 'string' ? f : f.label
-          ),
-        }))}
+        plans={monthlyPlans
+          .filter((plan) => (plan.credits ?? 0) >= requiredCredits)
+          .map((plan) => ({
+            id: plan.id,
+            name: plan.name,
+            price: plan.price,
+            interval: plan.interval,
+            description: plan.description,
+            featured: plan.featured,
+            featureLabels: plan.features.map((f) =>
+              typeof f === 'string' ? f : f.label
+            ),
+          }))}
         onCheckout={onPaywallCheckout}
         processingId={processingPlanId}
         emailLabel={m['lp.hero.paywall_email_label']()}

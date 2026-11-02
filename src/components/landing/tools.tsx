@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { Check, type LucideIcon } from 'lucide-react';
 
+import { Link } from '@/core/i18n/navigation';
 import { RevealSection } from '@/components/landing/reveal';
 
 export interface ToolCardData {
@@ -12,6 +13,8 @@ export interface ToolCardData {
   openLabel: string;
   guideLabel: string;
   href: string;
+  guideHref: string;
+  available: boolean;
 }
 
 export interface LandingToolsProps {
@@ -51,6 +54,7 @@ export function LandingTools({
                 <button
                   key={tab.id}
                   type="button"
+                  aria-pressed={isActive}
                   onClick={() => setActiveId(tab.id)}
                   className={`h-9 rounded-full px-4 text-sm font-medium transition ${
                     isActive
@@ -83,7 +87,7 @@ export function LandingTools({
                 <h3 className="mt-1 text-[15px] font-semibold text-zinc-950">
                   {tool.title}
                 </h3>
-                <p className="mt-1 text-[13px] leading-relaxed text-zinc-500">
+                <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">
                   {tool.description}
                 </p>
                 <ul className="mt-3 space-y-1.5">
@@ -97,18 +101,28 @@ export function LandingTools({
                   ))}
                 </ul>
                 <div className="mt-auto flex items-center gap-3 border-t border-zinc-100 pt-4">
-                  <a
-                    href={tool.href}
-                    className="text-[12.5px] font-semibold text-[var(--sv-iris-strong)] hover:underline"
-                  >
-                    {tool.openLabel}
-                  </a>
-                  <a
-                    href={tool.href}
+                  {tool.available ? (
+                    <Link
+                      href={tool.href}
+                      className="text-[12.5px] font-semibold text-[var(--sv-iris-strong)] hover:underline"
+                    >
+                      {tool.openLabel}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="text-[12.5px] font-semibold text-zinc-400 disabled:cursor-not-allowed"
+                    >
+                      {tool.openLabel}
+                    </button>
+                  )}
+                  <Link
+                    href={tool.guideHref}
                     className="text-[12.5px] text-zinc-400 hover:text-zinc-600"
                   >
                     {tool.guideLabel}
-                  </a>
+                  </Link>
                 </div>
               </div>
             );

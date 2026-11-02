@@ -1,0 +1,47 @@
+/** Local, optimized clips. Source pages and licenses: docs/research/video-sources.json. */
+function clip(slug: string, duration = '0:08') {
+  return {
+    src: `/media/landing/${slug}.mp4`,
+    poster: `/media/landing/${slug}.jpg`,
+    duration,
+  };
+}
+
+export const landingVideos = {
+  'sunset-couple': clip('sunset-couple'),
+  'night-drive': clip('night-drive'),
+  animation: clip('animation'),
+  product: clip('product'),
+  cosmos: clip('cosmos'),
+  'digital-world': clip('digital-world', '0:05'),
+  dance: clip('dance'),
+  city: clip('city'),
+  forest: clip('forest'),
+  boxing: clip('boxing'),
+  fashion: clip('fashion'),
+  creator: clip('creator'),
+  social: clip('social'),
+  avatar: clip('avatar'),
+  typing: clip('typing'),
+  editing: clip('editing', '0:06'),
+  'user-watch': clip('user-watch', '0:05'),
+  'user-dune-wreck': clip('user-dune-wreck', '0:05'),
+  'user-animated-pets': clip('user-animated-pets', '0:04'),
+  'user-golden-retriever': clip('user-golden-retriever', '0:05'),
+  'user-dragon': clip('user-dragon', '0:05'),
+  'user-pixel-run': clip('user-pixel-run', '0:05'),
+  'user-neon-drive': clip('user-neon-drive', '0:05'),
+  'user-crystal-whale': clip('user-crystal-whale', '0:05'),
+  'user-yarn-cat': clip('user-yarn-cat', '0:10'),
+  'user-neon-bike': clip('user-neon-bike', '0:15'),
+  'user-lab-tornado': clip('user-lab-tornado', '0:08'),
+  'user-supercar': clip('user-supercar', '0:05'),
+  'user-couture': clip('user-couture', '0:05'),
+  'user-skate-reel': clip('user-skate-reel', '0:10'),
+  'user-crowd-portrait': clip('user-crowd-portrait', '0:10'),
+  'user-pendant-hook': clip('user-pendant-hook', '0:05'),
+  'user-sky-train': clip('user-sky-train', '0:05'),
+  'user-pet-dance': clip('user-pet-dance', '0:05'),
+  'user-astronaut': clip('user-astronaut', '0:05'),
+  'user-story-transformation': clip('user-story-transformation', '0:08'),
+} as const;

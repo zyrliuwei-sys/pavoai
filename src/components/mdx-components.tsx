@@ -1,6 +1,7 @@
 import type { AnchorHTMLAttributes, HTMLAttributes } from 'react';
 import type { MDXComponents } from 'mdx/types';
 
+import { Link } from '@/core/i18n/navigation';
 import { cn } from '@/lib/utils';
 
 export const mdxComponents: MDXComponents = {
@@ -37,8 +38,13 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  a: ({ className, ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a
+  a: ({
+    className,
+    href = '',
+    ...props
+  }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <Link
+      href={href}
       className={cn(
         'text-primary font-medium underline-offset-4 hover:underline',
         className

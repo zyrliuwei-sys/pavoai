@@ -164,6 +164,7 @@ function TicketsPage() {
       }>(`/api/tickets/${row.id}`);
       setActiveTicket(data.ticket);
       setMessages(data.messages);
+      setReply('');
       setReplyAttachments([]);
       setReplyUploaderKey((k) => k + 1);
     } catch (e: any) {

@@ -1,14 +1,19 @@
 import type { CSSProperties } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
+import { Link } from '@/core/i18n/navigation';
 import { RevealSection } from '@/components/landing/reveal';
+import {
+  VideoPreview,
+  type PreviewVideo,
+} from '@/components/landing/video-preview';
 
 export interface UseCase {
   title: string;
   description: string;
   /** Long-form caption under the image — always fully visible (SEO copy). */
   detail: string;
-  image: string;
+  video: PreviewVideo;
   icon: LucideIcon;
 }
 
@@ -18,6 +23,8 @@ export interface LandingUseCasesProps {
   subtitle: string;
   cases: UseCase[];
   href: string;
+  playLabel: string;
+  pauseLabel: string;
 }
 
 export function LandingUseCases({
@@ -26,6 +33,8 @@ export function LandingUseCases({
   subtitle,
   cases,
   href,
+  playLabel,
+  pauseLabel,
 }: LandingUseCasesProps) {
   // Stagger cascade: title words → subtitle → cards.
   const titleWords = title.split(' ');
@@ -60,37 +69,37 @@ export function LandingUseCases({
           {cases.map((card, index) => {
             const Icon = card.icon;
             return (
-              <a
+              <article
                 key={card.title}
-                href={href}
                 className="sv-enter sv-hover-lift sv-press group relative block overflow-hidden rounded-[16px] bg-[#0a0e15] ring-1 ring-white/[0.07]"
                 style={{ '--i': cardBase + index } as CSSProperties}
               >
                 <div className="relative aspect-[4/3] overflow-hidden rounded-t-[16px] bg-black/40">
-                  <img
-                    src={card.image}
+                  <VideoPreview
+                    video={card.video}
                     alt={card.title}
-                    width={600}
-                    height={450}
-                    loading="lazy"
-                    className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-500 group-hover:scale-[1.04] group-hover:opacity-100"
+                    playLabel={playLabel}
+                    pauseLabel={pauseLabel}
                   />
                   <span className="absolute top-4 left-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur">
                     <Icon size={16} />
                   </span>
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-14">
+                  <Link
+                    href={href}
+                    className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-14 focus-visible:outline-2 focus-visible:outline-white"
+                  >
                     <h3 className="text-[15px] font-semibold text-white">
                       {card.title}
                     </h3>
                     <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-white/65">
                       {card.description}
                     </p>
-                  </div>
+                  </Link>
                 </div>
                 <p className="p-4 text-[13px] leading-relaxed text-white/65">
                   {card.detail}
                 </p>
-              </a>
+              </article>
             );
           })}
         </div>
