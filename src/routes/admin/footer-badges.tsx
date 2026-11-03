@@ -47,7 +47,8 @@ function AdminFooterBadgesPage() {
       setMarkup('');
       setInputError(false);
     },
-    onError: () => toast.error(m['admin.footer_badges.save_error']()),
+    onError: (error: Error) =>
+      toast.error(`${m['admin.footer_badges.save_error']()} ${error.message}`),
   });
 
   useEffect(() => {
@@ -58,11 +59,19 @@ function AdminFooterBadgesPage() {
     setInputError(false);
     try {
       const parsed = parseFooterBadgeMarkup(markup);
-      if (badges.length + parsed.length > MAX_FOOTER_BADGES) {
+      const merged = [
+        ...new Map(
+          [...badges, ...parsed].map((badge) => [
+            `${badge.href}:${badge.src ?? ''}`,
+            badge,
+          ])
+        ).values(),
+      ];
+      if (merged.length > MAX_FOOTER_BADGES) {
         setInputError(true);
         return;
       }
-      saveMutation.mutate([...badges, ...parsed]);
+      saveMutation.mutate(merged);
     } catch {
       setInputError(true);
     }
@@ -179,13 +188,17 @@ function AdminFooterBadgesPage() {
                 >
                   <div className="min-w-0 space-y-2">
                     <div className="flex min-h-12 items-center">
-                      <img
-                        src={badge.src}
-                        alt={badge.alt}
-                        width={badge.width ?? 250}
-                        height={badge.height}
-                        className="h-auto max-h-16 max-w-full"
-                      />
+                      {badge.src ? (
+                        <img
+                          src={badge.src}
+                          alt={badge.alt}
+                          width={badge.width ?? 250}
+                          height={badge.height}
+                          className="h-auto max-h-16 max-w-full"
+                        />
+                      ) : (
+                        <span className="text-sm font-medium">{badge.alt}</span>
+                      )}
                     </div>
                     <p className="text-muted-foreground truncate text-xs">
                       {badge.href}

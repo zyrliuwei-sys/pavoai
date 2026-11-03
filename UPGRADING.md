@@ -646,3 +646,7 @@ grant_<orderNo>`, so the unique index allows one grant per order. Older
   （`initial_credits` 仅发给正式注册用户），余额不足时原地弹付费面板。
 - Hero 生成器的 401/402 不再报错或跳转，改为打开付费面板（`PaywallDialog`），
   支付回调 redirect 到 `/`，提示词通过 sessionStorage 恢复。
+
+## 2026-11-03 — Footer badge rendering and import
+
+Footer badges now accept image or text links, preserve qualified `rel` values, and ignore safe presentation markup. Existing image records remain compatible. Keep `FooterBadgeList` mounted in custom marketing footers; the root loader supplies its server-rendered data so reciprocal-link verifiers can read the initial HTML. Rebuild and deploy to apply this change.

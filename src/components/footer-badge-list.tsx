@@ -31,19 +31,23 @@ function BadgeRow({
           <a
             href={badge.href}
             target="_blank"
-            rel="noopener noreferrer"
+            rel={badge.rel ?? 'noopener noreferrer'}
             tabIndex={hidden ? -1 : undefined}
             className="flex h-12 items-center transition-opacity hover:opacity-80"
           >
-            <img
-              src={badge.src}
-              alt={hidden ? '' : badge.alt}
-              width={badge.width ?? 250}
-              height={badge.height}
-              loading="lazy"
-              draggable={false}
-              className="h-full w-auto max-w-[260px] object-contain"
-            />
+            {badge.src ? (
+              <img
+                src={badge.src}
+                alt={hidden ? '' : badge.alt}
+                width={badge.width ?? 250}
+                height={badge.height}
+                loading="lazy"
+                draggable={false}
+                className="h-full w-auto max-w-[260px] object-contain"
+              />
+            ) : (
+              <span className="px-3 text-sm font-medium">{badge.alt}</span>
+            )}
           </a>
         </li>
       ))}

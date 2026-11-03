@@ -9,6 +9,7 @@ import {
 
 import { envConfigs } from '@/config';
 import { m } from '@/paraglide/messages.js';
+import { FooterBadgeList } from '@/components/footer-badge-list';
 import { LandingFooter } from '@/components/landing/footer';
 
 /**
@@ -25,6 +26,7 @@ export function Footer() {
 
   return (
     <LandingFooter
+      badges={<FooterBadgeList className="mt-10" />}
       appName={envConfigs.app_name}
       logoSrc={envConfigs.app_logo}
       tagline={m['lp.footer.tagline']()}

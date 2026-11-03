@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Link } from '@/core/i18n/navigation';
@@ -14,6 +15,7 @@ export interface FooterColumn {
 }
 
 export interface LandingFooterProps {
+  badges?: ReactNode;
   appName: string;
   logoSrc: string;
   tagline: string;
@@ -26,6 +28,7 @@ export interface LandingFooterProps {
 }
 
 export function LandingFooter({
+  badges,
   appName,
   logoSrc,
   tagline,
@@ -78,6 +81,8 @@ export function LandingFooter({
             })}
           </div>
         </div>
+
+        {badges}
 
         {/* Row 2: link columns */}
         <div className="mt-12 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
