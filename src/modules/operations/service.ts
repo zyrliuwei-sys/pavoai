@@ -51,6 +51,8 @@ const BUILD_LABEL = import.meta.env?.VITE_BUILD_LABEL || BUILD;
 export const OPS_COOKIE = 'pavo_ops_visitor';
 const notStaff = (id: any) =>
   sql`not exists (select 1 from ${userRole} where ${userRole.userId} = ${id}) and not exists (select 1 from ${opsVisitor} where ${opsVisitor.userId} = ${id} and ${opsVisitor.excluded} = true)`;
+// Anonymous buyers may not have a registered visitor.userId yet.
+const notTestCheckout = sql`not exists (select 1 from ${opsCheckout} inner join ${opsVisitor} on ${opsVisitor.id} = ${opsCheckout.visitorId} where ${opsCheckout.id} = ${order.orderNo} and ${opsVisitor.excluded} = true)`;
 
 export async function getControl() {
   const [row] = await db()
@@ -586,6 +588,7 @@ export async function getOperationsReport(
           lt(order.createdAt, now),
           eq(order.status, 'created'),
           isNull(order.deletedAt),
+          notTestCheckout,
           eq(user.type, 'user'),
           notStaff(user.id),
           notInArray(
@@ -764,6 +767,7 @@ async function revenuePeriod(from: Date, to: Date) {
   const currency = sql<string>`lower(coalesce(${order.paymentCurrency},${order.currency}))`;
   const eligible = and(
     isNull(order.deletedAt),
+    notTestCheckout,
     eq(user.type, 'user'),
     notStaff(user.id)
   );

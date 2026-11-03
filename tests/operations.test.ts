@@ -414,6 +414,24 @@ test('same-clock revenue uses payment and refund timestamps, separates currencie
   assert.equal(report.pendingUsers, 1);
   assert.equal(report.health.rate, 2 / 3);
   assert.equal(report.health.pending, 1);
+  const testGuest = await visit(undefined, {
+    userId: 'guest',
+    anonymous: true,
+  });
+  await newOrder('excluded-guest-test', {
+    userId: 'guest',
+    amount: 9990,
+    paymentAmount: 9990,
+    paidAt: new Date('2026-11-03T03:00:00Z'),
+  });
+  await ops.linkCheckout(testGuest.visitorId!, 'excluded-guest-test', 'guest');
+  await ops.excludeVisitor(testGuest.visitorId!, true, 'owner');
+  const filtered = await ops.getOperationsReport({ days: 7 }, now);
+  assert.equal(
+    filtered.current.find((r) => r.currency === 'usd')?.amount,
+    4000,
+    'Excluded anonymous checkout must not inflate income'
+  );
 });
 
 test('inspection is opt-in and one hour is saved once; read-only actors cannot mutate experiments', async () => {
