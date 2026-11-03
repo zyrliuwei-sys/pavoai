@@ -174,6 +174,7 @@ async function checkout(
     productName: p.productName,
     planName: p.planName,
     credits: p.credits,
+    creditsValidDays: p.creditsValidDays,
     paymentOrder: {
       productId,
       type: p.type,
@@ -362,11 +363,12 @@ test('the configured default provider is used only when the buyer omits a provid
   assert.equal(manager.getProvider('missing'), undefined);
 });
 
-test('capture webhook and callback racing settle the original PayPal order exactly once', async (t) => {
+test('capture webhook and callback racing grant permanent pack credits exactly once', async (t) => {
   await configure();
   const mock = paypalMock(t);
   const session = await checkout();
   const row = await stored(session.checkoutInfo.sessionId);
+  assert.equal(row.creditsValidDays, 0);
   const capture = completeOrder(
     mock.orders.get(session.checkoutInfo.sessionId)
   );
@@ -380,6 +382,7 @@ test('capture webhook and callback racing settle the original PayPal order exact
   const credits = await grants(row.orderNo);
   assert.equal(credits.length, 1);
   assert.equal(credits[0].credits, pricingCatalog.starter_lifetime.credits);
+  assert.equal(credits[0].expiresAt, null);
 });
 
 test('subscription sale webhooks accept PayPal v1 amounts and deduplicate initial payments and renewals', async (t) => {

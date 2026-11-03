@@ -94,7 +94,9 @@ export function usePricingGroups(): PricingGroup[] {
         checkoutPrice,
         billingNote: amounts.billedAnnually
           ? m['landing.pricing.billed_annually']({ amount: checkoutPrice })
-          : undefined,
+          : group.key === 'lifetime'
+            ? m['landing.pricing.one_time_payment']()
+            : undefined,
         interval: group.interval,
         featured: tier.key === 'pro',
         badge: tier.key === 'pro' ? m['landing.pricing.popular']() : undefined,
@@ -105,6 +107,9 @@ export function usePricingGroups(): PricingGroup[] {
               count: number.format(product.credits),
             }),
           },
+          ...(group.key === 'lifetime'
+            ? [m['landing.pricing.credits_never_expire']()]
+            : []),
           {
             icon: Image,
             label: m['landing.pricing.feature_images']({

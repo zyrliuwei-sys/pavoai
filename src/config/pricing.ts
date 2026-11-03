@@ -32,6 +32,7 @@ export type PricingProduct = {
    */
   cnyPriceInCents?: number;
   credits: number;
+  /** Zero means purchased credits never expire. */
   creditsValidDays?: number;
   plan?: PricingPlanInfo;
   /**
@@ -127,35 +128,39 @@ export const pricingCatalog: Record<string, PricingProduct> = {
       intervalCount: 1,
     },
   },
+  // Keep the legacy product IDs so existing orders and provider mappings work.
   starter_lifetime: {
     productId: 'starter_lifetime',
-    productName: 'Starter',
+    productName: 'Starter Credit Pack',
     planName: 'Starter Credit Pack',
     description: 'Starter Credit Pack',
     type: PaymentType.ONE_TIME,
     priceInCents: 999,
     currency: 'usd',
     credits: purchasedCredits(999),
+    creditsValidDays: 0,
   },
   pro_lifetime: {
     productId: 'pro_lifetime',
-    productName: 'Pro',
+    productName: 'Pro Credit Pack',
     planName: 'Pro Credit Pack',
     description: 'Pro Credit Pack',
     type: PaymentType.ONE_TIME,
     priceInCents: 2999,
     currency: 'usd',
     credits: purchasedCredits(2999),
+    creditsValidDays: 0,
   },
   enterprise_lifetime: {
     productId: 'enterprise_lifetime',
-    productName: 'Enterprise',
+    productName: 'Enterprise Credit Pack',
     planName: 'Enterprise Credit Pack',
     description: 'Enterprise Credit Pack',
     type: PaymentType.ONE_TIME,
     priceInCents: 7999,
     currency: 'usd',
     credits: purchasedCredits(7999),
+    creditsValidDays: 0,
   },
 
   // Guest posts (see src/modules/guest-posts). Published permanently, every

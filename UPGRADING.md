@@ -46,6 +46,15 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-03: Present one-time purchases as permanent credit packs
+
+Take the pricing catalog, pricing block and both message files together, then
+rebuild and redeploy. The former Lifetime tab now says Credit packs, with
+one-time payment and permanent-credit details. The $9.99 / $29.99 / $79.99
+pack prices and legacy `*_lifetime` product IDs stay the same. Each pack
+explicitly sets `creditsValidDays: 0`, so payment settlement grants credits
+with no expiration date. No schema migration or balance rewrite is required.
+
 ## 2026-11-03: Wire PayPal checkout and payment confirmation
 
 Take the payment manager, PayPal provider, payment service, settings test,

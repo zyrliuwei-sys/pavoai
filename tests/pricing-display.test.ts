@@ -61,6 +61,17 @@ test('monthly subscriptions and one-time packs retain their displayed totals', (
   }
 });
 
+test('credit packs are one-time purchases with explicitly permanent credits', () => {
+  for (const tier of ['starter', 'pro', 'enterprise']) {
+    const product = pricingCatalog[`${tier}_lifetime`];
+    assert.equal(product.type, 'one-time');
+    assert.equal(product.plan, undefined);
+    assert.equal(product.creditsValidDays, 0);
+    assert.ok(product.credits > 0);
+    assert.match(product.productName, /Credit Pack$/);
+  }
+});
+
 test('rounding a monthly comparison cannot change the annual checkout total', () => {
   const product = { ...pricingCatalog.starter_yearly, priceInCents: 5999 };
   const display = getPricingDisplayAmounts(product);

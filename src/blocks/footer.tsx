@@ -21,8 +21,6 @@ export function Footer() {
   const legal = [
     { label: m['lp.footer.l51'](), href: '/privacy-policy' },
     { label: m['lp.footer.l52'](), href: '/terms-of-service' },
-    { label: m['lp.footer.l53'](), href: '/terms-of-service#billing' },
-    { label: m['lp.footer.l54'](), href: '/terms-of-service#content-rights' },
   ];
 
   return (
