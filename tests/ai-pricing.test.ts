@@ -7,10 +7,12 @@ import { after, test } from 'node:test';
 import { eq } from 'drizzle-orm';
 
 import {
+  AI_CNY_FEN_PER_USD,
   AI_CREDITS_PER_USD,
   EVO_MODELS,
   evoCostCredits,
   generationCredits,
+  purchasedCredits,
 } from '../src/config/ai-pricing';
 import { pricingCatalog } from '../src/config/pricing';
 import { evoCreateTask } from '../src/core/ai/evolink';
@@ -75,14 +77,16 @@ test('unsupported quality and unsupported Fast resolution cannot undercharge', (
   }
 });
 
-test('every package preserves the same USD value per credit, including annual and one-time', () => {
+test('CNY packages convert to whole credits at the fixed retail rate without reusing USD amounts', () => {
   const packages = Object.values(pricingCatalog).filter((p) => !p.kind);
   assert.equal(packages.length, 9);
   for (const product of packages) {
-    assert.equal(product.currency, 'usd');
+    assert.equal(product.currency, 'cny');
     assert.equal(
-      product.credits / AI_CREDITS_PER_USD,
-      product.priceInCents / 100
+      product.credits,
+      Math.floor(
+        (product.priceInCents * AI_CREDITS_PER_USD) / AI_CNY_FEN_PER_USD
+      )
     );
     assert.ok(Number.isSafeInteger(product.credits));
   }
@@ -90,19 +94,17 @@ test('every package preserves the same USD value per credit, including annual an
     const monthly = pricingCatalog[`${tier}_monthly`];
     const yearly = pricingCatalog[`${tier}_yearly`];
     const once = pricingCatalog[`${tier}_lifetime`];
-    assert.ok(yearly.priceInCents / 12 < monthly.priceInCents);
-    assert.ok(once.priceInCents > monthly.priceInCents);
+    assert.ok(yearly.priceInCents / 12 <= monthly.priceInCents);
+    assert.ok(once.priceInCents < monthly.priceInCents);
     assert.equal(once.plan, undefined);
   }
-  assert.equal(pricingCatalog.starter_monthly.priceInCents, 499);
-  assert.equal(pricingCatalog.pro_monthly.priceInCents, 1499);
-  assert.equal(pricingCatalog.enterprise_monthly.priceInCents, 3999);
-  assert.equal(pricingCatalog.starter_yearly.priceInCents, 4788);
-  assert.equal(pricingCatalog.pro_yearly.priceInCents, 14388);
-  assert.equal(pricingCatalog.enterprise_yearly.priceInCents, 38388);
-  assert.equal(pricingCatalog.starter_lifetime.priceInCents, 999);
-  assert.equal(pricingCatalog.pro_lifetime.priceInCents, 2999);
-  assert.equal(pricingCatalog.enterprise_lifetime.priceInCents, 7999);
+  assert.equal(pricingCatalog.starter_monthly.credits, 2842);
+  assert.equal(pricingCatalog.starter_lifetime.credits, 1414);
+  assert.equal(purchasedCredits(499), 4990);
+  assert.equal(purchasedCredits(700, 'cny'), 1000);
+  for (const invalid of [-1, NaN, Infinity, 1.5]) {
+    assert.throws(() => purchasedCredits(invalid, 'cny'), /Invalid purchase/);
+  }
 });
 
 test('upstream requests match the quoted Fast route, supported quality and five-second billing unit', async () => {
@@ -146,7 +148,7 @@ test('upstream requests match the quoted Fast route, supported quality and five-
 
 test('concurrent generations cannot spend the same package balance twice; a failure refunds once', async () => {
   const userId = 'pricing-buyer';
-  const budget = pricingCatalog.starter_monthly.credits;
+  const budget = pricingCatalog.pro_lifetime.credits;
   const charge = evoCostCredits(EVO_MODELS['wan-2-7'], '720p');
   await db()
     .insert(user)

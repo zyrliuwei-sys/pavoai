@@ -8,7 +8,7 @@ const baseline = JSON.parse(
 
 const PRICE_COPY_KEYS = new Set(['lp.cmp.price', 'lp.faq.a2', 'lp.guide.b4']);
 const withoutPriceAmounts = (value: unknown) =>
-  String(value).replace(/\$\d+(?:\.\d{1,2})?/g, '$PRICE');
+  String(value).replace(/[$¥￥]\d+(?:\.\d{1,2})?/g, '$PRICE');
 
 for (const locale of ['en', 'zh']) {
   test(`${locale}: preserve public wording, allowing only approved price amounts to change`, () => {

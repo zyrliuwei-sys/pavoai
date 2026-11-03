@@ -5,6 +5,8 @@
  */
 export const AI_PRICE_MULTIPLIER = 8;
 export const AI_CREDITS_PER_USD = 1000;
+/** Fixed retail conversion for CNY packs, not a live foreign-exchange quote. */
+export const AI_CNY_FEN_PER_USD = 700;
 export const AI_VIDEO_DURATION_SECONDS = 5;
 
 export function generationCredits(upstreamCostMicros: number): number {
@@ -16,8 +18,15 @@ export function generationCredits(upstreamCostMicros: number): number {
   );
 }
 
-export function purchasedCredits(priceInCents: number): number {
-  return (priceInCents * AI_CREDITS_PER_USD) / 100;
+export function purchasedCredits(
+  priceInCents: number,
+  currency: 'usd' | 'cny' = 'usd'
+): number {
+  if (!Number.isSafeInteger(priceInCents) || priceInCents < 0) {
+    throw new Error('Invalid purchase amount');
+  }
+  const minorUnitsPerUsd = currency === 'cny' ? AI_CNY_FEN_PER_USD : 100;
+  return Math.floor((priceInCents * AI_CREDITS_PER_USD) / minorUnitsPerUsd);
 }
 
 export interface EvoModel {

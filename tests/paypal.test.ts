@@ -241,7 +241,7 @@ function subscriptionPayment(item: any, cycle = 1) {
   item.start_time = time;
   item.billing_info = {
     last_payment: {
-      amount: { value: '4.99', currency_code: 'USD' },
+      amount: { value: '19.90', currency_code: 'CNY' },
       time: paidTime,
     },
     next_billing_time:
@@ -252,7 +252,7 @@ function subscriptionPayment(item: any, cycle = 1) {
     id: `SALE-${item.id}-${cycle}`,
     state: 'completed',
     billing_agreement_id: item.id,
-    amount: { total: '4.99', currency: 'USD' },
+    amount: { total: '19.90', currency: 'CNY' },
     create_time: paidTime,
   };
 }
@@ -402,17 +402,19 @@ test('subscription sale webhooks accept PayPal v1 amounts and deduplicate initia
     .from(subscription)
     .where(eq(subscription.subscriptionId, item.id));
   assert.ok(sub);
-  assert.equal(sub.amount, 499);
+  assert.equal(sub.amount, 1990);
+  assert.equal(sub.currency, 'CNY');
   const next = subscriptionPayment(item, 2);
   await webhook('PAYMENT.SALE.COMPLETED', next);
   await webhook('PAYMENT.SALE.COMPLETED', next);
-  const rows = await db()
+  const rows: (typeof order.$inferSelect)[] = await db()
     .select()
     .from(order)
     .where(eq(order.subscriptionNo, sub.subscriptionNo));
   assert.equal(rows.length, 2);
   const renewal = rows.find((r) => r.orderNo !== row.orderNo)!;
-  assert.equal(renewal.paymentAmount, 499);
+  assert.equal(renewal.paymentAmount, 1990);
+  assert.equal(renewal.paymentCurrency, 'CNY');
   assert.equal((await grants(renewal.orderNo)).length, 1);
   const bad = {
     ...next,

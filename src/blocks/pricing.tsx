@@ -8,6 +8,7 @@ import { useRouter } from '@/core/i18n/navigation';
 import { EVO_MODELS, evoCostCredits } from '@/config/ai-pricing';
 import { pricingCatalog } from '@/config/pricing';
 import { apiPost } from '@/lib/api-client';
+import { paymentProviderSupportsCurrency } from '@/lib/payment-currency';
 import { getPricingDisplayAmounts } from '@/lib/pricing-display';
 import { currentPathWithQuery } from '@/lib/redirect';
 import { m } from '@/paraglide/messages.js';
@@ -34,10 +35,6 @@ const ALL_PROVIDERS: PaymentProvider[] = [
 /** Prices, credits and checkout metadata come from the authoritative catalog. */
 export function usePricingGroups(): PricingGroup[] {
   const number = new Intl.NumberFormat(getLocale());
-  const usd = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  });
   const tiers = [
     {
       key: 'starter',
@@ -78,8 +75,13 @@ export function usePricingGroups(): PricingGroup[] {
     label: group.label,
     plans: tiers.map((tier): PricingPlan => {
       const product = pricingCatalog[`${tier.key}_${group.key}`];
+      const money = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: product.currency.toUpperCase(),
+        currencyDisplay: 'narrowSymbol',
+      });
       const amounts = getPricingDisplayAmounts(product);
-      const checkoutPrice = usd.format(amounts.checkoutPriceInCents / 100);
+      const checkoutPrice = money.format(amounts.checkoutPriceInCents / 100);
       const images = Math.floor(
         product.credits / evoCostCredits(EVO_MODELS['seedream-4'], '2K')
       );
@@ -90,7 +92,7 @@ export function usePricingGroups(): PricingGroup[] {
         id: `${tier.key}-${group.key}`,
         name: tier.name,
         description: tier.description,
-        price: usd.format(amounts.displayPriceInCents / 100),
+        price: money.format(amounts.displayPriceInCents / 100),
         checkoutPrice,
         billingNote: amounts.billedAnnually
           ? m['landing.pricing.billed_annually']({ amount: checkoutPrice })
@@ -157,7 +159,15 @@ export function usePricingCheckout({
     useState<PaymentProvider | null>(null);
 
   const enabledProviders = useMemo<PaymentProvider[]>(
-    () => ALL_PROVIDERS.filter((p) => configs[`${p}_enabled`] === 'true'),
+    () =>
+      ALL_PROVIDERS.filter(
+        (p) =>
+          configs[`${p}_enabled`] === 'true' &&
+          paymentProviderSupportsCurrency(
+            p,
+            pricingCatalog.starter_monthly.currency
+          )
+      ),
     [configs]
   );
 
@@ -216,9 +226,11 @@ export function usePricingCheckout({
     }
 
     const selectEnabled = configs.select_payment_enabled === 'true';
-    const defaultProvider = (configs.default_payment_provider ||
-      enabledProviders[0] ||
-      'stripe') as PaymentProvider;
+    const configuredDefault =
+      configs.default_payment_provider as PaymentProvider;
+    const defaultProvider = enabledProviders.includes(configuredDefault)
+      ? configuredDefault
+      : (enabledProviders[0] ?? 'stripe');
 
     if (selectEnabled && enabledProviders.length > 1) {
       setPendingPlan(plan);

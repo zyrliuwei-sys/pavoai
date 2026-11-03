@@ -46,6 +46,34 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-03: Price AI packages in CNY
+
+Take the pricing catalog, pricing block, AI credit conversion, payment-currency
+helper, charge resolver and regression tests together, then rebuild and redeploy.
+Monthly plans cost ¥19.90 / ¥59.90 / ¥99.90; annual cards show
+¥19.90 / ¥49.90 / ¥79.90 per month and charge
+¥238.80 / ¥598.80 / ¥958.80 per year. Permanent one-time credit packs cost
+¥9.90 / ¥29.90 / ¥79.90. The three existing starting-price references change
+only their monetary tokens. Guest-post prices stay in USD.
+
+CNY purchases use a fixed retail conversion of ¥7 per USD of credit value,
+rounded down to whole credits. This is a catalog setting, not a live FX quote;
+generation charges and the 8× upstream multiplier stay the same. Existing
+orders, subscriptions and balances retain their original snapshots; no schema
+migration is required.
+
+Creem supports only USD/EUR product prices, so CNY plans are excluded from its
+selector and rejected server-side, preventing an old USD mapping from charging
+the wrong currency. Enable a CNY-capable provider for new AI checkouts. Stripe
+supports CNY; PayPal CNY receiving depends on an in-country merchant account.
+Verify the merchant account's CNY capability before production checkout testing.
+PayPal subscription and invoice amounts are rounded to integer minor units,
+so decimal prices such as ¥19.90 cannot produce fractional fen in renewals.
+
+Provider references: [Creem currencies](https://docs.creem.io/api-reference/endpoint/create-product),
+[Stripe currencies](https://docs.stripe.com/currencies),
+[PayPal currencies](https://developer.paypal.com/api/codes/currency/).
+
 ## 2026-11-03: Present one-time purchases as permanent credit packs
 
 Take the pricing catalog, pricing block and both message files together, then

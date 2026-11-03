@@ -7,9 +7,9 @@ import { resolveCharge } from '../src/server/payment/charge';
 
 test('annual cards show monthly prices while keeping the full annual total', () => {
   for (const [tier, monthlyCents] of [
-    ['starter', 399],
-    ['pro', 1199],
-    ['enterprise', 3199],
+    ['starter', 1990],
+    ['pro', 4990],
+    ['enterprise', 7990],
   ] as const) {
     const product = pricingCatalog[`${tier}_yearly`];
     assert.deepEqual(getPricingDisplayAmounts(product), {
@@ -22,13 +22,13 @@ test('annual cards show monthly prices while keeping the full annual total', () 
   }
 });
 
-test('every tier and billing option has a distinct displayed price', () => {
+test('each billing option has three distinct tiers at the requested CNY starting prices', () => {
   const tiers = ['starter', 'pro', 'enterprise'];
   const groups = ['monthly', 'yearly', 'lifetime'];
   const expected = {
-    monthly: [499, 1499, 3999],
-    yearly: [399, 1199, 3199],
-    lifetime: [999, 2999, 7999],
+    monthly: [1990, 5990, 9990],
+    yearly: [1990, 4990, 7990],
+    lifetime: [990, 2990, 7990],
   };
   for (const group of groups) {
     const prices = tiers.map(
@@ -39,14 +39,9 @@ test('every tier and billing option has a distinct displayed price', () => {
     assert.deepEqual(prices, expected[group as keyof typeof expected]);
     assert.equal(new Set(prices).size, 3);
   }
-  for (const tier of tiers) {
-    const prices = groups.map(
-      (group) =>
-        getPricingDisplayAmounts(pricingCatalog[`${tier}_${group}`])
-          .displayPriceInCents
-    );
-    assert.equal(new Set(prices).size, 3);
-  }
+  assert.equal(pricingCatalog.starter_yearly.priceInCents, 23880);
+  assert.equal(pricingCatalog.pro_yearly.priceInCents, 59880);
+  assert.equal(pricingCatalog.enterprise_yearly.priceInCents, 95880);
 });
 
 test('monthly subscriptions and one-time packs retain their displayed totals', () => {
@@ -75,12 +70,13 @@ test('credit packs are one-time purchases with explicitly permanent credits', ()
 test('rounding a monthly comparison cannot change the annual checkout total', () => {
   const product = { ...pricingCatalog.starter_yearly, priceInCents: 5999 };
   const display = getPricingDisplayAmounts(product);
-  const usd = new Intl.NumberFormat('en-US', {
+  const money = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'CNY',
+    currencyDisplay: 'narrowSymbol',
   });
-  assert.equal(usd.format(display.displayPriceInCents / 100), '$5.00');
-  assert.equal(usd.format(display.checkoutPriceInCents / 100), '$59.99');
+  assert.equal(money.format(display.displayPriceInCents / 100), '¥5.00');
+  assert.equal(money.format(display.checkoutPriceInCents / 100), '¥59.99');
   assert.equal(product.priceInCents, 5999);
 });
 
@@ -89,7 +85,7 @@ test('concurrent provider quotes preserve each billing option’s full checkout 
     const original = structuredClone(product);
     const display = getPricingDisplayAmounts(product);
     const quotes = await Promise.all(
-      ['stripe', 'creem', 'paypal'].map((paymentProvider) =>
+      ['stripe', 'paypal', 'alipay', 'wechat'].map((paymentProvider) =>
         resolveCharge({
           product,
           paymentProvider,
@@ -105,8 +101,39 @@ test('concurrent provider quotes preserve each billing option’s full checkout 
         quote.amount,
         display.displayPriceInCents * (display.billedAnnually ? 12 : 1)
       );
-      assert.equal(quote.currency, 'usd');
+      assert.equal(quote.currency, 'cny');
     }
     assert.deepEqual(product, original);
   }
+});
+
+test('Creem cannot charge a legacy USD mapping for any CNY package', async () => {
+  const quotes = await Promise.all(
+    Object.values(pricingCatalog)
+      .filter((p) => !p.kind)
+      .map((product) =>
+        resolveCharge({
+          product,
+          paymentProvider: 'creem',
+          userId: 'pricing-display-test',
+          configs: {},
+        })
+      )
+  );
+  for (const quote of quotes) {
+    assert.deepEqual(quote, {
+      error: 'This product is not available via creem',
+    });
+  }
+  const usd = await resolveCharge({
+    product: pricingCatalog.guest_post_standard,
+    paymentProvider: 'creem',
+    userId: 'pricing-display-test',
+    configs: {},
+  });
+  assert.deepEqual(usd, {
+    amount: 9900,
+    currency: 'usd',
+    providerKey: 'creem',
+  });
 });

@@ -558,7 +558,7 @@ export class PayPalProvider implements PaymentProvider {
           invoiceId: capture.id,
           invoiceUrl: activityUrl,
           amount: capture.amount?.value
-            ? parseFloat(capture.amount.value) * 100
+            ? Math.round(parseFloat(capture.amount.value) * 100)
             : undefined,
           currency: capture.amount?.currency_code,
         };
@@ -1234,9 +1234,11 @@ export class PayPalProvider implements PaymentProvider {
       planId: subscription.plan_id,
       description: planDetails?.name || subscription.plan_id,
       amount: billingCycle?.pricing_scheme?.fixed_price?.value
-        ? parseFloat(billingCycle.pricing_scheme.fixed_price.value) * 100
+        ? Math.round(
+            parseFloat(billingCycle.pricing_scheme.fixed_price.value) * 100
+          )
         : billingInfo?.last_payment?.amount?.value
-          ? parseFloat(billingInfo.last_payment.amount.value) * 100
+          ? Math.round(parseFloat(billingInfo.last_payment.amount.value) * 100)
           : 0,
       currency:
         billingCycle?.pricing_scheme?.fixed_price?.currency_code ||

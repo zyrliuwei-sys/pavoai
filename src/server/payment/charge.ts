@@ -1,5 +1,6 @@
 import type { PricingProduct } from '@/config/pricing';
 import { hasPermission } from '@/modules/rbac/service';
+import { paymentProviderSupportsCurrency } from '@/lib/payment-currency';
 
 const CNY_ONLY_PROVIDERS = new Set(['alipay', 'wechat']);
 
@@ -37,6 +38,9 @@ export async function resolveCharge(params: {
     }
     basePrice = product.cnyPriceInCents;
     currency = 'cny';
+  }
+  if (!paymentProviderSupportsCurrency(providerKey, currency)) {
+    return { error: `This product is not available via ${providerKey}` };
   }
   return {
     amount: testAmount > 0 ? testAmount : basePrice,
