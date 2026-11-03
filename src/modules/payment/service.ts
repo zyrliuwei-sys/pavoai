@@ -255,7 +255,7 @@ export async function createCheckout(params: {
       reference: params.reference || null,
     });
 
-  return session;
+  return { ...session, metadata: { ...session.metadata, orderNo } };
 }
 
 // --- Payment callback (return_url) ---

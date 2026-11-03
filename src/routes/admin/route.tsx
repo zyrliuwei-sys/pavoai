@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import {
+  Activity,
   BadgeCheck,
   BookOpen,
   Bot,
@@ -71,6 +72,15 @@ function AdminLayout() {
   ];
 
   const footerNavItems = [
+    ...(matchPermission('admin.operations.read', permissions?.permissions ?? [])
+      ? [
+          {
+            href: '/admin/operations',
+            label: m['admin.operations.nav'](),
+            icon: Activity,
+          },
+        ]
+      : []),
     ...(isSuperAdmin
       ? [
           {

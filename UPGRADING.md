@@ -46,6 +46,49 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-03: First-party operations workspace and pricing-layout experiments
+
+Take the operations module, public tracking routes/provider, admin operations
+routes/page, operation catalog, pricing integration, build metadata, Nitro task
+and all schema templates together. The admin entry is `/admin/operations`;
+the original source material stays at `/admin/ops-playbook`.
+
+Review `drizzle/0002_hot_argent.sql` before applying it to production. It adds
+eight `ops_*` tables and indexes, with no changes to existing business tables.
+For local development use `pnpm db:push`; for production use the reviewed
+migration via `wrangler d1 migrations apply pavoai --remote` (or `pnpm db:migrate`
+on the configured SQL database). Do not deploy this feature against a database
+that has not been migrated. The public bootstrap remains disabled if the
+operations tables are unavailable.
+
+Register the new `admin.operations.*` operation permissions using
+`pnpm admin:token sync-permissions`, then explicitly grant the intended roles.
+Existing super admins already have `*`. New default admin roles include all
+operations capabilities; new viewer roles receive read access only. Reporting,
+configuration, experiment creation/start/pause/apply, test exclusion and manual
+inspection each have their own permission.
+
+Tracking and hourly inspections start off. Enable them in the workspace after
+deployment. First-touch source/country/landing page, first build and first price
+snapshot are fixed per visitor; actual checkout prices are snapshotted
+separately. Browser events cannot report payment success: payment outcomes come
+from settled orders. Consent rejection and admin activity are excluded. Prior
+visitors are not fabricated or backfilled.
+
+Experiments compare the pricing component's default billing tab with fixed
+50/50 assignments. Catalog prices, credit rates and public copy do not change.
+Exposure requires the component to be visible; USD net revenue from its
+checkout is attributed for seven days from first exposure. Both groups must
+reach the configured observation count before an observed revenue-per-visitor
+leader may be applied. Application is manual and logged, and does not claim
+statistical significance. Pause plus the default-tab selector provides rollback.
+
+Nitro generates the `0 * * * *` Cloudflare cron trigger. When hourly inspection
+is enabled, each hour saves at most one report in the log. It does not send
+messages, call a language model, move money or auto-apply experimental winners.
+Agents can use the new operations tools through the existing admin MCP/API.
+Supplier balance is not inferred from task counts.
+
 ## 2026-11-03: Price AI packages and PayPal checkouts in USD
 
 Take the pricing catalog, pricing block, AI credit conversion, payment-currency

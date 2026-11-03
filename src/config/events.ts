@@ -27,6 +27,8 @@ export interface EventDefinition {
 }
 
 export const userEvents = {
+  // Read from ops_event via the user timeline source; never reported as money/client events.
+  ops_activity: { tone: 'gray' },
   // Reported by PricingTable when a signed-in user clicks a plan's button.
   plan_selected: { tone: 'amber', client: true },
   // Call track('paywall_hit', { feature }) where a feature needs a paid plan

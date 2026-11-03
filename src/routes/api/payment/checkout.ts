@@ -4,7 +4,9 @@ import { resolveCharge } from '@/server/payment/charge';
 import { getAuth } from '@/core/auth';
 import { getPricingProduct } from '@/config/pricing';
 import { getAllConfigs } from '@/modules/config/service';
+import { linkCheckout, OPS_COOKIE } from '@/modules/operations/service';
 import { createCheckout } from '@/modules/payment/service';
+import { getCookieFromHeader } from '@/lib/cookie';
 import { localizedPath } from '@/lib/locale-path';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr } from '@/lib/resp';
@@ -49,7 +51,13 @@ async function POST({ request }: { request: Request }) {
     if (userLimited) return userLimited;
 
     const body = await request.json().catch(() => ({}));
-    const { product_id, payment_provider, redirect, locale } = body;
+    const {
+      product_id,
+      payment_provider,
+      redirect,
+      locale,
+      ops_assignment_id,
+    } = body;
 
     if (!product_id || typeof product_id !== 'string') {
       return respErr('Missing product_id');
@@ -124,6 +132,16 @@ async function POST({ request }: { request: Request }) {
       provider: payment_provider,
     });
 
+    try {
+      await linkCheckout(
+        getCookieFromHeader(request.headers.get('cookie'), OPS_COOKIE),
+        String(checkout.metadata?.orderNo ?? ''),
+        session.user.id,
+        typeof ops_assignment_id === 'string' ? ops_assignment_id : undefined
+      );
+    } catch {
+      /* Optional analytics must never fail a checkout. */
+    }
     return respData({ checkout_url: checkout.checkoutInfo.checkoutUrl });
   } catch (error: any) {
     console.error('checkout error:', error);

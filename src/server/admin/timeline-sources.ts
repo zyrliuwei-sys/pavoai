@@ -1,4 +1,7 @@
-import type { SQL } from 'drizzle-orm';
+import { and, eq, ne, type SQL } from 'drizzle-orm';
+
+import { db } from '@/core/db';
+import { opsEvent, opsVisitor } from '@/config/db/schema';
 
 /**
  * Plug your own tables into the admin user timeline. Use this when the event
@@ -49,4 +52,58 @@ export interface TimelineSource {
   load: (ctx: TimelineSourceContext) => Promise<TimelineSourceRow[]>;
 }
 
-export const customTimelineSources: TimelineSource[] = [];
+export const customTimelineSources: TimelineSource[] = [
+  {
+    kind: 'ops_activity',
+    async load({ userId, from, by, limit }) {
+      try {
+        const rows = await db()
+          .select({
+            id: opsEvent.id,
+            at: opsEvent.createdAt,
+            kind: opsEvent.kind,
+            build: opsEvent.buildId,
+            source: opsVisitor.source,
+            country: opsVisitor.country,
+            price: opsVisitor.priceSnapshotId,
+          })
+          .from(opsEvent)
+          .innerJoin(opsVisitor, eq(opsEvent.visitorId, opsVisitor.id))
+          .where(
+            and(
+              eq(opsVisitor.userId, userId),
+              ne(opsEvent.kind, 'plan_selected'),
+              from(opsEvent.createdAt)
+            )
+          )
+          .orderBy(by(opsEvent.createdAt))
+          .limit(limit);
+        return rows.map(
+          (r: {
+            id: string;
+            at: Date;
+            kind: string;
+            build: string;
+            source: string;
+            country: string;
+            price: string;
+          }) => ({
+            id: r.id,
+            at: r.at,
+            detail: {
+              event: r.kind,
+              source: r.source,
+              country: r.country,
+              build: r.build,
+              price_snapshot: r.price.slice(0, 16),
+            },
+            href: '/admin/operations',
+          })
+        );
+      } catch (error) {
+        if (/no such table|does not exist/i.test(String(error))) return [];
+        throw error;
+      }
+    },
+  },
+];

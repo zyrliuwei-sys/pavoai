@@ -5,6 +5,7 @@ import { useRouter } from '@/core/i18n/navigation';
 import { EVO_MODELS, evoCostCredits } from '@/config/ai-pricing';
 import { landingVideos } from '@/config/landing-media';
 import { m } from '@/paraglide/messages.js';
+import { useOperations } from '@/hooks/use-operations';
 import { usePricingCheckout, usePricingGroups } from '@/blocks/pricing';
 import {
   parkPendingGen,
@@ -81,6 +82,7 @@ const IMAGE_QUALITIES = [
  * (mode tabs, prompt bar, in-place render preview) over video tiles.
  */
 export function Hero() {
+  const operations = useOperations();
   const router = useRouter();
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [requiredCredits, setRequiredCredits] = useState(0);
@@ -105,6 +107,7 @@ export function Hero() {
     tabId: string,
     selection: GenerationSelection
   ): Promise<'run' | 'blocked'> => {
+    operations.record('generate_clicked');
     const fresh = await authClient.getSession();
     if (fresh.data?.user) return 'run';
     const { error } = await authClient.signIn.anonymous();
@@ -126,6 +129,7 @@ export function Hero() {
     );
     parkPendingGen({ prompt, tabId, auto: true, selection });
     setPaywallOpen(true);
+    operations.record('paywall_viewed');
   };
 
   const onPaywallCheckout = async (planId: string) => {

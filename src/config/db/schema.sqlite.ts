@@ -806,3 +806,111 @@ export const userEvent = table(
 
 export type UserEvent = typeof userEvent.$inferSelect;
 export type NewUserEvent = typeof userEvent.$inferInsert;
+
+// ─── First-party operations and pricing-layout experiments ───────────────────
+export const opsControl = table('ops_control', {
+  id: text('id').primaryKey(),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+  hourly: integer('hourly', { mode: 'boolean' }).notNull().default(false),
+  defaultGroup: text('default_group').notNull().default('monthly'),
+});
+export const opsPriceSnapshot = table('ops_price_snapshot', {
+  id: text('id').primaryKey(),
+  data: text('data').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+export const opsVisitor = table(
+  'ops_visitor',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id'),
+    source: text('source').notNull().default(''),
+    country: text('country').notNull().default(''),
+    landingPath: text('landing_path').notNull().default(''),
+    buildLabel: text('build_label').notNull().default(''),
+    buildId: text('build_id').notNull().default(''),
+    priceSnapshotId: text('price_snapshot_id').notNull().default(''),
+    excluded: integer('excluded', { mode: 'boolean' }).notNull().default(false),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_visitor_lookup').on(t.createdAt, t.userId)]
+);
+export const opsEvent = table(
+  'ops_event',
+  {
+    id: text('id').primaryKey(),
+    visitorId: text('visitor_id').notNull().default(''),
+    kind: text('kind').notNull().default(''),
+    buildLabel: text('build_label').notNull().default(''),
+    buildId: text('build_id').notNull().default(''),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_event_lookup').on(t.visitorId, t.createdAt)]
+);
+export const opsExperiment = table('ops_experiment', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().default(''),
+  hypothesis: text('hypothesis').notNull(),
+  controlGroup: text('control_group').notNull().default(''),
+  variantGroup: text('variant_group').notNull().default(''),
+  status: text('status').notNull().default('draft'),
+  activeSlot: text('active_slot').unique(),
+  minVisitors: integer('min_visitors').notNull().default(400),
+  winnerGroup: text('winner_group'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  startedAt: integer('started_at', { mode: 'timestamp_ms' }),
+  endedAt: integer('ended_at', { mode: 'timestamp_ms' }),
+});
+export const opsAssignment = table(
+  'ops_assignment',
+  {
+    id: text('id').primaryKey(),
+    experimentId: text('experiment_id').notNull().default(''),
+    visitorId: text('visitor_id').notNull().default(''),
+    variant: text('variant').notNull().default(''),
+    attributionEndsAt: integer('attribution_ends_at', { mode: 'timestamp_ms' }),
+    exposedAt: integer('exposed_at', { mode: 'timestamp_ms' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_assignment_lookup').on(t.experimentId, t.visitorId)]
+);
+export const opsCheckout = table(
+  'ops_checkout',
+  {
+    id: text('id').primaryKey(),
+    visitorId: text('visitor_id').notNull().default(''),
+    assignmentId: text('assignment_id'),
+    priceSnapshotId: text('price_snapshot_id').notNull().default(''),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_checkout_lookup').on(t.visitorId)]
+);
+export const opsLog = table(
+  'ops_log',
+  {
+    id: text('id').primaryKey(),
+    experimentId: text('experiment_id'),
+    actorId: text('actor_id'),
+    action: text('action').notNull().default(''),
+    detail: text('detail').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_log_lookup').on(t.createdAt)]
+);

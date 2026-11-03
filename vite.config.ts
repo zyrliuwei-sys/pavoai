@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
@@ -47,8 +49,46 @@ function workersDbProvider(): string {
 
 const workersDb = isCloudflareBuild ? workersDbProvider() : '';
 const keepPostgres = workersDb === 'postgresql' || workersDb === 'postgres';
+let buildId = process.env.VITE_BUILD_ID || 'development';
+let buildLabel = process.env.VITE_BUILD_LABEL || 'Development';
+try {
+  if (!process.env.VITE_BUILD_ID)
+    buildId = execFileSync('git', ['rev-parse', '--short=12', 'HEAD'], {
+      encoding: 'utf8',
+    }).trim();
+  const diff = execFileSync(
+    'git',
+    ['diff', 'HEAD', '--', 'src', 'messages', 'vite.config.ts', 'server'],
+    { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 }
+  );
+  const untracked = execFileSync(
+    'git',
+    ['ls-files', '--others', '--exclude-standard', '-z', '--', 'src', 'server'],
+    { encoding: 'utf8' }
+  )
+    .split('\0')
+    .filter(Boolean);
+  if ((diff || untracked.length) && !process.env.VITE_BUILD_ID) {
+    const fingerprint = createHash('sha256').update(diff);
+    for (const file of untracked)
+      fingerprint.update(file).update(readFileSync(file));
+    buildId += `-${fingerprint.digest('hex').slice(0, 8)}`;
+  }
+  if (!process.env.VITE_BUILD_LABEL)
+    buildLabel = execFileSync('git', ['log', '-1', '--format=%s'], {
+      encoding: 'utf8',
+    })
+      .trim()
+      .slice(0, 150);
+} catch {
+  /* Source archives may not have Git metadata. */
+}
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_BUILD_ID': JSON.stringify(buildId),
+    'import.meta.env.VITE_BUILD_LABEL': JSON.stringify(buildLabel),
+  },
   server: {
     port: 3000,
     // Cloud sandboxes (ShipAny Code / e2b) proxy the dev server through a
@@ -119,6 +159,15 @@ export default defineConfig({
     // Analytics scripts come from the build-time config read — a rebuild picks
     // up admin changes.
     nitro({
+      experimental: { tasks: true },
+      tasks: {
+        'operations:inspect': {
+          handler: fileURLToPath(
+            new URL('./server/tasks/operations.ts', import.meta.url)
+          ),
+        },
+      },
+      scheduledTasks: { '0 * * * *': ['operations:inspect'] },
       routeRules: {
         '/': { prerender: true },
         '/zh': { prerender: true },

@@ -58,8 +58,13 @@ export async function apiGetText(url: string) {
   };
 }
 
-export const apiPost = <T = void>(url: string, body?: unknown) =>
+export const apiPost = <T = void>(
+  url: string,
+  body?: unknown,
+  options?: Pick<RequestInit, 'keepalive'>
+) =>
   request<T>(url, {
+    ...options,
     method: 'POST',
     body: body == null ? undefined : JSON.stringify(body),
   });

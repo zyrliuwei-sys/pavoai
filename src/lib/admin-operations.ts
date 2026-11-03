@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { INDEXNOW_KEY_PATTERN, MAX_INDEXNOW_URLS } from '@/lib/indexnow';
+import { experimentInputSchema } from '@/lib/operations';
 
 // The shared contract for REST, MCP, documentation, and permission discovery.
 const id = z.string().min(1).max(191);
@@ -77,6 +78,81 @@ function op(
 }
 
 export const adminOperations: AdminOperation[] = [
+  op(
+    'operations_report',
+    'First-party operations: same-clock revenue comparison (Asia/Shanghai), distinct-visitor funnel, first-touch source/country/build/landing-page cohorts, USD revenue per exposed visitor for pricing-layout experiments, and inspection logs. Visits are recorded only after tracking is enabled.',
+    'operations.read',
+    'GET',
+    'operations/',
+    z
+      .object({
+        days: z.coerce.number().int().min(1).max(30).optional(),
+        build: z.string().max(191).optional(),
+      })
+      .strict()
+  ),
+  op(
+    'operations_configure',
+    'Enable/disable first-party tracking and hourly saved inspections. Does not send messages or change prices.',
+    'operations.configure',
+    'POST',
+    'operations/configure',
+    z
+      .object({
+        enabled: z.boolean(),
+        hourly: z.boolean(),
+        defaultGroup: z.enum(['monthly', 'yearly', 'lifetime']).optional(),
+      })
+      .strict()
+  ),
+  op(
+    'operations_experiment_create',
+    'Create a 50/50 pricing-tab layout experiment. Prices, credits and copy stay identical between variants.',
+    'operations.experiment-create',
+    'POST',
+    'operations/create',
+    experimentInputSchema
+  ),
+  op(
+    'operations_experiment_start',
+    'Start/resume a pricing-layout experiment. Only one may run at a time; assignment is sticky by visitor.',
+    'operations.experiment-start',
+    'POST',
+    'operations/start',
+    z.object({ id }).strict()
+  ),
+  op(
+    'operations_experiment_pause',
+    'Pause allocation to a pricing-layout experiment; outstanding exposed checkouts retain their attribution.',
+    'operations.experiment-pause',
+    'POST',
+    'operations/pause',
+    z.object({ id }).strict()
+  ),
+  op(
+    'operations_experiment_apply',
+    'Finish and apply the observed revenue-per-visitor leader after BOTH variants reach their observation threshold. This is an observed leader, not a claim of statistical significance.',
+    'operations.experiment-apply',
+    'POST',
+    'operations/apply',
+    z.object({ id }).strict()
+  ),
+  op(
+    'operations_exclude',
+    'Mark visitor traffic as test traffic, or restore it to reporting.',
+    'operations.exclude',
+    'POST',
+    'operations/exclude',
+    z.object({ id, excluded: z.boolean() }).strict()
+  ),
+  op(
+    'operations_inspect',
+    'Save a time-stamped operations inspection and signals for AI/operator review.',
+    'operations.inspect',
+    'POST',
+    'operations/inspect',
+    empty
+  ),
   op(
     'indexnow_get',
     'Read IndexNow ownership verification and site status.',

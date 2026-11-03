@@ -1,6 +1,12 @@
 'use client';
 
-import { useRef, useState, type ComponentType, type SVGProps } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type SVGProps,
+} from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Check } from 'lucide-react';
 
@@ -53,13 +59,41 @@ export interface PricingGroup {
 export function PricingTable({
   groups,
   onCheckout,
+  initialGroup,
+  onView,
 }: {
   groups: PricingGroup[];
   onCheckout?: (plan: PricingPlan) => void | Promise<unknown>;
+  initialGroup?: string;
+  onView?: () => void;
 }) {
   const [activeGroup, setActiveGroup] = useState(groups[0]?.key || '');
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const startingCheckout = useRef(false);
+  const touched = useRef(false);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (
+      initialGroup &&
+      !touched.current &&
+      groups.some((g) => g.key === initialGroup)
+    )
+      setActiveGroup(initialGroup);
+  }, [initialGroup, groups]);
+  useEffect(() => {
+    if (!root.current || !onView) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.2) {
+          onView();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(root.current);
+    return () => observer.disconnect();
+  }, [onView]);
 
   const currentGroup = groups.find((g) => g.key === activeGroup) || groups[0];
 
@@ -121,7 +155,7 @@ export function PricingTable({
   }
 
   return (
-    <div className="space-y-10">
+    <div ref={root} className="space-y-10">
       {/* Group tabs — pill toggle */}
       {groups.length > 1 && (
         <div className="flex justify-center">
@@ -131,7 +165,10 @@ export function PricingTable({
                 key={group.key}
                 type="button"
                 aria-pressed={activeGroup === group.key}
-                onClick={() => setActiveGroup(group.key)}
+                onClick={() => {
+                  touched.current = true;
+                  setActiveGroup(group.key);
+                }}
                 className={cn(
                   'focus-visible:ring-ring focus-visible:ring-offset-muted rounded-full px-5 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                   activeGroup === group.key

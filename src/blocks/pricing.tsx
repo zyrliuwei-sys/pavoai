@@ -13,6 +13,7 @@ import { getPricingDisplayAmounts } from '@/lib/pricing-display';
 import { currentPathWithQuery } from '@/lib/redirect';
 import { m } from '@/paraglide/messages.js';
 import { getLocale } from '@/paraglide/runtime.js';
+import { useOperations } from '@/hooks/use-operations';
 import { usePublicConfig } from '@/hooks/use-public-config';
 import {
   PaymentProviderModal,
@@ -150,6 +151,7 @@ export function usePricingCheckout({
   redirect = '/settings/payments',
 }: { redirect?: string } = {}) {
   const router = useRouter();
+  const operations = useOperations();
   const { data: session } = useSession();
   const { data: configsData } = usePublicConfig();
   const configs = configsData ?? {};
@@ -194,6 +196,7 @@ export function usePricingCheckout({
         // Where the provider lands the user after paying.
         redirect,
         locale: getLocale(),
+        ops_assignment_id: operations.data?.assignment?.id,
       }),
     onSuccess: (data) => {
       if (!data?.checkout_url) {
@@ -215,6 +218,7 @@ export function usePricingCheckout({
   }
 
   async function handleCheckout(plan: PricingPlan) {
+    operations.record('plan_selected');
     // Fresh session check: the cached useSession snapshot can lag behind a
     // just-created anonymous session (landing paywall) and would wrongly
     // bounce a paying guest to the sign-in page.
@@ -277,6 +281,7 @@ export function Pricing({
   headingLevel = 2,
 }: { title?: string; headingLevel?: 1 | 2 } = {}) {
   const groups = usePricingGroups();
+  const operations = useOperations();
   const { handleCheckout, providerModal } = usePricingCheckout();
   const Heading = headingLevel === 1 ? 'h1' : 'h2';
 
@@ -294,7 +299,16 @@ export function Pricing({
             {m['landing.pricing.description']()}
           </p>
         </div>
-        <PricingTable groups={groups} onCheckout={handleCheckout} />
+        <PricingTable
+          groups={groups}
+          onCheckout={handleCheckout}
+          initialGroup={operations.data?.defaultGroup}
+          onView={
+            operations.data?.enabled
+              ? () => operations.record('pricing_viewed')
+              : undefined
+          }
+        />
         <p className="text-muted-foreground mt-5 text-center text-sm">
           {m['landing.pricing.usage_note']()}
         </p>

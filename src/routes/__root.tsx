@@ -32,6 +32,7 @@ import { getQueryClient } from '@/lib/query-client';
 import { getLocale, locales, localizeUrl } from '@/paraglide/runtime.js';
 import { useAppearance } from '@/hooks/use-appearance';
 import { useCookieConsent } from '@/hooks/use-cookie-consent';
+import { OperationsProvider } from '@/hooks/use-operations';
 import { CookieConsent } from '@/blocks/cookie-consent';
 import { Ads } from '@/components/analytics/ads';
 import { GoogleAnalytics } from '@/components/analytics/google-analytics';
@@ -187,7 +188,9 @@ function RootComponent() {
         enableSystem
         disableTransitionOnChange
       >
-        <Outlet />
+        <OperationsProvider allowed={adsAllowed}>
+          <Outlet />
+        </OperationsProvider>
         <SandboxPreviewBridge />
         {/* Appearance on: toasts follow the theme (globals.css). */}
         <Toaster

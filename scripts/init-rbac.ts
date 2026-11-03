@@ -368,6 +368,7 @@ const defaultRoles = [
       'admin.indexnow.read',
       'admin.indexnow.submit',
       'admin.ai-tasks.*',
+      'admin.operations.*',
     ],
   },
   {
@@ -399,6 +400,7 @@ const defaultRoles = [
       'admin.categories.read',
       'admin.payments.read',
       'admin.subscriptions.read',
+      'admin.operations.read',
       'admin.credits.read',
     ],
   },

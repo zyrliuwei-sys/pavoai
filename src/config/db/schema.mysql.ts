@@ -662,3 +662,111 @@ export const userEvent = table(
 
 export type UserEvent = typeof userEvent.$inferSelect;
 export type NewUserEvent = typeof userEvent.$inferInsert;
+
+// ─── First-party operations and pricing-layout experiments ───────────────────
+export const opsControl = table('ops_control', {
+  id: varchar191('id').primaryKey(),
+  enabled: boolean('enabled').notNull().default(false),
+  hourly: boolean('hourly').notNull().default(false),
+  defaultGroup: varchar191('default_group').notNull().default('monthly'),
+});
+export const opsPriceSnapshot = table('ops_price_snapshot', {
+  id: varchar191('id').primaryKey(),
+  data: longtext('data').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+export const opsVisitor = table(
+  'ops_visitor',
+  {
+    id: varchar191('id').primaryKey(),
+    userId: varchar191('user_id'),
+    source: varchar191('source').notNull().default(''),
+    country: varchar191('country').notNull().default(''),
+    landingPath: varchar191('landing_path').notNull().default(''),
+    buildLabel: varchar191('build_label').notNull().default(''),
+    buildId: varchar191('build_id').notNull().default(''),
+    priceSnapshotId: varchar191('price_snapshot_id').notNull().default(''),
+    excluded: boolean('excluded').notNull().default(false),
+    createdAt: timestamp('created_at', { mode: 'date' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    lastSeenAt: timestamp('last_seen_at', { mode: 'date' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_visitor_lookup').on(t.createdAt, t.userId)]
+);
+export const opsEvent = table(
+  'ops_event',
+  {
+    id: varchar191('id').primaryKey(),
+    visitorId: varchar191('visitor_id').notNull().default(''),
+    kind: varchar191('kind').notNull().default(''),
+    buildLabel: varchar191('build_label').notNull().default(''),
+    buildId: varchar191('build_id').notNull().default(''),
+    createdAt: timestamp('created_at', { mode: 'date' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_event_lookup').on(t.visitorId, t.createdAt)]
+);
+export const opsExperiment = table('ops_experiment', {
+  id: varchar191('id').primaryKey(),
+  name: varchar191('name').notNull().default(''),
+  hypothesis: longtext('hypothesis').notNull(),
+  controlGroup: varchar191('control_group').notNull().default(''),
+  variantGroup: varchar191('variant_group').notNull().default(''),
+  status: varchar191('status').notNull().default('draft'),
+  activeSlot: varchar191('active_slot').unique(),
+  minVisitors: int('min_visitors').notNull().default(400),
+  winnerGroup: varchar191('winner_group'),
+  createdAt: timestamp('created_at', { mode: 'date' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  startedAt: timestamp('started_at', { mode: 'date' }),
+  endedAt: timestamp('ended_at', { mode: 'date' }),
+});
+export const opsAssignment = table(
+  'ops_assignment',
+  {
+    id: varchar191('id').primaryKey(),
+    experimentId: varchar191('experiment_id').notNull().default(''),
+    visitorId: varchar191('visitor_id').notNull().default(''),
+    variant: varchar191('variant').notNull().default(''),
+    attributionEndsAt: timestamp('attribution_ends_at', { mode: 'date' }),
+    exposedAt: timestamp('exposed_at', { mode: 'date' }),
+    createdAt: timestamp('created_at', { mode: 'date' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_assignment_lookup').on(t.experimentId, t.visitorId)]
+);
+export const opsCheckout = table(
+  'ops_checkout',
+  {
+    id: varchar191('id').primaryKey(),
+    visitorId: varchar191('visitor_id').notNull().default(''),
+    assignmentId: varchar191('assignment_id'),
+    priceSnapshotId: varchar191('price_snapshot_id').notNull().default(''),
+    createdAt: timestamp('created_at', { mode: 'date' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_checkout_lookup').on(t.visitorId)]
+);
+export const opsLog = table(
+  'ops_log',
+  {
+    id: varchar191('id').primaryKey(),
+    experimentId: varchar191('experiment_id'),
+    actorId: varchar191('actor_id'),
+    action: varchar191('action').notNull().default(''),
+    detail: longtext('detail').notNull(),
+    createdAt: timestamp('created_at', { mode: 'date' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index('idx_ops_log_lookup').on(t.createdAt)]
+);
