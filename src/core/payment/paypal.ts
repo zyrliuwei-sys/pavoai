@@ -375,11 +375,10 @@ export class PayPalProvider implements PaymentProvider {
               }
             }
 
-            // If still APPROVED after polling, treat it as success
-            // PayPal will activate it shortly
+            // Authorization alone is not proof that a payment was received.
             if (subscriptionResult.status === 'APPROVED') {
               console.log(
-                'PayPal subscription still APPROVED after polling, treating as success'
+                'PayPal subscription is awaiting payment confirmation'
               );
             }
           }
@@ -955,9 +954,17 @@ export class PayPalProvider implements PaymentProvider {
       paymentCurrency = purchaseUnit.amount.currency_code || '';
     }
 
+    const orderStatus = this.mapPayPalStatus(order.status);
     const result: PaymentSession = {
       provider: this.name,
-      paymentStatus: this.mapPayPalStatus(order.status),
+      // A completed order can still contain a pending capture (for example
+      // delayed bank payments). Wait for the capture to complete before fulfillment.
+      paymentStatus:
+        orderStatus === PaymentStatus.SUCCESS
+          ? capture
+            ? this.mapPayPalStatus(capture.status)
+            : PaymentStatus.PROCESSING
+          : orderStatus,
       paymentInfo: {
         transactionId: order.id,
         discountCode: '', // PayPal doesn't have promotion codes like Stripe
@@ -1094,10 +1101,12 @@ export class PayPalProvider implements PaymentProvider {
         breakdown?.discount?.currency_code ||
         saleEvent.amount?.currency_code ||
         '';
-      paymentAmount = saleEvent.amount?.value
-        ? Math.round(parseFloat(saleEvent.amount.value) * 100)
-        : 0;
-      paymentCurrency = saleEvent.amount?.currency_code || '';
+      // Subscriptions use v1 sale events (total/currency), while v2
+      // captures use value/currency_code.
+      const saleAmount = saleEvent.amount?.value ?? saleEvent.amount?.total;
+      paymentAmount = saleAmount ? Math.round(parseFloat(saleAmount) * 100) : 0;
+      paymentCurrency =
+        saleEvent.amount?.currency_code || saleEvent.amount?.currency || '';
       paidAt = saleEvent.create_time
         ? new Date(saleEvent.create_time)
         : undefined;
@@ -1111,11 +1120,13 @@ export class PayPalProvider implements PaymentProvider {
       paidAt = lastPayment.time ? new Date(lastPayment.time) : undefined;
     }
 
-    // For subscriptions, APPROVED means user has authorized, treat as SUCCESS
-    // PayPal will automatically activate the subscription
+    // Approval/activation may precede the first charge. Fulfill only after
+    // PayPal includes an actual payment receipt, not merely authorization.
     const subscriptionPaymentStatus =
       subscription.status === 'APPROVED' || subscription.status === 'ACTIVE'
-        ? PaymentStatus.SUCCESS
+        ? paymentAmount > 0 && paymentCurrency
+          ? PaymentStatus.SUCCESS
+          : PaymentStatus.PROCESSING
         : this.mapPayPalStatus(subscription.status);
 
     const result: PaymentSession = {

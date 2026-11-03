@@ -6,6 +6,7 @@ import {
   AlipayProvider,
   CreemProvider,
   PaymentManager,
+  PayPalProvider,
   StripeProvider,
   WechatPayProvider,
 } from '@/core/payment';
@@ -71,6 +72,11 @@ async function getPaymentManager(): Promise<PaymentManager> {
     c('stripe_secret_key') || c('stripe_api_key'),
     c('creem_enabled'),
     c('creem_api_key'),
+    c('paypal_enabled'),
+    c('paypal_client_id'),
+    c('paypal_client_secret'),
+    c('paypal_webhook_id'),
+    c('paypal_environment'),
     c('alipay_app_id'),
     c('wechat_mch_id'),
     c('default_payment_provider'),
@@ -108,6 +114,24 @@ async function getPaymentManager(): Promise<PaymentManager> {
           c('creem_environment') === 'production' ? 'production' : 'sandbox',
       }),
       isDefault
+    );
+  }
+
+  if (
+    c('paypal_enabled') === 'true' &&
+    c('paypal_client_id') &&
+    c('paypal_client_secret')
+  ) {
+    manager.addProvider(
+      new PayPalProvider({
+        clientId: c('paypal_client_id'),
+        clientSecret: c('paypal_client_secret'),
+        webhookId: c('paypal_webhook_id') || undefined,
+        environment: ['live', 'production'].includes(c('paypal_environment'))
+          ? 'production'
+          : 'sandbox',
+      }),
+      c('default_payment_provider') === 'paypal'
     );
   }
 
@@ -307,6 +331,9 @@ async function handleCheckoutSuccess(session: any, provider: string) {
   // (which equals our orderNo and the value we stored in paymentSessionId).
   const result = session.paymentResult || {};
   const sessionId: string =
+    (provider === 'paypal' &&
+      (session.subscriptionId ||
+        result.supplementary_data?.related_ids?.order_id)) ||
     result.id ||
     result.object?.id ||
     result.out_trade_no ||
@@ -318,11 +345,34 @@ async function handleCheckoutSuccess(session: any, provider: string) {
   const [existingOrder] = await db()
     .select()
     .from(order)
-    .where(and(eq(order.paymentSessionId, sessionId), isNull(order.deletedAt)))
+    .where(
+      and(
+        eq(order.paymentSessionId, sessionId),
+        eq(order.paymentProvider, provider),
+        isNull(order.deletedAt)
+      )
+    )
     .limit(1);
 
   if (!existingOrder) return;
   await settleCheckoutOrder(existingOrder, session, provider);
+}
+
+function assertPayPalPayment(
+  provider: string,
+  paymentInfo: any,
+  amount: number,
+  currency: string
+) {
+  if (
+    provider === 'paypal' &&
+    (paymentInfo?.paymentAmount !== amount ||
+      paymentInfo?.paymentCurrency?.toLowerCase() !== currency.toLowerCase())
+  ) {
+    throw new Error(
+      'PayPal payment amount or currency does not match the order'
+    );
+  }
 }
 
 /**
@@ -347,6 +397,12 @@ export async function settleCheckoutOrder(
   const subscriptionInfo = session.subscriptionInfo;
 
   if (session.paymentStatus === PaymentStatus.SUCCESS) {
+    assertPayPalPayment(
+      provider,
+      paymentInfo,
+      existingOrder.amount,
+      existingOrder.currency
+    );
     // CNY providers charge exactly the order amount (no coupons or tax on
     // their side), so any mismatch means the notification belongs to some
     // other trade — refuse to settle rather than grant on the wrong payment.
@@ -524,6 +580,13 @@ export async function handleSubscriptionRenewal(
   if (session.paymentStatus !== PaymentStatus.SUCCESS) return;
 
   const paymentInfo = session.paymentInfo;
+
+  assertPayPalPayment(
+    provider,
+    paymentInfo,
+    existingSub.amount,
+    existingSub.currency
+  );
 
   // Idempotency: drop duplicate renewals for the same provider transaction.
   if (paymentInfo?.transactionId) {

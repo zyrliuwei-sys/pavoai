@@ -46,6 +46,20 @@ exports, permission codes, and behavior that changes for end users.
 
 ---
 
+## 2026-11-03: Wire PayPal checkout and payment confirmation
+
+Take the payment manager, PayPal provider, payment service, settings test,
+and `tests/paypal.test.ts` together, then rebuild and redeploy. The checkout
+service now registers enabled PayPal credentials, honors both `live` and
+legacy `production` environment values, and reloads the provider when its
+credentials, webhook ID, environment, or enabled flag changes. Explicitly
+requested providers no longer fall back to a different payment method.
+
+PayPal capture and subscription notifications resolve the original checkout
+ID. Subscription approval without a payment receipt does not grant credits;
+initial payments and renewals must match the stored amount and currency.
+Existing credentials stay in place; no database migration is required.
+
 ## 2026-11-02: Fix IndexNow submissions on Cloudflare Workers
 
 Take `src/modules/indexnow/service.ts` and `tests/indexnow.test.ts` together,

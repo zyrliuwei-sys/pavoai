@@ -206,8 +206,9 @@ async function testPaypal(
   const provider = new PayPalProvider({
     clientId: configs.paypal_client_id,
     clientSecret: configs.paypal_client_secret,
-    environment:
-      configs.paypal_environment === 'live' ? 'production' : 'sandbox',
+    environment: ['live', 'production'].includes(configs.paypal_environment)
+      ? 'production'
+      : 'sandbox',
     webhookId: configs.paypal_webhook_id || undefined,
   });
 
