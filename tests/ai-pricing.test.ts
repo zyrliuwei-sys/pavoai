@@ -7,7 +7,6 @@ import { after, test } from 'node:test';
 import { eq } from 'drizzle-orm';
 
 import {
-  AI_CNY_FEN_PER_USD,
   AI_CREDITS_PER_USD,
   EVO_MODELS,
   evoCostCredits,
@@ -77,16 +76,14 @@ test('unsupported quality and unsupported Fast resolution cannot undercharge', (
   }
 });
 
-test('CNY packages convert to whole credits at the fixed retail rate without reusing USD amounts', () => {
+test('USD packages grant 1,000 credits per dollar across all billing intervals', () => {
   const packages = Object.values(pricingCatalog).filter((p) => !p.kind);
   assert.equal(packages.length, 9);
   for (const product of packages) {
-    assert.equal(product.currency, 'cny');
+    assert.equal(product.currency, 'usd');
     assert.equal(
       product.credits,
-      Math.floor(
-        (product.priceInCents * AI_CREDITS_PER_USD) / AI_CNY_FEN_PER_USD
-      )
+      (product.priceInCents * AI_CREDITS_PER_USD) / 100
     );
     assert.ok(Number.isSafeInteger(product.credits));
   }
@@ -98,12 +95,11 @@ test('CNY packages convert to whole credits at the fixed retail rate without reu
     assert.ok(once.priceInCents < monthly.priceInCents);
     assert.equal(once.plan, undefined);
   }
-  assert.equal(pricingCatalog.starter_monthly.credits, 2842);
-  assert.equal(pricingCatalog.starter_lifetime.credits, 1414);
+  assert.equal(pricingCatalog.starter_monthly.credits, 19900);
+  assert.equal(pricingCatalog.starter_lifetime.credits, 9900);
   assert.equal(purchasedCredits(499), 4990);
-  assert.equal(purchasedCredits(700, 'cny'), 1000);
   for (const invalid of [-1, NaN, Infinity, 1.5]) {
-    assert.throws(() => purchasedCredits(invalid, 'cny'), /Invalid purchase/);
+    assert.throws(() => purchasedCredits(invalid), /Invalid purchase/);
   }
 });
 
@@ -148,8 +144,9 @@ test('upstream requests match the quoted Fast route, supported quality and five-
 
 test('concurrent generations cannot spend the same package balance twice; a failure refunds once', async () => {
   const userId = 'pricing-buyer';
-  const budget = pricingCatalog.pro_lifetime.credits;
-  const charge = evoCostCredits(EVO_MODELS['wan-2-7'], '720p');
+  const budget = pricingCatalog.starter_monthly.credits;
+  const model = EVO_MODELS['seedance-2-0'];
+  const charge = evoCostCredits(model, '1080p');
   await db()
     .insert(user)
     .values({ id: userId, name: 'Buyer', email: 'pricing@example.test' });
@@ -169,7 +166,7 @@ test('concurrent generations cannot spend the same package balance twice; a fail
         userId,
         mediaType: 'video',
         provider: 'evolink',
-        model: EVO_MODELS['wan-2-7'].model,
+        model: model.model,
         prompt: 'A landscape',
         costCredits: charge,
       })
@@ -182,7 +179,7 @@ test('concurrent generations cannot spend the same package balance twice; a fail
     .from(aiTask)
     .where(eq(aiTask.userId, userId));
   assert.equal(tasks.length, 1);
-  assert.equal(tasks[0].costCredits, 3200);
+  assert.equal(tasks[0].costCredits, charge);
   await Promise.all([
     updateTask({ taskId: tasks[0].id, status: AITaskStatus.FAILED }),
     updateTask({ taskId: tasks[0].id, status: AITaskStatus.FAILED }),

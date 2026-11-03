@@ -1,9 +1,9 @@
-/** Creem product prices support USD/EUR; never send a CNY pack to an old USD mapping. */
+/** Keep native CNY-only methods out of USD package checkouts. */
 export function paymentProviderSupportsCurrency(
   provider: string,
   currency: string
 ) {
-  return (
-    provider !== 'creem' || ['usd', 'eur'].includes(currency.toLowerCase())
-  );
+  const code = currency.toLowerCase();
+  if (provider === 'alipay' || provider === 'wechat') return code === 'cny';
+  return provider !== 'creem' || ['usd', 'eur'].includes(code);
 }

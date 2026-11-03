@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { pricingCatalog } from '../src/config/pricing';
+import { paymentProviderSupportsCurrency } from '../src/lib/payment-currency';
 import { getPricingDisplayAmounts } from '../src/lib/pricing-display';
 import { resolveCharge } from '../src/server/payment/charge';
 
@@ -22,7 +23,7 @@ test('annual cards show monthly prices while keeping the full annual total', () 
   }
 });
 
-test('each billing option has three distinct tiers at the requested CNY starting prices', () => {
+test('each billing option has three distinct tiers at the requested USD starting prices', () => {
   const tiers = ['starter', 'pro', 'enterprise'];
   const groups = ['monthly', 'yearly', 'lifetime'];
   const expected = {
@@ -72,11 +73,11 @@ test('rounding a monthly comparison cannot change the annual checkout total', ()
   const display = getPricingDisplayAmounts(product);
   const money = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'CNY',
+    currency: pricingCatalog.starter_yearly.currency.toUpperCase(),
     currencyDisplay: 'narrowSymbol',
   });
-  assert.equal(money.format(display.displayPriceInCents / 100), '¥5.00');
-  assert.equal(money.format(display.checkoutPriceInCents / 100), '¥59.99');
+  assert.equal(money.format(display.displayPriceInCents / 100), '$5.00');
+  assert.equal(money.format(display.checkoutPriceInCents / 100), '$59.99');
   assert.equal(product.priceInCents, 5999);
 });
 
@@ -85,7 +86,7 @@ test('concurrent provider quotes preserve each billing option’s full checkout 
     const original = structuredClone(product);
     const display = getPricingDisplayAmounts(product);
     const quotes = await Promise.all(
-      ['stripe', 'paypal', 'alipay', 'wechat'].map((paymentProvider) =>
+      ['stripe', 'paypal', 'creem'].map((paymentProvider) =>
         resolveCharge({
           product,
           paymentProvider,
@@ -101,28 +102,47 @@ test('concurrent provider quotes preserve each billing option’s full checkout 
         quote.amount,
         display.displayPriceInCents * (display.billedAnnually ? 12 : 1)
       );
-      assert.equal(quote.currency, 'cny');
+      assert.equal(quote.currency, 'usd');
     }
     assert.deepEqual(product, original);
   }
 });
 
-test('Creem cannot charge a legacy USD mapping for any CNY package', async () => {
+test('USD packages cannot reuse their dollar amount as yuan on native CNY providers', async () => {
   const quotes = await Promise.all(
     Object.values(pricingCatalog)
       .filter((p) => !p.kind)
-      .map((product) =>
-        resolveCharge({
-          product,
-          paymentProvider: 'creem',
-          userId: 'pricing-display-test',
-          configs: {},
-        })
+      .flatMap((product) =>
+        ['alipay', 'wechat'].map((paymentProvider) =>
+          resolveCharge({
+            product,
+            paymentProvider,
+            userId: 'pricing-display-test',
+            configs: {},
+          })
+        )
       )
   );
   for (const quote of quotes) {
-    assert.deepEqual(quote, {
-      error: 'This product is not available via creem',
+    assert.ok('error' in quote);
+    assert.match(quote.error, /not available via (alipay|wechat)/);
+  }
+  for (const provider of ['paypal', 'stripe', 'creem']) {
+    assert.equal(paymentProviderSupportsCurrency(provider, 'usd'), true);
+  }
+  for (const provider of ['alipay', 'wechat']) {
+    assert.equal(paymentProviderSupportsCurrency(provider, 'usd'), false);
+    assert.equal(paymentProviderSupportsCurrency(provider, 'cny'), true);
+    const cny = await resolveCharge({
+      product: pricingCatalog.guest_post_standard,
+      paymentProvider: provider,
+      userId: 'pricing-display-test',
+      configs: {},
+    });
+    assert.deepEqual(cny, {
+      amount: 69900,
+      currency: 'cny',
+      providerKey: provider,
     });
   }
   const usd = await resolveCharge({

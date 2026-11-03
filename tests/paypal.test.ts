@@ -105,6 +105,21 @@ function paypalMock(t: TestContext) {
         return json({ id: `PRODUCT-${++sequence}`, ...body }, 201);
       }
       if (method === 'POST' && url.pathname === '/v1/billing/plans') {
+        // Reproduce a USD-only receiving account: CNY previously failed here.
+        if (
+          body.billing_cycles.some(
+            (cycle: any) =>
+              cycle.pricing_scheme.fixed_price.currency_code !== 'USD'
+          )
+        ) {
+          return json(
+            {
+              name: 'UNPROCESSABLE_ENTITY',
+              details: [{ issue: 'CURRENCY_NOT_SUPPORTED_FOR_RECEIVER' }],
+            },
+            422
+          );
+        }
         const plan = { id: `PLAN-${++sequence}`, ...body };
         plans.set(plan.id, plan);
         return json(plan, 201);
@@ -126,6 +141,19 @@ function paypalMock(t: TestContext) {
         return json(item, 201);
       }
       if (method === 'POST' && url.pathname === '/v2/checkout/orders') {
+        if (
+          body.purchase_units.some(
+            (unit: any) => unit.amount.currency_code !== 'USD'
+          )
+        ) {
+          return json(
+            {
+              name: 'UNPROCESSABLE_ENTITY',
+              details: [{ issue: 'CURRENCY_NOT_SUPPORTED_FOR_RECEIVER' }],
+            },
+            422
+          );
+        }
         const item = {
           id: `ORDER-${++sequence}`,
           ...body,
@@ -241,7 +269,7 @@ function subscriptionPayment(item: any, cycle = 1) {
   item.start_time = time;
   item.billing_info = {
     last_payment: {
-      amount: { value: '19.90', currency_code: 'CNY' },
+      amount: { value: '19.90', currency_code: 'USD' },
       time: paidTime,
     },
     next_billing_time:
@@ -252,12 +280,12 @@ function subscriptionPayment(item: any, cycle = 1) {
     id: `SALE-${item.id}-${cycle}`,
     state: 'completed',
     billing_agreement_id: item.id,
-    amount: { total: '19.90', currency: 'CNY' },
+    amount: { total: '19.90', currency: 'USD' },
     create_time: paidTime,
   };
 }
 
-test('enabled Live PayPal handles concurrent monthly, annual and one-time checkouts at catalog prices', async (t) => {
+test('USD-only PayPal receiver accepts concurrent monthly, annual and one-time checkouts at catalog prices', async (t) => {
   await configure();
   const mock = paypalMock(t);
   const ids = ['starter_monthly', 'pro_yearly', 'starter_lifetime'];
@@ -279,10 +307,15 @@ test('enabled Live PayPal handles concurrent monthly, annual and one-time checko
         (p.priceInCents / 100).toFixed(2)
       );
       assert.equal(
+        plan.billing_cycles[0].pricing_scheme.fixed_price.currency_code,
+        'USD'
+      );
+      assert.equal(
         plan.billing_cycles[0].frequency.interval_unit,
         p.plan!.interval.toUpperCase()
       );
     } else {
+      assert.equal(payload.purchase_units[0].amount.currency_code, 'USD');
       assert.equal(
         payload.purchase_units[0].amount.value,
         (p.priceInCents / 100).toFixed(2)
@@ -403,7 +436,7 @@ test('subscription sale webhooks accept PayPal v1 amounts and deduplicate initia
     .where(eq(subscription.subscriptionId, item.id));
   assert.ok(sub);
   assert.equal(sub.amount, 1990);
-  assert.equal(sub.currency, 'CNY');
+  assert.equal(sub.currency, 'USD');
   const next = subscriptionPayment(item, 2);
   await webhook('PAYMENT.SALE.COMPLETED', next);
   await webhook('PAYMENT.SALE.COMPLETED', next);
@@ -414,7 +447,7 @@ test('subscription sale webhooks accept PayPal v1 amounts and deduplicate initia
   assert.equal(rows.length, 2);
   const renewal = rows.find((r) => r.orderNo !== row.orderNo)!;
   assert.equal(renewal.paymentAmount, 1990);
-  assert.equal(renewal.paymentCurrency, 'CNY');
+  assert.equal(renewal.paymentCurrency, 'USD');
   assert.equal((await grants(renewal.orderNo)).length, 1);
   const bad = {
     ...next,

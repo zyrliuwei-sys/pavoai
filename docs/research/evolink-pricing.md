@@ -10,8 +10,6 @@ pages and blog posts show different prices; do not substitute their rates.
 - 1,000 Pavo credits = $1. Credits are not EvoLink's own credits.
 - Whole-credit charges round upward, so the difference is less than $0.001.
 - One request produces one image or a **5-second** text-to-video clip.
-- CNY packs use a fixed retail basis of ¥7 per USD of credit value, rounded
-  down to whole credits. This is not a live foreign-exchange quote.
 - All package intervals sell credits at this same rate. Annual packages
   contain 12 monthly allocations, granted upfront. One-time purchases are
   finite credit packs. No package promises unlimited generation.
@@ -50,20 +48,19 @@ submitted to verify these prices.
 
 | Tier       | Monthly | Monthly credits | Annual / month | Annual charge | Annual credits | One-time | One-time credits |
 | ---------- | ------: | --------------: | -------------: | ------------: | -------------: | -------: | ---------------: |
-| Starter    |  ¥19.90 |           2,842 |         ¥19.90 |       ¥238.80 |         34,114 |    ¥9.90 |            1,414 |
-| Pro        |  ¥59.90 |           8,557 |         ¥49.90 |       ¥598.80 |         85,542 |   ¥29.90 |            4,271 |
-| Enterprise |  ¥99.90 |          14,271 |         ¥79.90 |       ¥958.80 |        136,971 |   ¥79.90 |           11,414 |
+| Starter    |  $19.90 |          19,900 |         $19.90 |       $238.80 |        238,800 |    $9.90 |            9,900 |
+| Pro        |  $59.90 |          59,900 |         $49.90 |       $598.80 |        598,800 |   $29.90 |           29,900 |
+| Enterprise |  $99.90 |          99,900 |         $79.90 |       $958.80 |        958,800 |   $79.90 |           79,900 |
 
 All three tiers have distinct prices within each billing option. The entry
-monthly and annual comparison prices both start at ¥19.90 as requested.
-The conversion remains 1,000 credits per USD of credit value at the fixed
-retail basis, including annual and one-time packs. Annual cards show the monthly equivalent; checkout charges the
+monthly and annual comparison prices both start at $19.90 as requested.
+The conversion remains 1,000 credits per USD, including annual and one-time
+packs. Annual cards show the monthly equivalent; checkout charges the
 full annual total. These are different credit budgets rather than a change
 to the per-generation model rates.
 
 Usage counts on cards are alternatives, not cumulative entitlements:
-Seedream 4 2K images **or** Wan 2.7 720p 5-second clips, rounded down. A
-Starter monthly plan cannot fund a Wan or Standard Seedance request; the generation paywall only shows
+Seedream 4 2K images **or** Wan 2.7 720p 5-second clips, rounded down. The generation paywall only shows
 packages that can fund the selected request. The selected model, resolution
 and Fast mode survive the checkout redirect. Per-model rate tables are kept
 in this internal research note and are not displayed on the website.
