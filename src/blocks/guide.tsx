@@ -1,3 +1,4 @@
+import { pavoGuideSlugs } from '@/config/pavo-guides';
 import { m } from '@/paraglide/messages.js';
 import { LandingGuide } from '@/components/landing/guide';
 
@@ -16,6 +17,25 @@ export function Guide() {
         { title: m['lp.guide.b2t'](), body: m['lp.guide.b2']() },
         { title: m['lp.guide.b3t'](), body: m['lp.guide.b3']() },
         { title: m['lp.guide.b4t'](), body: m['lp.guide.b4']() },
+      ]}
+      linksTitle={m['lp.guide.links_title']()}
+      links={[
+        {
+          label: m['lp.guide.link_video'](),
+          href: `/blog/${pavoGuideSlugs.video}`,
+        },
+        {
+          label: m['lp.guide.link_image_video'](),
+          href: `/blog/${pavoGuideSlugs.imageVideo}`,
+        },
+        {
+          label: m['lp.guide.link_web'](),
+          href: `/blog/${pavoGuideSlugs.web}`,
+        },
+        {
+          label: m['lp.guide.link_mobile'](),
+          href: `/blog/${pavoGuideSlugs.mobile}`,
+        },
       ]}
     />
   );

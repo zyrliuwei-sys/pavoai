@@ -82,6 +82,7 @@ export const getBlogPostFn = createServerFn()
       title: meta.title,
       description: meta.description,
       image: meta.image,
+      imageAlt: meta.image_alt,
       createdAt: new Date(meta.created_at).toISOString(),
       authorName: meta.author_name,
       authorImage: meta.author_image,

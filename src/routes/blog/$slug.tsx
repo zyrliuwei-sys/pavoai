@@ -266,7 +266,7 @@ function BlogPostPage() {
           {post.image && (
             <img
               src={post.image}
-              alt={post.title}
+              alt={post.imageAlt ?? post.title}
               className="border-border mb-8 w-full rounded-2xl border object-cover"
             />
           )}

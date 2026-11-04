@@ -1,3 +1,6 @@
+import { ArrowUpRight } from 'lucide-react';
+
+import { Link } from '@/core/i18n/navigation';
 import { RevealSection } from '@/components/landing/reveal';
 
 export interface GuideBlock {
@@ -10,6 +13,8 @@ export interface LandingGuideProps {
   title: string;
   intro: string;
   blocks: GuideBlock[];
+  linksTitle: string;
+  links: { label: string; href: string }[];
 }
 
 /**
@@ -21,6 +26,8 @@ export function LandingGuide({
   title,
   intro,
   blocks,
+  linksTitle,
+  links,
 }: LandingGuideProps) {
   return (
     <RevealSection className="bg-zinc-100 py-20 sm:py-28 lg:py-32">
@@ -55,6 +62,35 @@ export function LandingGuide({
             </article>
           ))}
         </div>
+
+        <nav
+          id="pavo-ai-guides"
+          aria-labelledby="pavo-ai-guides-title"
+          className="mt-12 scroll-mt-24 border-t border-zinc-300/70 pt-6"
+        >
+          <h3
+            id="pavo-ai-guides-title"
+            className="text-base font-semibold text-zinc-950"
+          >
+            {linksTitle}
+          </h3>
+          <ul className="mt-4 grid gap-x-14 gap-y-2 md:grid-cols-2">
+            {links.map(({ label, href }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[var(--sv-iris-strong)] underline-offset-4 hover:underline"
+                >
+                  {label}
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className="size-3.5 shrink-0"
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </RevealSection>
   );

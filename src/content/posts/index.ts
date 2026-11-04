@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 
+import { pavoGuideSlugs } from '@/config/pavo-guides';
 import { baseLocale } from '@/paraglide/runtime.js';
 
 /**
@@ -12,6 +13,7 @@ import { baseLocale } from '@/paraglide/runtime.js';
  * local posts via the pure helpers below.
  */
 export const BLOG_POST_SLUGS = [
+  ...Object.values(pavoGuideSlugs),
   'veo-3-1-vs-kling-3-0',
   'how-to-write-cinematic-video-prompts',
   'ugc-ads-with-ai-prompts',
@@ -24,6 +26,7 @@ export type BlogPostMeta = {
   author_name?: string;
   author_image?: string;
   image?: string;
+  image_alt?: string;
 };
 
 type PostModule = {
@@ -36,6 +39,7 @@ export type BlogPost = {
   title: string;
   description: string;
   image?: string;
+  imageAlt?: string;
   /** ISO date string — serializable across loader/server-fn boundaries */
   createdAt: string;
   authorName?: string;
@@ -87,6 +91,7 @@ function localPostToItem(slug: string, meta: BlogPostMeta): BlogPost {
     title: meta.title,
     description: meta.description,
     image: meta.image,
+    imageAlt: meta.image_alt,
     createdAt: new Date(meta.created_at).toISOString(),
     authorName: meta.author_name,
     authorImage: meta.author_image,
