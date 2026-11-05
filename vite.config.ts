@@ -153,11 +153,8 @@ export default defineConfig({
       srcDirectory: 'src',
     }),
     viteReact(),
-    // Prerender the marketing landing at build time: both locale variants are
-    // pure composition (no per-request data), so serving them as static edge
-    // assets removes the SSR render AND the config-table D1 read from TTFB.
-    // Analytics scripts come from the build-time config read — a rebuild picks
-    // up admin changes.
+    // Footer badges are live database content. Render the landing per request
+    // so a directory can verify a newly installed badge without another deploy.
     nitro({
       experimental: { tasks: true },
       tasks: {
@@ -168,14 +165,6 @@ export default defineConfig({
         },
       },
       scheduledTasks: { '0 * * * *': ['operations:inspect'] },
-      routeRules: {
-        '/': { prerender: true },
-        '/zh': { prerender: true },
-      },
-      // Emit zh.html instead of zh/index.html so /zh serves the static page
-      // directly — the subfolder layout makes /zh 307 to /zh/, which then
-      // disagrees with the canonical (also what internal links point at).
-      prerender: { autoSubfolderIndex: false },
     }),
   ],
 });
