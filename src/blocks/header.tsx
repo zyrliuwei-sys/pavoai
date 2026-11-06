@@ -1,3 +1,4 @@
+import { usePathname } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
 import { m } from '@/paraglide/messages.js';
 import { LandingNav } from '@/components/landing/nav';
@@ -7,8 +8,10 @@ import { LandingNav } from '@/components/landing/nav';
  * Used by the homepage, /pricing and /blog routes.
  */
 export function Header() {
+  const pathname = usePathname();
   return (
     <LandingNav
+      overlay={pathname === '/'}
       logoSrc={envConfigs.app_logo}
       appName={envConfigs.app_name}
       links={[

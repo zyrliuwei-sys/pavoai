@@ -158,13 +158,21 @@ export default defineConfig({
     nitro({
       experimental: { tasks: true },
       tasks: {
+        'generations:process': {
+          handler: fileURLToPath(
+            new URL('./server/tasks/generations.ts', import.meta.url)
+          ),
+        },
         'operations:inspect': {
           handler: fileURLToPath(
             new URL('./server/tasks/operations.ts', import.meta.url)
           ),
         },
       },
-      scheduledTasks: { '0 * * * *': ['operations:inspect'] },
+      scheduledTasks: {
+        '0 * * * *': ['operations:inspect'],
+        '* * * * *': ['generations:process'],
+      },
     }),
   ],
 });

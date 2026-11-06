@@ -9,7 +9,7 @@ export function WhatsNew() {
     <LandingWhatsNew
       label={m['lp.new.label']()}
       title={m['lp.new.title']()}
-      link={{ label: m['lp.new.link'](), href: '/#tools' }}
+      link={{ label: m['lp.new.link'](), href: '/#generator' }}
       cards={[
         {
           badge: m['lp.new.c1_badge'](),

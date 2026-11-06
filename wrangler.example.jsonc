@@ -31,6 +31,10 @@
       "migrations_dir": "drizzle",
     },
   ],
+  // Private generated media: create a bucket first, then uncomment.
+  // Keep public access disabled. The app serves authenticated/signed downloads.
+  // "r2_buckets": [{ "binding": "WORKS_BUCKET", "bucket_name": "your-private-works" }],
+  // Nitro generates the every-minute generations:process cron from vite.config.ts.
   // ── Postgres via Hyperdrive (instead of D1) ────────────────────────────────
   // 1. npx wrangler hyperdrive create <name> --connection-string="postgres://..." (your direct PG url)
   // 2. Set vars.DATABASE_PROVIDER to "postgresql" and remove the d1_databases block

@@ -20,7 +20,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Link } from '@/core/i18n/navigation';
+import { EVO_MODELS, evoCostCredits } from '@/config/ai-pricing';
 import { ApiError, apiGet, apiPost } from '@/lib/api-client';
+import type { DeliveryMode } from '@/lib/generation-delivery';
 import {
   parsePendingGeneration,
   shouldResumeGeneration,
@@ -60,6 +63,8 @@ interface RunResult {
   /** Generated media URL ("" while the task is still rendering). */
   url: string;
   meta: string;
+  downloadUrl?: string;
+  delivery?: DeliveryMode;
   aspectId?: string;
 }
 
@@ -69,14 +74,33 @@ interface GenStatus {
   progress: number;
   url: string;
   error: string;
+  downloadUrl: string;
+  delivery: DeliveryMode;
+  emailSent: boolean;
 }
 
 export interface LandingGeneratorProps {
+  delivery: {
+    registered: boolean;
+    email: string;
+    onEmailChange: (email: string) => void;
+    emailAvailable: boolean;
+    emailLabel: string;
+    emailPlaceholder: string;
+    hint: string;
+    downloadLabel: string;
+    accountResult: string;
+    emailResult: string;
+    temporaryResult: string;
+    retryLabel: string;
+    worksLabel: string;
+  };
   tabs: GeneratorTab[];
   /** Example prompts cycled by the typewriter placeholder. */
   promptExamples: string[];
   examplesLabel: string;
   generateLabel: string;
+  creditLabel: string;
   trust: string[];
   /** Toggle chips. */
   styleLabel: string;
@@ -195,10 +219,12 @@ function ChipGroup({
  * block; only the generation API call lives here.
  */
 export function LandingGenerator({
+  delivery,
   tabs,
   promptExamples,
   examplesLabel,
   generateLabel,
+  creditLabel,
   trust,
   styleLabel,
   fastLabel,
@@ -218,6 +244,7 @@ export function LandingGenerator({
   const [draft, setDraft] = useState<string | null>(null);
   const [phase, setPhase] = useState<'idle' | 'rendering' | 'done'>('idle');
   const [progress, setProgress] = useState(0);
+  const [retrying, setRetrying] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -300,7 +327,10 @@ export function LandingGenerator({
       }));
       setFastOn(pending.selection.fast);
     }
-    if (pending.email) deliverEmailRef.current = pending.email;
+    if (pending.email) {
+      deliverEmailRef.current = pending.email;
+      delivery.onEmailChange(pending.email);
+    }
     if (shouldResumeGeneration(pending, window.location.search)) {
       const cleanUrl = new URL(window.location.href);
       cleanUrl.searchParams.delete('checkout');
@@ -430,46 +460,78 @@ export function LandingGenerator({
     setAudioPlaying(false);
     setResult({ prompt, tabId, model, url: '', meta, aspectId });
     setProgress(0);
+    setRetrying(false);
     setPhase('rendering');
 
     const stale = () => runIdRef.current !== runId || !mountedRef.current;
 
-    // Create the task, poll it to completion, then mail the result if the
-    // visitor left a delivery address in the paywall.
+    // Delivery continues on the server even when this browser goes away.
     const attempt = async (): Promise<void> => {
-      const { taskId } = await apiPost<{ taskId: string }>('/api/ai/generate', {
+      const { taskId, access } = await apiPost<{
+        taskId: string;
+        access: string;
+      }>('/api/ai/generate', {
         prompt,
         model: modelId,
         aspect: aspectId ?? '16:9',
         quality: selection.quality,
         fast: selection.fast,
-        email: deliverEmailRef.current || undefined,
+        email: delivery.registered
+          ? undefined
+          : (auto ? deliverEmailRef.current : delivery.email.trim()) ||
+            undefined,
       });
       if (stale()) return;
 
       // Poll the task until it completes, fails, or a newer run takes over.
+      let pollFailures = 0;
       for (;;) {
-        await sleep(POLL_MS);
+        await sleep(Math.min(30_000, POLL_MS * 2 ** Math.min(pollFailures, 4)));
         if (stale()) return;
-        const st = await apiGet<GenStatus>(
-          `/api/ai/generate?taskId=${encodeURIComponent(taskId)}`
-        );
+        let st: GenStatus;
+        try {
+          st = await apiGet<GenStatus>(
+            `/api/ai/generate?taskId=${encodeURIComponent(taskId)}&access=${encodeURIComponent(access || '')}`
+          );
+        } catch (error) {
+          if (stale()) return;
+          if (error instanceof ApiError && [401, 404].includes(error.code))
+            throw error;
+          // Keep the original task and its in-memory guest access. Retrying a
+          // status request must never create another paid generation.
+          pollFailures += 1;
+          setRetrying(true);
+          continue;
+        }
         if (stale()) return;
+        pollFailures = 0;
+        setRetrying(false);
 
         setProgress((p) => Math.max(p, st.progress));
         if (st.status === 'completed') {
           if (!st.url) throw new Error('Generation returned no result');
-          setResult((prev) => (prev ? { ...prev, url: st.url } : prev));
+          setResult((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  url: st.url,
+                  downloadUrl: st.downloadUrl,
+                  delivery: st.delivery,
+                }
+              : prev
+          );
           setProgress(100);
           setPhase('done');
 
-          // Optional email delivery (best-effort, never blocks the result).
-          const deliverTo = deliverEmailRef.current;
-          if (deliverTo) {
-            deliverEmailRef.current = '';
-            apiPost('/api/ai/deliver', { taskId, email: deliverTo }).catch(
-              () => {}
-            );
+          // A temporary guest's download is attempted once. The visible button
+          // remains available if the browser blocks an automatic download.
+          if (st.delivery === 'temporary' && st.downloadUrl) {
+            const link = document.createElement('a');
+            link.href = st.downloadUrl;
+            link.download = '';
+            document.body.append(link);
+            link.click();
+            link.remove();
           }
           return;
         }
@@ -744,15 +806,25 @@ export function LandingGenerator({
             </button>
 
             {/* Generate — the panel's primary action, bottom right */}
+            {EVO_MODELS[activeModelId] && (
+              <span className="sv-meta ml-auto self-center text-xs text-white/75">
+                {evoCostCredits(
+                  EVO_MODELS[activeModelId],
+                  activeQualityId,
+                  fastOn
+                ).toLocaleString()}{' '}
+                {creditLabel}
+              </span>
+            )}
             <button
               type="submit"
               disabled={starting || phase === 'rendering'}
-              className="sv-press ml-auto inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[14.5px] font-semibold text-white shadow-[var(--sv-iris-deep)]/30 shadow-lg hover:bg-[var(--sv-iris-deep)] disabled:cursor-wait lg:w-auto"
+              className="sv-press inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--sv-iris-strong)] px-6 text-[14.5px] font-semibold text-white shadow-[var(--sv-iris-deep)]/30 shadow-lg hover:bg-[var(--sv-iris-deep)] disabled:cursor-wait lg:w-auto"
             >
               {starting || phase === 'rendering' ? (
                 <>
                   <Loader2 size={16} className="animate-spin" aria-hidden />
-                  <span className="tabular-nums">{progress}%</span>
+                  <span className="tabular-nums">{Math.round(progress)}%</span>
                 </>
               ) : (
                 <>
@@ -791,7 +863,7 @@ export function LandingGenerator({
                     role="status"
                     aria-live="polite"
                   >
-                    {stageLabel}
+                    {retrying ? delivery.retryLabel : stageLabel}
                   </p>
                   <div className="text-[32px] leading-none font-semibold text-white tabular-nums">
                     {Math.round(progress)}%
@@ -903,7 +975,13 @@ export function LandingGenerator({
           {/* Caption row — actions + disclosure */}
           {phase === 'done' && (
             <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
-              <p className="sv-meta text-[11px] text-white/40">{demoNote}</p>
+              <p className="sv-meta max-w-md text-[12px] leading-relaxed text-white/65">
+                {result.delivery === 'account'
+                  ? delivery.accountResult
+                  : result.delivery === 'email'
+                    ? delivery.emailResult
+                    : delivery.temporaryResult}
+              </p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -913,17 +991,48 @@ export function LandingGenerator({
                   <RefreshCw size={13} aria-hidden />
                   {againLabel}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => onSignUp?.(result.prompt, result.tabId)}
-                  className="sv-press inline-flex items-center gap-1.5 rounded-full bg-[var(--sv-iris-strong)] px-4 py-1.5 text-[12.5px] font-semibold text-white hover:bg-[var(--sv-iris-deep)]"
-                >
-                  {keepLabel}
-                  <ArrowRight size={13} aria-hidden />
-                </button>
+                {result.downloadUrl && (
+                  <a
+                    href={result.downloadUrl}
+                    download
+                    className="sv-press inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[var(--sv-iris-strong)] px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-[var(--sv-iris-deep)]"
+                  >
+                    {delivery.downloadLabel}
+                    <ArrowRight size={13} aria-hidden />
+                  </a>
+                )}
+                {result.delivery === 'account' && (
+                  <Link
+                    href="/settings/works"
+                    className="inline-flex min-h-10 items-center rounded-full border border-white/15 px-4 text-[12.5px] text-white"
+                  >
+                    {delivery.worksLabel}
+                  </Link>
+                )}
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {phase === 'idle' && (
+        <div className="mt-3 w-full max-w-[1040px] text-left">
+          {!delivery.registered && delivery.emailAvailable && (
+            <label className="block max-w-sm text-xs text-white/70">
+              {delivery.emailLabel}
+              <input
+                type="email"
+                maxLength={200}
+                value={delivery.email}
+                onChange={(event) => delivery.onEmailChange(event.target.value)}
+                placeholder={delivery.emailPlaceholder}
+                className="mt-2 h-10 w-full rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-[var(--sv-iris)]"
+              />
+            </label>
+          )}
+          <p className="mt-2 text-xs leading-relaxed text-white/60">
+            {delivery.hint}
+          </p>
         </div>
       )}
 

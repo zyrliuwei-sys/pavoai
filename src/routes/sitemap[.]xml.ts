@@ -29,7 +29,7 @@ function urlFor(path: string, locale: string): string {
   }).href;
 }
 
-function entryXml(e: Entry): string {
+function entryXml(e: Entry, locale: string): string {
   const alternates = locales
     .map(
       (loc) =>
@@ -38,7 +38,7 @@ function entryXml(e: Entry): string {
     .join('\n');
   return [
     '  <url>',
-    `    <loc>${urlFor(e.path, baseLocale)}</loc>`,
+    `    <loc>${urlFor(e.path, locale)}</loc>`,
     alternates,
     e.lastModified ? `    <lastmod>${e.lastModified}</lastmod>` : null,
     `    <changefreq>${e.changeFrequency}</changefreq>`,
@@ -95,7 +95,9 @@ export const Route = createFileRoute('/sitemap.xml')({
         const xml = [
           '<?xml version="1.0" encoding="UTF-8"?>',
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
-          ...entries.map(entryXml),
+          ...entries.flatMap((entry) =>
+            locales.map((locale) => entryXml(entry, locale))
+          ),
           '</urlset>',
           '',
         ].join('\n');

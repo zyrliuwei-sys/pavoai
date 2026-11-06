@@ -1,3 +1,70 @@
+## 2026-11-06 — Show credit packs first
+
+Pricing tabs now start with the existing one-time credit packs. Disabled or
+unavailable operations tracking does not override that default with its legacy
+monthly fallback; enabled pricing experiments and admin defaults still apply.
+The generation paywall offers one-time packs that cover the selected generation,
+ordered by price, and highlights the smallest eligible pack. Checkout continues
+to use the existing catalog product IDs, prices and credit amounts.
+
+Deploy the pricing and hero blocks together. No database, environment, payment
+provider, price or credit-grant changes are required. Verify the default pricing
+tab, monthly/yearly switching, and the paywall's product ID and one-time payment
+type; run pricing and payment regressions and a production build.
+
+## 2026-11-06 — Connected model copy and creation delivery
+
+The public English/Chinese copy now describes only Seedance 2.0, Wan 2.7,
+Nano Banana 2 and Seedream 4. Signup credit promises and unsupported studio
+claims were removed. Existing blog URLs remain valid with corrected content.
+The public-copy fixture was refreshed with the user's explicit approval.
+
+Registered generation results are saved privately and listed at `/settings/works`.
+Guests can leave an email for a download link. Without an email, a download is
+attempted on completion; the button stays available on that page. Guest access
+is kept only in React memory, never in local/session storage, so refreshing does
+not restore a result. Pending checkout drafts still survive the payment redirect.
+
+Before deploying:
+
+- Create a **private R2 bucket** and bind it as `WORKS_BUCKET` in `wrangler.jsonc`.
+  No public bucket URL is needed. Account/email generation checks storage before
+  charging, so deploy the binding with the code.
+  The PavoAI bucket `pavoai-works` has been created with public access disabled,
+  and the local deployment configuration includes its binding.
+- Configure a verified sender using Settings → Email (Resend or Cloudflare).
+  If unavailable, the guest email field is hidden and the page explains the
+  current-page download option. Requests with an email fail before any charge.
+- Deploy Nitro's `generations:process` task and its every-minute cron from
+  `vite.config.ts`. It finishes storage and email delivery without the browser;
+  keep the existing hourly operations cron too. A Node deployment needs an R2
+  binding adapter and a scheduler; this project's production target is Workers.
+- No database migration: delivery options, status and private object references
+  use the existing `ai_task` columns. AI tasks already appear in admin timelines.
+- Back up the R2 bucket alongside the database. Email download links are bearer
+  links derived from `AUTH_SECRET`; rotating that secret invalidates old links.
+
+Generation failures refund idempotently. Storage/email failures are retried and
+never turn a successful generation into a refunded one. Concurrent processors
+claim a lease; Resend also receives an idempotency key. Download endpoints check
+ownership, or the email link token, before returning a private media stream.
+Polling retries temporary network errors without creating or charging for a new task.
+Validate with `pnpm test:works`, `pnpm test:works:d1`, `pnpm test:payment` and
+`pnpm build`. The D1 test uses an isolated local database and private R2 emulator;
+provider generation and email delivery are mocked.
+
+## 2026-11-06 — Launch audit fixes
+
+Public pages now emit page-specific canonical, hreflang and social metadata.
+The sitemap includes both language URLs, localized dashboard paths are excluded
+from robots, and account/admin screens are marked noindex. Deploy the updated
+routes together with `src/lib/seo.ts`; no database or environment changes are needed.
+
+The marketing header keeps a dark background on inner pages so its white links
+remain visible in light mode. Result email delivery now decodes the stored JSON
+task result before selecting the media URL. Sending still requires a configured
+email provider; this change does not enable one or send any messages.
+
 ## 2026-11-05 — Automatic badge installation
 
 The homepage and Chinese homepage now render at request time. Build-time static

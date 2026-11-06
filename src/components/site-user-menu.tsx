@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOutIcon, SettingsIcon, ShieldIcon } from 'lucide-react';
+import { ImagesIcon, LogOutIcon, SettingsIcon, ShieldIcon } from 'lucide-react';
 
 import { signOut } from '@/core/auth/client';
 import { Link, useRouter } from '@/core/i18n/navigation';
@@ -65,6 +65,10 @@ export function SiteUserMenu({
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/settings/works" />}>
+          <ImagesIcon className="size-4" />
+          {m['works.title']()}
+        </DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/settings" />}>
           <SettingsIcon className="size-4" />
           {m['common.nav.settings']()}

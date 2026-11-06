@@ -3,6 +3,7 @@ import {
   Coins,
   CreditCard,
   Home,
+  Images,
   Key,
   LayoutDashboard,
   LifeBuoy,
@@ -33,6 +34,11 @@ function SettingsLayout() {
       href: '/settings',
       label: m['settings.nav.overview'](),
       icon: LayoutDashboard,
+    },
+    {
+      href: '/settings/works',
+      label: m['works.title'](),
+      icon: Images,
     },
     {
       href: '/settings/profile',

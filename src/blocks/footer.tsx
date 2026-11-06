@@ -53,18 +53,33 @@ export function Footer() {
           title: m['lp.footer.col1'](),
           links: [
             { label: m['lp.footer.l11'](), href: '/?mode=video#generator' },
-            { label: m['lp.footer.l12'](), href: '/#use-cases' },
-            { label: m['lp.footer.l13'](), href: '/#tools' },
-            { label: m['lp.footer.l14'](), href: '/#tools' },
+            {
+              label: m['lp.footer.l12'](),
+              href: '/?mode=video&model=seedance-2-0#generator',
+            },
+            {
+              label: m['lp.footer.l13'](),
+              href: '/?mode=video&model=wan-2-7#generator',
+            },
+            { label: m['lp.footer.l14'](), href: '/settings/works' },
           ],
         },
         {
           title: m['lp.footer.col2'](),
           links: [
             { label: m['lp.footer.l21'](), href: '/?mode=image#generator' },
-            { label: m['lp.footer.l22'](), href: '/#tools' },
-            { label: m['lp.footer.l23'](), href: '/#tools' },
-            { label: m['lp.footer.l24'](), href: '/#use-cases' },
+            {
+              label: m['lp.footer.l22'](),
+              href: '/?mode=image&model=nano-banana-2#generator',
+            },
+            {
+              label: m['lp.footer.l23'](),
+              href: '/?mode=image&model=seedream-4#generator',
+            },
+            {
+              label: m['lp.footer.l24'](),
+              href: '/blog/how-to-write-cinematic-video-prompts',
+            },
           ],
         },
         {

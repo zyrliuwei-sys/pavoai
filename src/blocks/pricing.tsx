@@ -55,6 +55,11 @@ export function usePricingGroups(): PricingGroup[] {
   ];
   const groups = [
     {
+      key: 'lifetime',
+      label: m['landing.pricing.lifetime'](),
+      interval: undefined,
+    },
+    {
       key: 'monthly',
       label: m['landing.pricing.monthly'](),
       interval: m['landing.pricing.month_unit'](),
@@ -63,11 +68,6 @@ export function usePricingGroups(): PricingGroup[] {
       key: 'yearly',
       label: m['landing.pricing.yearly'](),
       interval: m['landing.pricing.month_unit'](),
-    },
-    {
-      key: 'lifetime',
-      label: m['landing.pricing.lifetime'](),
-      interval: undefined,
     },
   ];
 
@@ -302,7 +302,9 @@ export function Pricing({
         <PricingTable
           groups={groups}
           onCheckout={handleCheckout}
-          initialGroup={operations.data?.defaultGroup}
+          initialGroup={
+            operations.data?.enabled ? operations.data.defaultGroup : 'lifetime'
+          }
           onView={
             operations.data?.enabled
               ? () => operations.record('pricing_viewed')

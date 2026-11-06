@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import { envConfigs } from '@/config';
+import { publicPageHead } from '@/lib/seo';
 import { m } from '@/paraglide/messages.js';
 import { getLocale, localizeUrl } from '@/paraglide/runtime.js';
 import { Blog } from '@/blocks/blog';
@@ -103,7 +104,7 @@ export const Route = createFileRoute('/')({
         applicationCategory: 'MultimediaApplication',
         operatingSystem: 'Web',
         description,
-        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        offers: { '@type': 'Offer', price: '9.90', priceCurrency: 'USD' },
       },
       {
         '@context': 'https://schema.org',
@@ -116,26 +117,17 @@ export const Route = createFileRoute('/')({
       },
     ]);
 
-    return { title, description, canonical, ogImage, jsonLd };
+    return { title, description, canonical, ogImage, jsonLd, locale };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: loaderData.title },
-          { name: 'description', content: loaderData.description },
-          { property: 'og:title', content: loaderData.title },
-          { property: 'og:description', content: loaderData.description },
-          { property: 'og:type', content: 'website' },
-          { property: 'og:url', content: loaderData.canonical },
-          { property: 'og:image', content: loaderData.ogImage },
-          { property: 'og:site_name', content: envConfigs.app_name },
-          { name: 'twitter:card', content: 'summary_large_image' },
-          { name: 'twitter:title', content: loaderData.title },
-          { name: 'twitter:description', content: loaderData.description },
-          { name: 'twitter:image', content: loaderData.ogImage },
-        ]
-      : [],
-    links: loaderData ? [{ rel: 'canonical', href: loaderData.canonical }] : [],
-  }),
+  head: ({ loaderData }) =>
+    loaderData
+      ? publicPageHead({
+          title: loaderData.title,
+          description: loaderData.description,
+          path: '/',
+          locale: loaderData.locale,
+          image: loaderData.ogImage,
+        })
+      : {},
   component: HomePage,
 });

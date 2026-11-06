@@ -13,9 +13,10 @@ import { toast } from 'sonner';
 
 import { Link, useRouter } from '@/core/i18n/navigation';
 import { envConfigs } from '@/config';
+import { publicPageHead } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 import { m } from '@/paraglide/messages.js';
-import { getLocale, localizeUrl } from '@/paraglide/runtime.js';
+import { getLocale } from '@/paraglide/runtime.js';
 import { useGuestPostCheckout } from '@/hooks/use-guest-post-checkout';
 import { formatPrice, guestPostSubmitProblem } from '@/hooks/use-guest-posts';
 import { Footer } from '@/blocks/footer';
@@ -59,16 +60,14 @@ export const Route = createFileRoute('/blog/$slug')({
         ],
       };
     }
-    const canonical = localizeUrl(`${envConfigs.app_url}/blog/${post.slug}`, {
-      locale: locale as any,
-    }).href;
-    return {
-      meta: [
-        { title: `${post.title} | ${envConfigs.app_name}` },
-        { name: 'description', content: post.description },
-      ],
-      links: [{ rel: 'canonical', href: canonical }],
-    };
+    return publicPageHead({
+      title: `${post.title} | ${envConfigs.app_name}`,
+      description: post.description,
+      path: `/blog/${post.slug}`,
+      locale,
+      type: 'article',
+      image: post.image || undefined,
+    });
   },
   component: BlogPostPage,
 });

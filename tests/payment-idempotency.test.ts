@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { after, test } from 'node:test';
 import { eq } from 'drizzle-orm';
 
+import { pricingCatalog } from '../src/config/pricing';
+
 // Isolated SQLite database; no application modules load before the env is set.
 const directory = await mkdtemp(join(tmpdir(), 'shipany-payment-test-'));
 Object.assign(process.env, {
@@ -132,6 +134,55 @@ test('a late failure event from a stale read never downgrades a paid order', asy
     'stripe'
   );
   assert.equal((await readOrder('ORD-RACE')).status, 'paid');
+});
+
+test('first-purchase credit pack callback retries grant permanent credits once without a subscription', async () => {
+  const product = pricingCatalog.starter_lifetime;
+  const orderNo = 'ORD-FIRST-PACK';
+  await db().insert(order).values({
+    id: 'id-first-pack',
+    orderNo,
+    userId,
+    userEmail: 'buyer@example.test',
+    status: 'created',
+    amount: product.priceInCents,
+    currency: product.currency,
+    productId: product.productId,
+    paymentType: product.type,
+    paymentProvider: 'stripe',
+    paymentSessionId: 'cs_first_pack',
+    checkoutInfo: '{}',
+    creditsAmount: product.credits,
+    creditsValidDays: product.creditsValidDays,
+  });
+  const stale = await readOrder(orderNo);
+  const subscriptionsBefore = await db().select().from(subscription);
+  // Replay racing callbacks that all read the same unpaid order.
+  for (let i = 0; i < 3; i++) {
+    await settleCheckoutOrder(
+      stale,
+      {
+        paymentStatus: 'paid',
+        paymentResult: { id: 'cs_first_pack' },
+        paymentInfo: { transactionId: 'pi_first_pack', paidAt: new Date() },
+      },
+      'stripe'
+    );
+  }
+  const settled = await readOrder(orderNo);
+  assert.equal(settled.status, 'paid');
+  assert.equal(settled.amount, 990);
+  assert.equal(settled.paymentType, 'one-time');
+  assert.ok(!settled.subscriptionNo);
+  const grants = await db()
+    .select()
+    .from(credit)
+    .where(eq(credit.orderNo, orderNo));
+  assert.equal(grants.length, 1);
+  assert.equal(grants[0].credits, 9900);
+  assert.equal(grants[0].remainingCredits, 9900);
+  assert.equal(grants[0].expiresAt, null);
+  assert.deepEqual(await db().select().from(subscription), subscriptionsBefore);
 });
 
 test('duplicate renewal deliveries for one period create one renewal order and one grant', async () => {

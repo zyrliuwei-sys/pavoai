@@ -1,21 +1,4 @@
-import {
-  AudioWaveform,
-  Captions,
-  Clapperboard,
-  Film,
-  Flame,
-  Image as ImageIcon,
-  Languages,
-  Maximize2,
-  Megaphone,
-  Mic,
-  Music,
-  Scissors,
-  Shirt,
-  UserRound,
-  Video,
-  Wand2,
-} from 'lucide-react';
+import { Clapperboard, Image as ImageIcon } from 'lucide-react';
 
 import { tDynamic } from '@/core/i18n/dynamic';
 import { m } from '@/paraglide/messages.js';
@@ -25,29 +8,6 @@ import { LandingTools } from '@/components/landing/tools';
 const GENERATE = [
   [1, Clapperboard],
   [2, ImageIcon],
-  [3, UserRound],
-  [4, Wand2],
-] as const;
-
-const EDIT = [
-  [5, Scissors],
-  [6, Captions],
-  [7, Maximize2],
-  [8, Video],
-] as const;
-
-const STUDIOS = [
-  [9, Megaphone],
-  [10, Shirt],
-  [11, Flame],
-  [12, Film],
-] as const;
-
-const AUDIO = [
-  [13, Music],
-  [14, Mic],
-  [15, Languages],
-  [16, AudioWaveform],
 ] as const;
 
 function tool(
@@ -69,7 +29,7 @@ function tool(
 }
 
 /**
- * Tools — the 16-studio directory with four tabs.
+ * The two connected generation modes.
  */
 export function Tools() {
   return (
@@ -82,21 +42,6 @@ export function Tools() {
           id: 'generate',
           label: m['lp.tools.tab_generate'](),
           tools: GENERATE.map((t) => tool(t, m['lp.tools.tab_generate']())),
-        },
-        {
-          id: 'edit',
-          label: m['lp.tools.tab_edit'](),
-          tools: EDIT.map((t) => tool(t, m['lp.tools.tab_edit']())),
-        },
-        {
-          id: 'studios',
-          label: m['lp.tools.tab_studios'](),
-          tools: STUDIOS.map((t) => tool(t, m['lp.tools.tab_studios']())),
-        },
-        {
-          id: 'audio',
-          label: m['lp.tools.tab_audio'](),
-          tools: AUDIO.map((t) => tool(t, m['lp.tools.tab_audio']())),
         },
       ]}
     />

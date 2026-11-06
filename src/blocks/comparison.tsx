@@ -15,7 +15,7 @@ export function Comparison() {
         kicker: m['lp.cmp.old_kicker'](),
         heading: m['lp.cmp.old_heading'](),
         note: m['lp.cmp.old_note'](),
-        items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => ({
+        items: [1, 2, 3, 4].map((i) => ({
           name: tDynamic(`lp.cmp.i${i}`),
           category: tDynamic(`lp.cmp.i${i}c`),
         })),

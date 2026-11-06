@@ -1,45 +1,29 @@
 export const meta = {
-  title: 'How to Write Video Prompts That Look Cinematic',
+  title: 'How to Write Focused Video Prompts',
   description:
-    'The four-part prompt formula behind AI video clips that do not look AI-generated: camera, light, motion and mood — with before/after examples you can copy.',
-  created_at: '2026-10-28',
+    'Describe a subject, camera, light and motion for a five-second generated video.',
+  created_at: '2026-11-06',
   author_name: 'Pavo AI Team',
   author_image: '/logo.svg',
-  image: '/imgs/generated/blog-prompt.jpg',
+  image: '/logo.svg',
 };
 
-Most AI video prompts fail the same way: they describe a subject and stop. "A woman walking through Tokyo" gives the model nothing to direct, so you get a documentary shot from a camera that does not exist. Cinematic clips come from prompts written like a director would brief a shot — camera, light, motion, mood. Here is the formula.
+## Give one shot a clear brief
 
-## 1. Camera first, subject second
+A five-second clip is a small unit of a larger story. Describe one subject, a setting and one visible action. Avoid asking the model to show several scenes or a full plot in one request.
 
-Name the shot before the content: close-up, wide establishing, over-the-shoulder, drone pull-back, handheld follow. The lens language does more for the look of the frame than the subject does.
+## Camera, light and motion
 
-- Weak: `a chef plating a dish`
-- Strong: `slow macro close-up, shallow depth of field, a chef plating a dish`
+Specify a camera movement such as a slow push-in or a fixed medium shot. Describe the light, then the subject's movement. For example:
 
-## 2. Light like a cinematographer
+> A chef plating a dessert, close-up with shallow depth of field, warm side light, one hand gently placing a berry, camera held still.
 
-Light is the difference between a clip and a stock video. Specify source, direction and quality: golden-hour backlight, hard noon sun, single practical lamp, neon bounce at night, soft overcast key.
+## Change one thing at a time
 
-- Weak: `a perfume bottle on a table`
-- Strong: `low-key studio light, one hard key from camera left, a perfume bottle on a black table, rim light on the glass`
+Review the result and decide what needs changing: the framing, the movement or the light. Keep the rest of the prompt stable when trying again. Each new generation consumes credits.
 
-## 3. Give the motion a direction
+## Use the connected models
 
-Models animate what moves — so say what moves and how: "steam rises slowly", "the camera pushes in", "her coat flutters in the wind". One deliberate motion reads as cinema; three competing motions read as noise.
+Pavo AI provides Seedance 2.0 and Wan 2.7 for five-second videos at 720p or 1080p. Select a model and compare the displayed cost. Prompt wording guides a model but does not guarantee an exact camera movement or consistent identity across separate generations.
 
-## 4. Set the mood, then stop
-
-End with grade and tone: muted teal-and-orange, faded film grain, high-contrast noir, pastel and airy. Then stop writing. Long prompts dilute; every extra clause is another instruction the model can drop.
-
-## A full example, assembled
-
-`Slow dolly-in on a lone astronaut standing in a red sand desert, golden-hour side light, dust drifting across the lens, muted warm grade, subtle film grain.`
-
-Camera, light, motion, mood — eleven words of scene, all of them directional. That structure, reused across shots, is also how you keep a multi-scene video consistent: lock the light and grade, change only the subject and the camera move.
-
-## Iterate in passes
-
-First pass: get the composition right with a fast model. Second pass: swap to a heavier model and keep the winning prompt verbatim. Third pass: change one variable at a time — never rewrite a working prompt wholesale. On Pavo AI you can run the same prompt across Veo, Kling and the rest in one window, which is exactly the workflow this formula was tuned for.
-
-Write your next prompt with the four parts and compare it against your old one — the difference is usually immediate.
+[Try your prompt](/?mode=video#generator). Registered results are saved in [My Creations](/settings/works); guests should leave an email or download before refreshing.

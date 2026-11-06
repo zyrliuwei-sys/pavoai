@@ -1,4 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
+import {
+  accessHash,
+  canReadGeneration,
+  newGenerationAccess,
+} from '@/server/generation-access';
+import {
+  generationStatus,
+  processGeneration,
+} from '@/server/generation-processing';
 
 import {
   EVO_ASPECTS,
@@ -6,9 +15,9 @@ import {
   evoCostCredits,
   evoCreateTask,
   evoQuality,
-  evoQueryTask,
 } from '@/core/ai/evolink';
-import { getAuth } from '@/core/auth';
+import { getAuth, getEmailProvider } from '@/core/auth';
+import { worksBucket } from '@/core/storage/works';
 import {
   AITaskStatus,
   attachTaskInfo,
@@ -17,8 +26,10 @@ import {
   updateTask,
 } from '@/modules/ai-tasks/service';
 import { getAllConfigs } from '@/modules/config/service';
+import { generationDelivery } from '@/lib/generation-delivery';
 import { enforceMinIntervalRateLimit } from '@/lib/rate-limit';
 import { respData, respErr, respJson } from '@/lib/resp';
+import { getLocale } from '@/paraglide/runtime.js';
 
 /**
  * Landing-page generator backed by EvoLink. Generation is a paid feature:
@@ -45,16 +56,6 @@ async function readEvoConfigs() {
 async function requireSession(request: Request) {
   const auth = getAuth();
   return auth.api.getSession({ headers: request.headers });
-}
-
-function parseTaskInfo(raw: unknown): Record<string, any> {
-  if (typeof raw !== 'string' || !raw) return {};
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {};
-  }
 }
 
 async function POST({ request }: { request: Request }) {
@@ -86,12 +87,27 @@ async function POST({ request }: { request: Request }) {
     // Optional delivery address the visitor left in the paywall (optional
     // field; the finished media is mailed there once the task completes).
     const emailRaw = typeof body.email === 'string' ? body.email.trim() : '';
-    const email =
-      emailRaw.length <= 200 && EMAIL_RE.test(emailRaw) ? emailRaw : '';
+    if (emailRaw && (emailRaw.length > 200 || !EMAIL_RE.test(emailRaw)))
+      return respErr('Please enter a valid email address');
+    const anonymous = session.user.isAnonymous === true;
+    const email = anonymous ? emailRaw : '';
+    const delivery = generationDelivery(anonymous, email);
+    const allConfigs = await getAllConfigs();
+    if (delivery !== 'temporary' && !worksBucket())
+      return respErr(
+        'Saving creations is temporarily unavailable. Please try again later.'
+      );
+    if (delivery === 'email' && !getEmailProvider(allConfigs))
+      return respErr(
+        'Email delivery is temporarily unavailable. Clear the email to download on this page, or try again later.'
+      );
+    const access = anonymous ? newGenerationAccess() : '';
 
     // Look the model up in the server catalog; never trust the client string
     // (the price comes with it, not from the request).
-    const entry = EVO_MODELS[String(body.model)];
+    const entry = Object.hasOwn(EVO_MODELS, String(body.model))
+      ? EVO_MODELS[String(body.model)]
+      : undefined;
     if (!entry) return respErr('Unknown model');
 
     const aspect = EVO_ASPECTS.includes(String(body.aspect))
@@ -113,6 +129,13 @@ async function POST({ request }: { request: Request }) {
         model: entry.model,
         prompt,
         costCredits: evoCostCredits(entry, quality, fast),
+        scene: 'generation_delivery_pending',
+        options: {
+          delivery,
+          email: email || undefined,
+          locale: getLocale(),
+          accessHash: access ? accessHash(access) : undefined,
+        },
       });
     } catch (error: any) {
       if (String(error?.message || '').includes('Insufficient credits'))
@@ -129,23 +152,18 @@ async function POST({ request }: { request: Request }) {
         quality,
         fast,
       });
-      await attachTaskInfo(
-        task.id,
-        email
-          ? { evoTaskId: evoTask.taskId, guestEmail: email }
-          : { evoTaskId: evoTask.taskId }
-      );
+      await attachTaskInfo(task.id, { evoTaskId: evoTask.taskId });
     } catch (error: any) {
       await updateTask({
         taskId: task.id,
         status: AITaskStatus.FAILED,
       }).catch(() => {});
-      return respErr(error?.message || 'Failed to create generation task');
+      return respErr('Failed to create generation task. Please try again.');
     }
 
-    return respData({ taskId: task.id });
+    return respData({ taskId: task.id, access, delivery });
   } catch (error: any) {
-    return respErr(error?.message || 'Failed to create generation task');
+    return respErr('Failed to create generation task. Please try again.');
   }
 }
 
@@ -165,63 +183,16 @@ async function GET({ request }: { request: Request }) {
       return respErr('Invalid taskId');
 
     const task = await findTask(taskId);
-    if (!task || task.userId !== session.user.id)
-      return respErr('Task not found');
-
-    const { evoTaskId } = parseTaskInfo(task.taskInfo);
-    if (!evoTaskId) return respErr('Task has no provider reference');
-
-    const configs = await readEvoConfigs();
-    if (!configs.apiKey) return respErr('EvoLink API key is not configured');
-
-    const st = await evoQueryTask(configs, String(evoTaskId));
-
-    if (st.status === 'completed') {
-      const url = st.urls[0] || '';
-      if (url) {
-        await updateTask({
-          taskId: task.id,
-          status: AITaskStatus.SUCCESS,
-          taskResult: { url, urls: st.urls },
-        });
-        return respData({
-          status: 'completed',
-          progress: 100,
-          url,
-          error: '',
-        });
-      }
-      // Completed without a URL — treat as failure and revoke the charge.
-      await updateTask({ taskId: task.id, status: AITaskStatus.FAILED });
-      return respData({
-        status: 'failed',
-        progress: 100,
-        url: '',
-        error: 'Generation returned no result',
-      });
-    }
-
-    if (st.status === 'failed') {
-      await updateTask({ taskId: task.id, status: AITaskStatus.FAILED });
-      return respData({
-        status: 'failed',
-        progress: 100,
-        url: '',
-        error: st.error || 'Generation failed',
-      });
-    }
-
-    if (task.status === AITaskStatus.PENDING) {
-      await updateTask({ taskId: task.id, status: AITaskStatus.PROCESSING });
-    }
-    return respData({
-      status: st.status,
-      progress: st.progress,
-      url: '',
-      error: '',
+    const access = new URL(request.url).searchParams.get('access') || '';
+    if (!task || !canReadGeneration(task, session, access))
+      return respJson(404, 'Task not found', undefined, { status: 404 });
+    await processGeneration(task.id);
+    const current = await findTask(task.id);
+    return respData(generationStatus(current!, access), {
+      headers: { 'Cache-Control': 'private, no-store' },
     });
   } catch (error: any) {
-    return respErr(error?.message || 'Failed to query generation task');
+    return respErr('Failed to query generation task. Retrying shortly.');
   }
 }
 

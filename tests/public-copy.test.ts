@@ -11,7 +11,7 @@ const withoutPriceAmounts = (value: unknown) =>
   String(value).replace(/\$\d+(?:\.\d{1,2})?/g, '$PRICE');
 
 for (const locale of ['en', 'zh']) {
-  test(`${locale}: preserve public wording, allowing only approved price amounts to change`, () => {
+  test(`${locale}: preserve the approved connected-model wording, allowing price amounts to change`, () => {
     const messages = JSON.parse(
       readFileSync(
         new URL(`../messages/${locale}.json`, import.meta.url),

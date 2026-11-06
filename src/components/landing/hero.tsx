@@ -18,6 +18,7 @@ export interface HeroTile {
 }
 
 export interface LandingHeroProps {
+  delivery: LandingGeneratorProps['delivery'];
   eyebrow: string;
   words: { text: string; emphasized?: boolean }[];
   subtitle: string;
@@ -27,6 +28,7 @@ export interface LandingHeroProps {
   /** Label in front of the clickable example chips. */
   examplesLabel: string;
   ctaLabel: string;
+  creditLabel: string;
   /** Called with the finished prompt + mode from the result card CTA. */
   onSignUp?: (prompt: string, tabId: string) => void;
   /** See LandingGeneratorProps — first-generate gate + paywall hook. */
@@ -55,6 +57,7 @@ const TILE_STAGGER_OFFSET = 5;
 const MARQUEE_TITLE_WIDTH = 104;
 
 export function LandingHero({
+  delivery,
   eyebrow,
   words,
   subtitle,
@@ -62,6 +65,7 @@ export function LandingHero({
   promptExamples,
   examplesLabel,
   ctaLabel,
+  creditLabel,
   onSignUp,
   onFirstGenerate,
   onPaywall,
@@ -121,10 +125,12 @@ export function LandingHero({
 
         {/* Generator — mode tabs, prompt bar and the in-place render preview */}
         <LandingGenerator
+          delivery={delivery}
           tabs={tabs}
           promptExamples={promptExamples}
           examplesLabel={examplesLabel}
           generateLabel={ctaLabel}
+          creditLabel={creditLabel}
           trust={trust}
           styleLabel={styleLabel}
           fastLabel={fastLabel}

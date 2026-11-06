@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
-import { authClient } from '@/core/auth/client';
+import { authClient, useSession } from '@/core/auth/client';
 import { useRouter } from '@/core/i18n/navigation';
 import { EVO_MODELS, evoCostCredits } from '@/config/ai-pricing';
 import { landingVideos } from '@/config/landing-media';
+import { apiGet } from '@/lib/api-client';
 import { m } from '@/paraglide/messages.js';
 import { useOperations } from '@/hooks/use-operations';
 import { usePricingCheckout, usePricingGroups } from '@/blocks/pricing';
@@ -18,20 +21,7 @@ import { PaywallDialog } from '@/components/landing/paywall-dialog';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const MODELS = [
-  'Veo 3.1',
-  'Kling 3.0',
-  'Sora 2',
-  'Hailuo 02',
-  'Wan 3.0',
-  'Seedance 1.0',
-  'Runway Gen-4',
-  'Luma Ray 3',
-  'Pika 2.5',
-  'Vidu Q2',
-  'PixVerse V5',
-  'MiniMax',
-];
+const MODELS = Object.values(EVO_MODELS).map((model) => model.label);
 
 const TILES = [
   'user-neon-drive',
@@ -83,6 +73,14 @@ const IMAGE_QUALITIES = [
  */
 export function Hero() {
   const operations = useOperations();
+  const { data: session } = useSession();
+  const registered = !!session?.user && !session.user.isAnonymous;
+  const availability = useQuery({
+    queryKey: ['generation-availability'],
+    queryFn: () =>
+      apiGet<{ storage: boolean; email: boolean }>('/api/ai/availability'),
+    staleTime: 30_000,
+  });
   const router = useRouter();
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [requiredCredits, setRequiredCredits] = useState(0);
@@ -90,9 +88,11 @@ export function Hero() {
   // Optional delivery address from the paywall (where results are mailed).
   const [paywallEmail, setPaywallEmail] = useState('');
 
-  // Paywall plans come from the shared pricing grid (monthly group).
+  // First purchases use one-time packs from the same catalog as the pricing page.
   const groups = usePricingGroups();
-  const monthlyPlans = groups.find((g) => g.key === 'monthly')?.plans ?? [];
+  const creditPacks = (groups.find((g) => g.key === 'lifetime')?.plans ?? [])
+    .filter((plan) => (plan.credits ?? 0) >= requiredCredits)
+    .sort((a, b) => (a.priceInCents ?? 0) - (b.priceInCents ?? 0));
   // After paying, land back on the generator instead of the payments page.
   const { handleCheckout, providerModal } = usePricingCheckout({
     redirect: '/?checkout=returned#generator',
@@ -108,7 +108,25 @@ export function Hero() {
     selection: GenerationSelection
   ): Promise<'run' | 'blocked'> => {
     operations.record('generate_clicked');
+    const available = await apiGet<{ storage: boolean; email: boolean }>(
+      '/api/ai/availability'
+    );
     const fresh = await authClient.getSession();
+    if (
+      fresh.data?.user &&
+      !fresh.data.user.isAnonymous &&
+      !available.storage
+    ) {
+      toast.error(m['works.storage_unavailable']());
+      return 'blocked';
+    }
+    if (
+      paywallEmail.trim() &&
+      (!EMAIL_RE.test(paywallEmail.trim()) || paywallEmail.trim().length > 200)
+    ) {
+      toast.error(m['works.invalid_email']());
+      return 'blocked';
+    }
     if (fresh.data?.user) return 'run';
     const { error } = await authClient.signIn.anonymous();
     if (error) return 'run'; // let the API path handle it (401 → paywall)
@@ -133,7 +151,15 @@ export function Hero() {
   };
 
   const onPaywallCheckout = async (planId: string) => {
-    const plan = monthlyPlans.find((p) => p.id === planId);
+    if (
+      !registered &&
+      paywallEmail.trim() &&
+      !EMAIL_RE.test(paywallEmail.trim())
+    ) {
+      toast.error(m['works.invalid_email']());
+      return;
+    }
+    const plan = creditPacks.find((p) => p.id === planId);
     if (!plan) return;
     // Merge the optional delivery email into the parked run before paying.
     const pending = readPendingGen();
@@ -166,6 +192,25 @@ export function Hero() {
   return (
     <>
       <LandingHero
+        delivery={{
+          registered,
+          email: paywallEmail,
+          onEmailChange: setPaywallEmail,
+          emailAvailable: availability.data?.email === true,
+          emailLabel: m['lp.hero.paywall_email_label'](),
+          emailPlaceholder: m['lp.hero.paywall_email_placeholder'](),
+          hint: registered
+            ? m['works.account_hint']()
+            : availability.data?.email
+              ? m['works.guest_hint']()
+              : m['works.guest_no_email_hint'](),
+          downloadLabel: m['works.download'](),
+          accountResult: m['works.account_result'](),
+          emailResult: m['works.email_result'](),
+          temporaryResult: m['works.temporary_result'](),
+          retryLabel: m['works.retrying'](),
+          worksLabel: m['works.title'](),
+        }}
         eyebrow={m['lp.hero.eyebrow']()}
         words={words}
         subtitle={m['lp.hero.subtitle']()}
@@ -197,6 +242,7 @@ export function Hero() {
         onFirstGenerate={onFirstGenerate}
         onPaywall={openPaywall}
         ctaLabel={m['lp.hero.cta']()}
+        creditLabel={m['works.credits']()}
         examplesLabel={m['lp.hero.examples_label']()}
         promptExamples={[
           m['lp.hero.pe1'](),
@@ -239,22 +285,27 @@ export function Hero() {
       <PaywallDialog
         open={paywallOpen}
         onOpenChange={setPaywallOpen}
-        title={m['lp.hero.paywall_title']()}
-        description={m['lp.hero.paywall_desc']()}
-        note={m['lp.hero.paywall_note']()}
-        plans={monthlyPlans
-          .filter((plan) => (plan.credits ?? 0) >= requiredCredits)
-          .map((plan) => ({
-            id: plan.id,
-            name: plan.name,
-            price: plan.price,
-            interval: plan.interval,
-            description: plan.description,
-            featured: plan.featured,
-            featureLabels: plan.features.map((f) =>
-              typeof f === 'string' ? f : f.label
-            ),
-          }))}
+        title={m['landing.pricing.buy_lifetime']()}
+        description={m['landing.pricing.one_time_payment']()}
+        note={
+          registered
+            ? m['works.account_hint']()
+            : availability.data?.email
+              ? m['works.guest_hint']()
+              : m['works.guest_no_email_hint']()
+        }
+        showEmail={!registered && availability.data?.email === true}
+        plans={creditPacks.map((plan, index) => ({
+          id: plan.id,
+          name: plan.name,
+          price: plan.price,
+          interval: plan.interval,
+          description: plan.billingNote,
+          featured: index === 0,
+          featureLabels: plan.features.map((f) =>
+            typeof f === 'string' ? f : f.label
+          ),
+        }))}
         onCheckout={onPaywallCheckout}
         processingId={processingPlanId}
         emailLabel={m['lp.hero.paywall_email_label']()}

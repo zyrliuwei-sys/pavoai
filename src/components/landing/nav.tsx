@@ -19,6 +19,8 @@ export interface LandingNavProps {
   signInLabel: string;
   signInHref: string;
   menuLabel: string;
+  /** Transparent chrome is only readable above the homepage's dark hero. */
+  overlay?: boolean;
   localeSelector?: ReactNode;
   /** Optional primary CTA pill; omit when the page has its own entry point. */
   ctaLabel?: string;
@@ -32,6 +34,7 @@ export function LandingNav({
   signInLabel,
   signInHref,
   menuLabel,
+  overlay = false,
   localeSelector,
   ctaLabel,
   ctaHref,
@@ -60,7 +63,7 @@ export function LandingNav({
     <header
       className={cn(
         'fixed inset-x-0 top-0 z-50 border-b transition-all duration-300',
-        scrolled
+        scrolled || !overlay
           ? 'border-white/[0.08] bg-[#080b11]/80 backdrop-blur-md'
           : 'border-transparent',
         hidden && !open && '-translate-y-full'
