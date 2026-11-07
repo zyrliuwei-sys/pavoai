@@ -22,6 +22,7 @@ import {
 import { PaymentType, type PaymentOrder } from '@/core/payment/types';
 import { R2Provider } from '@/core/storage/r2';
 import { envConfigs } from '@/config';
+import { pricingCatalog } from '@/config/pricing';
 import { getUniSeq } from '@/lib/hash';
 
 import type { TestResult } from './settings-test-specs';
@@ -128,6 +129,7 @@ async function testStripe(
   const provider = new StripeProvider({
     secretKey: key,
     publishableKey: configs.stripe_publishable_key || '',
+    managedPayments: configs.stripe_managed_payments_enabled === 'true',
     signingSecret:
       configs.stripe_signing_secret ||
       configs.stripe_webhook_secret ||
@@ -143,6 +145,7 @@ async function testStripe(
       currency: (inputs.currency || 'usd').toLowerCase(),
     },
     description: inputs.description || 'Test checkout',
+    taxCode: pricingCatalog.starter_lifetime.taxCode,
     successUrl: configuredSuccessUrl('stripe', configs),
     cancelUrl: configuredSuccessUrl('stripe', configs),
   };

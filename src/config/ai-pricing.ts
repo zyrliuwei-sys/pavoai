@@ -31,7 +31,7 @@ export interface EvoModel {
   fastPromptPriority?: boolean;
   qualities: string[];
   defaultQuality: string;
-  /** Integer seconds accepted by this video route (standard and Fast). */
+  /** Integer seconds offered by Pavo (within provider limits, standard and Fast). */
   videoDuration?: { min: number; max: number; default: number };
   /** Upstream USD micros per image or per SECOND of video. */
   upstreamCostMicros: Record<string, number>;
@@ -62,7 +62,7 @@ export const EVO_MODELS: Record<string, EvoModel> = {
     model: 'wan2.7-text-to-video',
     qualities: ['720p', '1080p'],
     defaultQuality: '720p',
-    videoDuration: { min: 2, max: 15, default: AI_VIDEO_DURATION_SECONDS },
+    videoDuration: { min: 5, max: 15, default: AI_VIDEO_DURATION_SECONDS },
     upstreamCostMicros: {
       '720p': 80_000,
       '1080p': 120_000,
@@ -75,7 +75,7 @@ export const EVO_MODELS: Record<string, EvoModel> = {
     fastModel: 'seedance-2.0-fast-text-to-video',
     qualities: ['720p', '1080p'],
     defaultQuality: '720p',
-    videoDuration: { min: 4, max: 15, default: AI_VIDEO_DURATION_SECONDS },
+    videoDuration: { min: 5, max: 15, default: AI_VIDEO_DURATION_SECONDS },
     upstreamCostMicros: {
       '720p': 199_000,
       '1080p': 497_000,

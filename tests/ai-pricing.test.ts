@@ -78,10 +78,10 @@ test('unsupported quality and unsupported Fast resolution cannot undercharge', (
   }
 });
 
-test('every supported integer duration uses the same per-second rate as the provider', () => {
+test('every offered integer duration uses the same per-second rate as the provider', () => {
   for (const [id, min, rate720, rate1080] of [
-    ['seedance-2-0', 4, 1592, 3976],
-    ['wan-2-7', 2, 640, 960],
+    ['seedance-2-0', 5, 1592, 3976],
+    ['wan-2-7', 5, 640, 960],
   ] as const) {
     const model = EVO_MODELS[id];
     assert.deepEqual(
@@ -107,6 +107,9 @@ test('every supported integer duration uses the same per-second rate as the prov
     }
     for (const invalid of [
       null,
+      1,
+      2,
+      3,
       min - 1,
       16,
       5.5,
@@ -194,9 +197,9 @@ test('upstream requests match the quoted route, quality and selected duration; o
     assert.equal(requests[3].prompt_priority, 'fast');
     assert.equal('duration' in requests[3], false);
     for (const [id, fast, duration] of [
-      ['seedance-2-0', false, 4],
+      ['seedance-2-0', false, 5],
       ['seedance-2-0', true, 15],
-      ['wan-2-7', false, 2],
+      ['wan-2-7', false, 5],
       ['wan-2-7', true, 15],
     ] as const) {
       await evoCreateTask(

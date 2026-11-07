@@ -25,6 +25,8 @@ export type PricingProduct = {
   type: PaymentType;
   priceInCents: number;
   currency: string;
+  /** Stripe's classification of the service; never supplied by the buyer. */
+  taxCode?: string;
   /**
    * Price in fen for CNY-only providers (Alipay, WeChat Pay) when `currency`
    * isn't CNY. Without it those providers refuse the product — the amount is
@@ -55,6 +57,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Starter',
     planName: 'Starter',
     description: 'Starter Monthly',
+    taxCode: 'txcd_10105001', // Cloud AI service, personal use
     type: PaymentType.SUBSCRIPTION,
     priceInCents: 1990,
     currency: 'usd',
@@ -70,6 +73,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Pro',
     planName: 'Pro',
     description: 'Pro Monthly',
+    taxCode: 'txcd_10105002', // Cloud AI service, business use
     type: PaymentType.SUBSCRIPTION,
     priceInCents: 5990,
     currency: 'usd',
@@ -81,6 +85,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Enterprise',
     planName: 'Enterprise',
     description: 'Enterprise Monthly',
+    taxCode: 'txcd_10105002',
     type: PaymentType.SUBSCRIPTION,
     priceInCents: 9990,
     currency: 'usd',
@@ -96,6 +101,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Starter',
     planName: 'Starter',
     description: 'Starter Yearly',
+    taxCode: 'txcd_10105001',
     type: PaymentType.SUBSCRIPTION,
     priceInCents: 1990 * 12,
     currency: 'usd',
@@ -107,6 +113,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Pro',
     planName: 'Pro',
     description: 'Pro Yearly',
+    taxCode: 'txcd_10105002',
     type: PaymentType.SUBSCRIPTION,
     priceInCents: 4990 * 12,
     currency: 'usd',
@@ -118,6 +125,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Enterprise',
     planName: 'Enterprise',
     description: 'Enterprise Yearly',
+    taxCode: 'txcd_10105002',
     type: PaymentType.SUBSCRIPTION,
     priceInCents: 7990 * 12,
     currency: 'usd',
@@ -134,6 +142,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Starter Credit Pack',
     planName: 'Starter Credit Pack',
     description: 'Starter Credit Pack',
+    taxCode: 'txcd_10105001',
     type: PaymentType.ONE_TIME,
     priceInCents: 990,
     currency: 'usd',
@@ -145,6 +154,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Pro Credit Pack',
     planName: 'Pro Credit Pack',
     description: 'Pro Credit Pack',
+    taxCode: 'txcd_10105002',
     type: PaymentType.ONE_TIME,
     priceInCents: 2990,
     currency: 'usd',
@@ -156,6 +166,7 @@ export const pricingCatalog: Record<string, PricingProduct> = {
     productName: 'Enterprise Credit Pack',
     planName: 'Enterprise Credit Pack',
     description: 'Enterprise Credit Pack',
+    taxCode: 'txcd_10105002',
     type: PaymentType.ONE_TIME,
     priceInCents: 7990,
     currency: 'usd',

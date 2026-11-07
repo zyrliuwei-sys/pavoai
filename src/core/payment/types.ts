@@ -84,6 +84,7 @@ export interface PaymentOrder {
   type?: PaymentType; // optional
   orderNo?: string; // order no
   productId?: string; // create product first
+  taxCode?: string; // server catalog tax classification for inline products
   requestId?: string; // request id
   price?: PaymentPrice; // required if productId is not provided
   discount?: PaymentDiscount; // discount code

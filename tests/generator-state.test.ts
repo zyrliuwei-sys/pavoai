@@ -55,7 +55,7 @@ test('reject corrupt or incompatible persisted input', () => {
 test('checkout recovery preserves selected video duration and defaults older drafts to five seconds', () => {
   for (const [modelId, duration] of [
     ['seedance-2-0', 15],
-    ['wan-2-7', 2],
+    ['wan-2-7', 5],
   ] as const) {
     const selection = {
       ...draft.selection,
@@ -82,7 +82,7 @@ test('checkout recovery preserves selected video duration and defaults older dra
 });
 
 test('invalid saved durations cannot silently become a different paid request', () => {
-  for (const duration of [null, 2, 16, 5.5, '15', false]) {
+  for (const duration of [null, 1, 2, 3, 4, 16, 5.5, '15', false]) {
     assert.equal(
       parsePendingGeneration(
         JSON.stringify({

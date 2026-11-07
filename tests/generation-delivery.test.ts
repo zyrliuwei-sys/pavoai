@@ -427,10 +427,10 @@ test('prototype names cannot select a model or spend credits', async () => {
 
 test('video API charges and submits the selected duration, including Fast and legacy defaults', async () => {
   for (const [model, duration, fast, quality, charge] of [
-    ['seedance-2-0', 4, false, '720p', 6368],
+    ['seedance-2-0', 5, false, '720p', 7960],
     ['seedance-2-0', 15, true, '720p', 19320],
     ['seedance-2-0', 10, true, '1080p', 39760],
-    ['wan-2-7', 2, false, '720p', 1280],
+    ['wan-2-7', 5, false, '720p', 3200],
     ['wan-2-7', 15, false, '1080p', 14400],
     ['wan-2-7', undefined, false, '720p', 3200],
   ] as const) {
@@ -468,30 +468,45 @@ test('video API charges and submits the selected duration, including Fast and le
 
 test('invalid video duration fails before charging, recording a task or calling the provider', async () => {
   let index = 0;
-  for (const duration of [null, 0, 3, 16, 180, 5.5, '10', false, {}]) {
-    const id = `invalid-duration-${index++}`;
-    await freshUser(id);
-    const calls = providerCalls;
-    const response = await generate.POST({
-      request: request('/api/ai/generate', {
-        prompt: 'test',
-        model: 'seedance-2-0',
-        duration,
-      }),
-    });
-    assert.equal(response.status, 400);
-    assert.equal((await response.json()).code, 400);
-    assert.equal(await getBalance(id), 1000);
-    assert.equal(providerCalls, calls);
-    assert.equal(
-      (
-        await db()
-          .select()
-          .from(schema.aiTask)
-          .where(eq(schema.aiTask.userId, id))
-      ).length,
-      0
-    );
+  for (const model of ['seedance-2-0', 'wan-2-7']) {
+    for (const duration of [
+      null,
+      0,
+      1,
+      2,
+      3,
+      4,
+      16,
+      180,
+      5.5,
+      '10',
+      false,
+      {},
+    ]) {
+      const id = `invalid-duration-${index++}`;
+      await freshUser(id);
+      const calls = providerCalls;
+      const response = await generate.POST({
+        request: request('/api/ai/generate', {
+          prompt: 'test',
+          model,
+          duration,
+        }),
+      });
+      assert.equal(response.status, 400);
+      assert.equal((await response.json()).code, 400);
+      assert.equal(await getBalance(id), 1000);
+      assert.equal(providerCalls, calls);
+      assert.equal(
+        (
+          await db()
+            .select()
+            .from(schema.aiTask)
+            .where(eq(schema.aiTask.userId, id))
+        ).length,
+        0
+      );
+    }
   }
 });
 

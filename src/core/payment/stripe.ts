@@ -33,6 +33,7 @@ export interface StripeConfigs extends PaymentConfigs {
   apiVersion?: string;
   allowedPaymentMethods?: string[];
   allowPromotionCodes?: boolean;
+  managedPayments?: boolean;
 }
 
 /**
@@ -62,6 +63,11 @@ export class StripeProvider implements PaymentProvider {
       if (!order.price) {
         throw new Error('price is required');
       }
+      if (this.configs.managedPayments && !order.taxCode) {
+        throw new Error(
+          'A product tax code is required for Stripe Managed Payments'
+        );
+      }
 
       // create payment with dynamic product
 
@@ -72,6 +78,7 @@ export class StripeProvider implements PaymentProvider {
           unit_amount: order.price.amount, // unit: cents
           product_data: {
             name: order.description || '',
+            ...(order.taxCode ? { tax_code: order.taxCode } : {}),
           },
         };
 
@@ -113,7 +120,11 @@ export class StripeProvider implements PaymentProvider {
       }
 
       // create payment session params
-      const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      // Managed Payments was added after this SDK's generated types. Keep
+      // the supported API field explicit without weakening other parameters.
+      const sessionParams: Stripe.Checkout.SessionCreateParams & {
+        managed_payments?: { enabled: boolean };
+      } = {
         mode:
           order.type === PaymentType.SUBSCRIPTION ? 'subscription' : 'payment',
         line_items: [
@@ -123,6 +134,10 @@ export class StripeProvider implements PaymentProvider {
           },
         ],
       };
+
+      if (this.configs.managedPayments) {
+        sessionParams.managed_payments = { enabled: true };
+      }
 
       // pre-set promotion code
       if (order.discount && order.discount.code) {
@@ -141,7 +156,11 @@ export class StripeProvider implements PaymentProvider {
       // If currency is CNY, enable WeChat Pay and Alipay (only for one-time payments)
       // Note: WeChat Pay and Alipay through Stripe only supports one-time payments, not subscriptions
       const currency = order.price.currency.toLowerCase();
-      if (currency === 'cny' && order.type === PaymentType.ONE_TIME) {
+      if (
+        !this.configs.managedPayments &&
+        currency === 'cny' &&
+        order.type === PaymentType.ONE_TIME
+      ) {
         // Enable WeChat Pay and Alipay for CNY one-time payments
         sessionParams.payment_method_types = [];
         sessionParams.payment_method_options = {};
@@ -169,7 +188,12 @@ export class StripeProvider implements PaymentProvider {
         }
       }
 
-      if (order.type === PaymentType.ONE_TIME) {
+      // Managed Payments owns invoicing and dynamic payment methods, and
+      // rejects invoice_creation / payment_method_types on the session.
+      if (
+        order.type === PaymentType.ONE_TIME &&
+        !this.configs.managedPayments
+      ) {
         sessionParams.invoice_creation = {
           enabled: true,
         };
@@ -455,6 +479,7 @@ export class StripeProvider implements PaymentProvider {
   private mapStripeEventType(eventType: string): PaymentEventType {
     switch (eventType) {
       case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded':
         return PaymentEventType.CHECKOUT_SUCCESS;
       case 'invoice.payment_succeeded':
         return PaymentEventType.PAYMENT_SUCCESS;

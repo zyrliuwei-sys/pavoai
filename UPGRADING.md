@@ -1,7 +1,27 @@
+## 2026-11-07 — Support Stripe Managed Payments checkout
+
+For Stripe accounts using Managed Payments, enable its new switch in Payment
+settings. AI credit packs and subscriptions now send their server catalog tax
+codes (cloud AI service: Starter personal use, Pro/Enterprise business use).
+Managed checkout omits invoice/payment-method overrides that Stripe rejects.
+Ordinary Stripe checkout keeps its existing invoicing behavior. Prices, credit
+amounts and the account's tax behavior are unchanged; Stripe may calculate tax
+and localized currency at checkout.
+
+Register `/api/payment/notify/stripe` in the same live/test account as the API
+key and save its signing secret. Include `checkout.session.completed`,
+`checkout.session.async_payment_succeeded`, `invoice.payment_succeeded`,
+`customer.subscription.updated` and `customer.subscription.deleted`.
+Signing-secret and Managed Payments changes now refresh the cached provider.
+Unclassified guest-post products are not assigned an AI tax code.
+No schema migration is required. Verify live checkout creation without charging
+a card, signed webhook handling, duplicate fulfillment and the production build.
+
 ## 2026-11-07 — Select video duration and charge by the selected seconds
 
-The generator now offers every supported integer duration: Seedance 2.0
-Standard/Fast 4–15 seconds and Wan 2.7 2–15 seconds. Existing requests and
+The generator now offers integer durations from 5–15 seconds for both Seedance
+2.0 Standard/Fast and Wan 2.7. The five-second minimum is a product limit within
+the providers' supported ranges. Existing requests and
 checkout drafts without a duration keep the five-second default. The selected
 duration survives checkout, appears on the result badge and is stored in task
 options with quality/aspect/Fast for support review. Image pricing is unchanged.

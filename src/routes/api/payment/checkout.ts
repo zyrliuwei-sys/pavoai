@@ -112,6 +112,7 @@ async function POST({ request }: { request: Request }) {
       creditsValidDays: product.creditsValidDays,
       paymentOrder: {
         productId: product.productId,
+        taxCode: product.taxCode,
         price: { amount: chargeAmount, currency },
         type: product.type,
         description: product.description,

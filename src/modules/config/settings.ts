@@ -632,6 +632,13 @@ export function getSettings(): Setting[] {
       tab: 'payment',
     },
     {
+      name: 'stripe_managed_payments_enabled',
+      title: 'Use Stripe Managed Payments',
+      type: 'switch',
+      group: 'stripe',
+      tab: 'payment',
+    },
+    {
       name: 'stripe_secret_key',
       title: 'Secret Key',
       type: 'password',

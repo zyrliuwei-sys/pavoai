@@ -70,6 +70,9 @@ async function getPaymentManager(): Promise<PaymentManager> {
   // Rebuild manager if provider configs changed
   const hash = JSON.stringify([
     c('stripe_secret_key') || c('stripe_api_key'),
+    c('stripe_publishable_key'),
+    c('stripe_signing_secret') || c('stripe_webhook_secret'),
+    c('stripe_managed_payments_enabled'),
     c('creem_enabled'),
     c('creem_api_key'),
     c('paypal_enabled'),
@@ -95,6 +98,7 @@ async function getPaymentManager(): Promise<PaymentManager> {
       new StripeProvider({
         secretKey: stripeKey,
         publishableKey: c('stripe_publishable_key'),
+        managedPayments: c('stripe_managed_payments_enabled') === 'true',
         signingSecret:
           c('stripe_signing_secret') || c('stripe_webhook_secret') || undefined,
         allowPromotionCodes: true,

@@ -5,8 +5,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import { eq } from 'drizzle-orm';
+import Stripe from 'stripe';
 
 import { pricingCatalog } from '../src/config/pricing';
+import { StripeProvider } from '../src/core/payment/stripe';
+import { WebhookIgnoredError } from '../src/core/payment/types';
 
 // Isolated SQLite database; no application modules load before the env is set.
 const directory = await mkdtemp(join(tmpdir(), 'shipany-payment-test-'));
@@ -36,7 +39,9 @@ const {
   settleCheckoutOrder,
   handleSubscriptionRenewal,
   handleSubscriptionUpdated,
+  handleWebhook,
 } = await import('../src/modules/payment/service');
+const { saveConfigs } = await import('../src/modules/config/service');
 
 after(async () => {
   await rm(directory, { recursive: true, force: true });
@@ -157,17 +162,47 @@ test('first-purchase credit pack callback retries grant permanent credits once w
   });
   const stale = await readOrder(orderNo);
   const subscriptionsBefore = await db().select().from(subscription);
-  // Replay racing callbacks that all read the same unpaid order.
-  for (let i = 0; i < 3; i++) {
-    await settleCheckoutOrder(
-      stale,
-      {
-        paymentStatus: 'paid',
-        paymentResult: { id: 'cs_first_pack' },
-        paymentInfo: { transactionId: 'pi_first_pack', paidAt: new Date() },
+  // Signed initial/async webhooks and the browser callback can all read the
+  // same unpaid order before any of them commits. Replay those stale reads.
+  const secret = 'isolated-stripe-pack-webhook-fixture';
+  const provider = new StripeProvider({
+    secretKey: 'isolated-stripe-api-fixture',
+    publishableKey: '',
+    signingSecret: secret,
+  });
+  for (const type of [
+    'checkout.session.completed',
+    'checkout.session.async_payment_succeeded',
+    'checkout.session.completed',
+  ]) {
+    const payload = JSON.stringify({
+      id: `evt_${type}`,
+      object: 'event',
+      type,
+      data: {
+        object: {
+          id: 'cs_first_pack',
+          object: 'checkout.session',
+          status: 'complete',
+          payment_status: 'paid',
+          amount_total: 990,
+          currency: 'usd',
+        },
       },
-      'stripe'
-    );
+    });
+    const event = await provider.getPaymentEvent({
+      req: new Request('https://pavoai.net/api/payment/notify/stripe', {
+        method: 'POST',
+        body: payload,
+        headers: {
+          'stripe-signature': Stripe.webhooks.generateTestHeaderString({
+            payload,
+            secret,
+          }),
+        },
+      }),
+    });
+    await settleCheckoutOrder(stale, event.paymentSession, 'stripe');
   }
   const settled = await readOrder(orderNo);
   assert.equal(settled.status, 'paid');
@@ -183,6 +218,48 @@ test('first-purchase credit pack callback retries grant permanent credits once w
   assert.equal(grants[0].remainingCredits, 9900);
   assert.equal(grants[0].expiresAt, null);
   assert.deepEqual(await db().select().from(subscription), subscriptionsBefore);
+});
+
+test('saving a Stripe signing secret refreshes a previously cached provider', async () => {
+  const oldSecret = 'isolated-stripe-old-signing-fixture';
+  const newSecret = 'isolated-stripe-new-signing-fixture';
+  await saveConfigs({
+    stripe_secret_key: 'isolated-stripe-api-fixture',
+    stripe_signing_secret: oldSecret,
+  });
+  const request = (secret: string) => {
+    // Authentic but unsupported event: exercises verification without any
+    // provider/network request or order mutation.
+    const payload = JSON.stringify({
+      id: 'evt_probe',
+      object: 'event',
+      type: 'pavo.connection_check',
+      data: { object: {} },
+    });
+    return new Request('https://pavoai.net/api/payment/notify/stripe', {
+      method: 'POST',
+      body: payload,
+      headers: {
+        'stripe-signature': Stripe.webhooks.generateTestHeaderString({
+          payload,
+          secret,
+        }),
+      },
+    });
+  };
+  await assert.rejects(
+    handleWebhook({ req: request(oldSecret), provider: 'stripe' }),
+    WebhookIgnoredError
+  );
+  await saveConfigs({ stripe_signing_secret: newSecret });
+  await assert.rejects(
+    handleWebhook({ req: request(newSecret), provider: 'stripe' }),
+    WebhookIgnoredError
+  );
+  await assert.rejects(
+    handleWebhook({ req: request(oldSecret), provider: 'stripe' }),
+    /signature/i
+  );
 });
 
 test('duplicate renewal deliveries for one period create one renewal order and one grant', async () => {

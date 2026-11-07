@@ -52,8 +52,9 @@ submitted to verify these prices.
   [Provider API reference](https://github.com/Evolink-AI/Seedance-2.0-Gateway-Service/blob/main/docs/text-to-video.md).
 - Wan 2.7 text-to-video: integer seconds **2–15**, default **5**.
   [Provider model playground](https://evolink.ai/zh/wan-2-7).
-- The UI options, quote, server validation and provider request share the same
-  catalog limits. Durations written in a prompt do not override the setting.
+- Pavo offers **5–15 seconds** for both models, with a product minimum of five
+  seconds even where a provider accepts shorter clips. The UI options, quote,
+  server validation and provider request share these product catalog limits. Durations written in a prompt do not override the setting.
   Unsupported explicit durations fail before any credit charge or provider call.
   Image generation continues to charge per image.
 
