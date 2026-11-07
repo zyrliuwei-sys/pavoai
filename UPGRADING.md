@@ -1,3 +1,14 @@
+## 2026-11-07 — Restore the private operations guide body
+
+The MDX plugin now excludes `src/content/admin/`, whose documents are imported
+as raw strings by authenticated admin API routes. Previously MDX transformed
+the raw guide into a component function, which JSON serialization silently
+omitted; the live playbook displayed its metadata without its body or images.
+Normal public MDX pages continue to compile as components. Deploy the Vite
+configuration with the existing guide and admin route; no database changes or
+new permissions are needed. `pnpm test:ops-playbook` builds the actual raw guide
+and a normal MDX page to check their different output types and all 11 images.
+
 ## 2026-11-07 — Support Stripe Managed Payments checkout
 
 For Stripe accounts using Managed Payments, enable its new switch in Payment

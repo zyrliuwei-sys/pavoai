@@ -107,12 +107,14 @@ export default defineConfig({
   },
   plugins: [
     // MDX must run before the react plugin so JSX in compiled MDX gets transformed.
-    // .claude/ holds agent skills served verbatim (`?raw`) — never compile them.
+    // Skills and private admin guides are served verbatim (`?raw`). MDX strips
+    // the query before filtering, so exclude their directories explicitly;
+    // otherwise a guide becomes a component and JSON omits its function body.
     {
       enforce: 'pre',
       ...mdx({
         providerImportSource: '@mdx-js/react',
-        exclude: /\/\.claude\//,
+        exclude: [/\/\.claude\//, /\/src\/content\/admin\//],
       }),
     },
     tailwindcss(),
