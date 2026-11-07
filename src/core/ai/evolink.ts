@@ -8,7 +8,7 @@
  */
 
 import {
-  AI_VIDEO_DURATION_SECONDS,
+  evoDuration,
   evoQuality,
   evoUsesFastModel,
   type EvoModel,
@@ -17,6 +17,7 @@ import {
 export {
   EVO_MODELS,
   evoCostCredits,
+  evoDuration,
   evoQuality,
   type EvoModel,
 } from '@/config/ai-pricing';
@@ -44,6 +45,7 @@ export interface EvoCreateInput {
   aspect: string;
   quality: string;
   fast: boolean;
+  duration?: number;
 }
 
 export interface EvoTask {
@@ -99,7 +101,7 @@ export async function evoCreateTask(
       prompt: input.prompt,
       aspect_ratio: input.aspect,
       quality,
-      duration: AI_VIDEO_DURATION_SECONDS,
+      duration: evoDuration(model, input.duration),
     };
   }
 

@@ -93,6 +93,7 @@ getAuth().api.getSession = async () => session;
 let sequence = 0;
 let emails: { to: string[]; text: string; idempotency: string | null }[] = [];
 let providerCalls = 0;
+const providerRequests: Record<string, unknown>[] = [];
 let mediaAvailable = true;
 const states = new Map<string, string>();
 const objects = new Map<string, { bytes: Uint8Array; contentType: string }>();
@@ -120,8 +121,12 @@ const bucket = {
 (globalThis as any).__CF_ENV__ = { ...localEnv, WORKS_BUCKET: bucket };
 globalThis.fetch = (async (input: any, init?: any) => {
   const url = String(input instanceof Request ? input.url : input);
-  if (url.includes('/images/generations')) {
+  if (
+    url.includes('/images/generations') ||
+    url.includes('/videos/generations')
+  ) {
     providerCalls++;
+    providerRequests.push(JSON.parse(init.body));
     const id = `remote-${++sequence}`;
     states.set(id, 'completed');
     return Response.json({ id });
@@ -210,7 +215,7 @@ async function start(userId: string, email = '') {
   });
   return { response, body: await response.json() };
 }
-async function freshUser(id: string, anonymous = true) {
+async function freshUser(id: string, anonymous = true, budget = 1000) {
   await db()
     .insert(schema.user)
     .values({
@@ -227,8 +232,8 @@ async function freshUser(id: string, anonymous = true) {
       transactionNo: `grant-${id}`,
       transactionType: 'grant',
       transactionScene: 'test',
-      credits: 1000,
-      remainingCredits: 1000,
+      credits: budget,
+      remainingCredits: budget,
       status: 'active',
     });
   session = { user: { id, isAnonymous: anonymous } };
@@ -418,6 +423,76 @@ test('prototype names cannot select a model or spend credits', async () => {
   assert.equal(body.message, 'Unknown model');
   assert.equal(await getBalance('invalid-model'), 1000);
   assert.equal(providerCalls, calls);
+});
+
+test('video API charges and submits the selected duration, including Fast and legacy defaults', async () => {
+  for (const [model, duration, fast, quality, charge] of [
+    ['seedance-2-0', 4, false, '720p', 6368],
+    ['seedance-2-0', 15, true, '720p', 19320],
+    ['seedance-2-0', 10, true, '1080p', 39760],
+    ['wan-2-7', 2, false, '720p', 1280],
+    ['wan-2-7', 15, false, '1080p', 14400],
+    ['wan-2-7', undefined, false, '720p', 3200],
+  ] as const) {
+    const id = `duration-${model}-${duration}-${quality}`;
+    await freshUser(id, true, 50000);
+    const body = await (
+      await generate.POST({
+        request: request('/api/ai/generate', {
+          prompt: 'A landscape',
+          model,
+          duration,
+          fast,
+          quality,
+          aspect: '9:16',
+        }),
+      })
+    ).json();
+    assert.equal(body.code, 0, body.message);
+    assert.equal(await getBalance(id), 50000 - charge);
+    const task = (await findTask(body.data.taskId))!;
+    assert.equal(task.costCredits, charge);
+    assert.equal(JSON.parse(task.options!).duration, duration ?? 5);
+    assert.equal(providerRequests.at(-1)!.duration, duration ?? 5);
+    assert.equal(providerRequests.at(-1)!.quality, quality);
+    assert.equal(providerRequests.at(-1)!.aspect_ratio, '9:16');
+    if (model === 'seedance-2-0')
+      assert.equal(
+        providerRequests.at(-1)!.model,
+        fast && quality === '720p'
+          ? 'seedance-2.0-fast-text-to-video'
+          : 'seedance-2.0-text-to-video'
+      );
+  }
+});
+
+test('invalid video duration fails before charging, recording a task or calling the provider', async () => {
+  let index = 0;
+  for (const duration of [null, 0, 3, 16, 180, 5.5, '10', false, {}]) {
+    const id = `invalid-duration-${index++}`;
+    await freshUser(id);
+    const calls = providerCalls;
+    const response = await generate.POST({
+      request: request('/api/ai/generate', {
+        prompt: 'test',
+        model: 'seedance-2-0',
+        duration,
+      }),
+    });
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).code, 400);
+    assert.equal(await getBalance(id), 1000);
+    assert.equal(providerCalls, calls);
+    assert.equal(
+      (
+        await db()
+          .select()
+          .from(schema.aiTask)
+          .where(eq(schema.aiTask.userId, id))
+      ).length,
+      0
+    );
+  }
 });
 
 test('storage failures retry without refunding successful generation', async () => {

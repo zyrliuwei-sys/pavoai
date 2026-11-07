@@ -29,6 +29,8 @@ export interface LandingHeroProps {
   examplesLabel: string;
   ctaLabel: string;
   creditLabel: string;
+  durationLabel: string;
+  durationHint: string;
   /** Called with the finished prompt + mode from the result card CTA. */
   onSignUp?: (prompt: string, tabId: string) => void;
   /** See LandingGeneratorProps — first-generate gate + paywall hook. */
@@ -66,6 +68,8 @@ export function LandingHero({
   examplesLabel,
   ctaLabel,
   creditLabel,
+  durationLabel,
+  durationHint,
   onSignUp,
   onFirstGenerate,
   onPaywall,
@@ -131,6 +135,8 @@ export function LandingHero({
           examplesLabel={examplesLabel}
           generateLabel={ctaLabel}
           creditLabel={creditLabel}
+          durationLabel={durationLabel}
+          durationHint={durationHint}
           trust={trust}
           styleLabel={styleLabel}
           fastLabel={fastLabel}

@@ -9,7 +9,9 @@ pages and blog posts show different prices; do not substitute their rates.
 - Customer generation price = upstream **base generation** fee × **8**.
 - 1,000 Pavo credits = $1. Credits are not EvoLink's own credits.
 - Whole-credit charges round upward, so the difference is less than $0.001.
-- One request produces one image or a **5-second** text-to-video clip.
+- One request produces one image or a text-to-video clip of the selected
+  duration (default **5 seconds**). Video rows below are five-second examples;
+  the charge scales with the selected integer seconds before rounding.
 - All package intervals sell credits at this same rate. Annual packages
   contain 12 monthly allocations, granted upfront. One-time purchases are
   finite credit packs. No package promises unlimited generation.
@@ -44,6 +46,17 @@ realized margin below 8× all-in cost. Web/image search and reference images
 are not currently offered by this generator. No live paid generation was
 submitted to verify these prices.
 
+## Duration support — verified 2026-11-07
+
+- Seedance 2.0 Standard and Fast: integer seconds **4–15**, default **5**.
+  [Provider API reference](https://github.com/Evolink-AI/Seedance-2.0-Gateway-Service/blob/main/docs/text-to-video.md).
+- Wan 2.7 text-to-video: integer seconds **2–15**, default **5**.
+  [Provider model playground](https://evolink.ai/zh/wan-2-7).
+- The UI options, quote, server validation and provider request share the same
+  catalog limits. Durations written in a prompt do not override the setting.
+  Unsupported explicit durations fail before any credit charge or provider call.
+  Image generation continues to charge per image.
+
 ## Packages
 
 | Tier       | Monthly | Monthly credits | Annual / month | Annual charge | Annual credits | One-time | One-time credits |
@@ -62,7 +75,7 @@ to the per-generation model rates.
 Usage counts on cards are alternatives, not cumulative entitlements:
 Seedream 4 2K images **or** Wan 2.7 720p 5-second clips, rounded down. The generation paywall only shows
 packages that can fund the selected request. The selected model, resolution
-and Fast mode survive the checkout redirect. Per-model rate tables are kept
+and Fast mode, along with duration, survive the checkout redirect. Per-model rate tables are kept
 in this internal research note and are not displayed on the website.
 
 ## Sources

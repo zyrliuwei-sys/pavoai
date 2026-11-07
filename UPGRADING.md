@@ -1,3 +1,22 @@
+## 2026-11-07 — Select video duration and charge by the selected seconds
+
+The generator now offers every supported integer duration: Seedance 2.0
+Standard/Fast 4–15 seconds and Wan 2.7 2–15 seconds. Existing requests and
+checkout drafts without a duration keep the five-second default. The selected
+duration survives checkout, appears on the result badge and is stored in task
+options with quality/aspect/Fast for support review. Image pricing is unchanged.
+
+Deploy the client, pricing catalog, and generation API/provider together.
+Video `upstreamCostMicros` now means **per second**, rather than per five-second
+clip; use `evoCostCredits` to quote/charge the entire request. Never multiply the
+returned credits by duration again. Explicit invalid durations return HTTP 400
+before any charge or upstream request. No schema/env changes are required.
+
+The user-requested duration feature also updates English/Chinese public copy
+and its approved fixture. Five-second pricing examples remain valid. Verify
+duration-based credit limits, concurrent spending/refunds, checkout recovery,
+both model menus, mobile layout, and the production build before deployment.
+
 ## 2026-11-06 — Show credit packs first
 
 Pricing tabs now start with the existing one-time credit packs. Disabled or

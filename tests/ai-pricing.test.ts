@@ -10,6 +10,8 @@ import {
   AI_CREDITS_PER_USD,
   EVO_MODELS,
   evoCostCredits,
+  evoDuration,
+  evoDurationOptions,
   generationCredits,
   purchasedCredits,
 } from '../src/config/ai-pricing';
@@ -76,6 +78,59 @@ test('unsupported quality and unsupported Fast resolution cannot undercharge', (
   }
 });
 
+test('every supported integer duration uses the same per-second rate as the provider', () => {
+  for (const [id, min, rate720, rate1080] of [
+    ['seedance-2-0', 4, 1592, 3976],
+    ['wan-2-7', 2, 640, 960],
+  ] as const) {
+    const model = EVO_MODELS[id];
+    assert.deepEqual(
+      evoDurationOptions(model),
+      Array.from({ length: 16 - min }, (_, i) => min + i)
+    );
+    assert.equal(evoDuration(model), 5);
+    for (const duration of evoDurationOptions(model)) {
+      assert.equal(evoDuration(model, duration), duration);
+      assert.equal(
+        evoCostCredits(model, '720p', false, duration),
+        rate720 * duration
+      );
+      assert.equal(
+        evoCostCredits(model, '1080p', true, duration),
+        rate1080 * duration
+      );
+      if (id === 'seedance-2-0')
+        assert.equal(
+          evoCostCredits(model, '720p', true, duration),
+          1288 * duration
+        );
+    }
+    for (const invalid of [
+      null,
+      min - 1,
+      16,
+      5.5,
+      '10',
+      false,
+      {},
+      NaN,
+      Infinity,
+    ]) {
+      assert.throws(
+        () => evoDuration(model, invalid),
+        /duration must be a whole number/
+      );
+      assert.throws(
+        () => evoCostCredits(model, '720p', false, invalid as number),
+        /duration must be a whole number/
+      );
+    }
+  }
+  assert.deepEqual(evoDurationOptions(EVO_MODELS['seedream-4']), []);
+  assert.equal(evoDuration(EVO_MODELS['seedream-4'], 15), undefined);
+  assert.equal(evoCostCredits(EVO_MODELS['seedream-4'], '2K', false, 15), 180);
+});
+
 test('USD packages grant 1,000 credits per dollar across all billing intervals', () => {
   const packages = Object.values(pricingCatalog).filter((p) => !p.kind);
   assert.equal(packages.length, 9);
@@ -103,7 +158,7 @@ test('USD packages grant 1,000 credits per dollar across all billing intervals',
   }
 });
 
-test('upstream requests match the quoted Fast route, supported quality and five-second billing unit', async () => {
+test('upstream requests match the quoted route, quality and selected duration; omitted duration stays five seconds', async () => {
   const originalFetch = globalThis.fetch;
   const requests: Record<string, unknown>[] = [];
   globalThis.fetch = async (_url, init) => {
@@ -137,6 +192,42 @@ test('upstream requests match the quoted Fast route, supported quality and five-
     assert.equal(requests[3].n, 1);
     assert.equal(requests[3].quality, '4K');
     assert.equal(requests[3].prompt_priority, 'fast');
+    assert.equal('duration' in requests[3], false);
+    for (const [id, fast, duration] of [
+      ['seedance-2-0', false, 4],
+      ['seedance-2-0', true, 15],
+      ['wan-2-7', false, 2],
+      ['wan-2-7', true, 15],
+    ] as const) {
+      await evoCreateTask(
+        { baseUrl: 'https://example.test/v1', apiKey: 'test-token' },
+        {
+          model: EVO_MODELS[id],
+          prompt: 'A landscape',
+          aspect: '9:16',
+          quality: '720p',
+          fast,
+          duration,
+        }
+      );
+      assert.equal(requests.at(-1)!.duration, duration);
+    }
+    const calls = requests.length;
+    await assert.rejects(
+      evoCreateTask(
+        { baseUrl: 'https://example.test/v1', apiKey: 'test-token' },
+        {
+          model: EVO_MODELS['wan-2-7'],
+          prompt: 'A landscape',
+          aspect: '9:16',
+          quality: '720p',
+          fast: false,
+          duration: 180,
+        }
+      ),
+      /duration must/
+    );
+    assert.equal(requests.length, calls);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -146,7 +237,9 @@ test('concurrent generations cannot spend the same package balance twice; a fail
   const userId = 'pricing-buyer';
   const budget = pricingCatalog.starter_monthly.credits;
   const model = EVO_MODELS['seedance-2-0'];
-  const charge = evoCostCredits(model, '1080p');
+  const duration = 10;
+  const charge = evoCostCredits(model, '720p', false, duration);
+  assert.equal(charge, 15920);
   await db()
     .insert(user)
     .values({ id: userId, name: 'Buyer', email: 'pricing@example.test' });
@@ -169,6 +262,7 @@ test('concurrent generations cannot spend the same package balance twice; a fail
         model: model.model,
         prompt: 'A landscape',
         costCredits: charge,
+        options: { duration },
       })
     )
   );
@@ -180,6 +274,7 @@ test('concurrent generations cannot spend the same package balance twice; a fail
     .where(eq(aiTask.userId, userId));
   assert.equal(tasks.length, 1);
   assert.equal(tasks[0].costCredits, charge);
+  assert.equal(JSON.parse(tasks[0].options!).duration, duration);
   await Promise.all([
     updateTask({ taskId: tasks[0].id, status: AITaskStatus.FAILED }),
     updateTask({ taskId: tasks[0].id, status: AITaskStatus.FAILED }),

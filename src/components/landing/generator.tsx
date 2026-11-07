@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  Clock3,
   FastForward,
   Loader2,
   Palette,
@@ -21,7 +22,12 @@ import {
 import { toast } from 'sonner';
 
 import { Link } from '@/core/i18n/navigation';
-import { EVO_MODELS, evoCostCredits } from '@/config/ai-pricing';
+import {
+  EVO_MODELS,
+  evoCostCredits,
+  evoDuration,
+  evoDurationOptions,
+} from '@/config/ai-pricing';
 import { ApiError, apiGet, apiPost } from '@/lib/api-client';
 import type { DeliveryMode } from '@/lib/generation-delivery';
 import {
@@ -101,6 +107,8 @@ export interface LandingGeneratorProps {
   examplesLabel: string;
   generateLabel: string;
   creditLabel: string;
+  durationLabel: string;
+  durationHint: string;
   trust: string[];
   /** Toggle chips. */
   styleLabel: string;
@@ -225,6 +233,8 @@ export function LandingGenerator({
   examplesLabel,
   generateLabel,
   creditLabel,
+  durationLabel,
+  durationHint,
   trust,
   styleLabel,
   fastLabel,
@@ -262,6 +272,9 @@ export function LandingGenerator({
     Object.fromEntries(tabs.map((tab) => [tab.id, tab.qualities[0]?.id ?? '']))
   );
   const [fastOn, setFastOn] = useState(false);
+  const [durationByModel, setDurationByModel] = useState<
+    Record<string, number>
+  >({});
 
   // Model dropdown (open one at a time).
   const [modelsOpen, setModelsOpen] = useState(false);
@@ -291,6 +304,13 @@ export function LandingGenerator({
     activeTab?.models[0];
   const activeAspectId = aspectByTab[activeTab?.id ?? ''] ?? '';
   const activeQualityId = qualityByTab[activeTab?.id ?? ''] ?? '';
+  const activeCatalogModel = EVO_MODELS[activeModelId];
+  const durationOptions = activeCatalogModel
+    ? evoDurationOptions(activeCatalogModel)
+    : [];
+  const activeDuration = activeCatalogModel
+    ? evoDuration(activeCatalogModel, durationByModel[activeModelId])
+    : undefined;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -326,6 +346,11 @@ export function LandingGenerator({
         [pending.tabId]: pending.selection!.aspect,
       }));
       setFastOn(pending.selection.fast);
+      if (pending.selection.duration !== undefined)
+        setDurationByModel((value) => ({
+          ...value,
+          [pending.selection!.modelId]: pending.selection!.duration!,
+        }));
     }
     if (pending.email) {
       deliverEmailRef.current = pending.email;
@@ -429,11 +454,18 @@ export function LandingGenerator({
   ): Promise<void> => {
     const tab = tabs.find((t) => t.id === tabId);
     if (!tab || phase === 'rendering') return;
+    const selectedModelId = modelByTab[tabId] || tab.models[0]?.id || '';
     const selection: GenerationSelection = restoredSelection ?? {
-      modelId: modelByTab[tabId] || tab.models[0]?.id || '',
+      modelId: selectedModelId,
       quality: qualityByTab[tabId] ?? '',
       aspect: aspectByTab[tabId] || '16:9',
       fast: fastOn,
+      duration: EVO_MODELS[selectedModelId]
+        ? evoDuration(
+            EVO_MODELS[selectedModelId],
+            durationByModel[selectedModelId]
+          )
+        : undefined,
     };
 
     // First-generate gate: the block signs in an anonymous guest and, for
@@ -450,7 +482,12 @@ export function LandingGenerator({
       (q) => q.id === selection.quality
     )?.label;
     const aspectId = selection.aspect;
-    const meta = [quality, aspectId, selection.fast ? fastLabel : '']
+    const meta = [
+      quality,
+      aspectId,
+      selection.duration ? `${selection.duration}s` : '',
+      selection.fast ? fastLabel : '',
+    ]
       .filter(Boolean)
       .join(' · ');
 
@@ -476,6 +513,7 @@ export function LandingGenerator({
         aspect: aspectId ?? '16:9',
         quality: selection.quality,
         fast: selection.fast,
+        duration: selection.duration,
         email: delivery.registered
           ? undefined
           : (auto ? deliverEmailRef.current : delivery.email.trim()) ||
@@ -778,6 +816,34 @@ export function LandingGenerator({
               />
             )}
 
+            {durationOptions.length > 0 && (
+              <label className="sv-meta inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/[0.06] px-2.5 text-[12px] text-white/75 ring-1 ring-white/10">
+                <Clock3 size={13} aria-hidden />
+                {durationLabel}
+                <select
+                  aria-label={durationLabel}
+                  value={activeDuration}
+                  onChange={(event) =>
+                    setDurationByModel((previous) => ({
+                      ...previous,
+                      [activeModelId]: Number(event.target.value),
+                    }))
+                  }
+                  className="h-full cursor-pointer rounded bg-transparent pl-1 text-white outline-none focus-visible:ring-2 focus-visible:ring-[var(--sv-iris)]"
+                >
+                  {durationOptions.map((seconds) => (
+                    <option
+                      key={seconds}
+                      value={seconds}
+                      className="bg-[#101720]"
+                    >
+                      {seconds}s
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
             {/* Preserve the original copy for the style control. */}
             <button
               type="button"
@@ -811,7 +877,8 @@ export function LandingGenerator({
                 {evoCostCredits(
                   EVO_MODELS[activeModelId],
                   activeQualityId,
-                  fastOn
+                  fastOn,
+                  activeDuration
                 ).toLocaleString()}{' '}
                 {creditLabel}
               </span>
@@ -834,6 +901,11 @@ export function LandingGenerator({
               )}
             </button>
           </div>
+          {durationOptions.length > 0 && (
+            <p className="sv-meta mt-3 px-1 text-left text-xs leading-relaxed text-white/60">
+              {durationHint}
+            </p>
+          )}
         </fieldset>
       </form>
 

@@ -143,7 +143,14 @@ export function Hero() {
   ) => {
     const model = EVO_MODELS[selection.modelId];
     setRequiredCredits(
-      model ? evoCostCredits(model, selection.quality, selection.fast) : 0
+      model
+        ? evoCostCredits(
+            model,
+            selection.quality,
+            selection.fast,
+            selection.duration
+          )
+        : 0
     );
     parkPendingGen({ prompt, tabId, auto: true, selection });
     setPaywallOpen(true);
@@ -243,6 +250,8 @@ export function Hero() {
         onPaywall={openPaywall}
         ctaLabel={m['lp.hero.cta']()}
         creditLabel={m['works.credits']()}
+        durationLabel={m['lp.gen.duration']()}
+        durationHint={m['lp.gen.duration_hint']()}
         examplesLabel={m['lp.hero.examples_label']()}
         promptExamples={[
           m['lp.hero.pe1'](),

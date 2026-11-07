@@ -51,3 +51,47 @@ test('reject corrupt or incompatible persisted input', () => {
     assert.equal(parsePendingGeneration(raw), null);
   }
 });
+
+test('checkout recovery preserves selected video duration and defaults older drafts to five seconds', () => {
+  for (const [modelId, duration] of [
+    ['seedance-2-0', 15],
+    ['wan-2-7', 2],
+  ] as const) {
+    const selection = {
+      ...draft.selection,
+      modelId,
+      quality: '720p',
+      duration,
+    };
+    const recovered = parsePendingGeneration(
+      JSON.stringify({ ...draft, tabId: 'video', selection })
+    );
+    assert.deepEqual(recovered?.selection, selection);
+    assert.equal(
+      shouldResumeGeneration(recovered!, '?checkout=returned'),
+      true
+    );
+    const { duration: _, ...legacySelection } = selection;
+    assert.equal(
+      parsePendingGeneration(
+        JSON.stringify({ ...draft, tabId: 'video', selection: legacySelection })
+      )?.selection?.duration,
+      5
+    );
+  }
+});
+
+test('invalid saved durations cannot silently become a different paid request', () => {
+  for (const duration of [null, 2, 16, 5.5, '15', false]) {
+    assert.equal(
+      parsePendingGeneration(
+        JSON.stringify({
+          ...draft,
+          tabId: 'video',
+          selection: { ...draft.selection, modelId: 'seedance-2-0', duration },
+        })
+      ),
+      null
+    );
+  }
+});

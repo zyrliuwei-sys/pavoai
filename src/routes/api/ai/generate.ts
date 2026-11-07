@@ -14,6 +14,7 @@ import {
   EVO_MODELS,
   evoCostCredits,
   evoCreateTask,
+  evoDuration,
   evoQuality,
 } from '@/core/ai/evolink';
 import { getAuth, getEmailProvider } from '@/core/auth';
@@ -115,6 +116,14 @@ async function POST({ request }: { request: Request }) {
       : '16:9';
     const quality = evoQuality(entry, String(body.quality));
     const fast = body.fast === true;
+    let duration: number | undefined;
+    try {
+      duration = evoDuration(entry, body.duration);
+    } catch (error) {
+      return respJson(400, (error as Error).message, undefined, {
+        status: 400,
+      });
+    }
 
     const configs = await readEvoConfigs();
     if (!configs.apiKey) return respErr('EvoLink API key is not configured');
@@ -128,9 +137,13 @@ async function POST({ request }: { request: Request }) {
         provider: 'evolink',
         model: entry.model,
         prompt,
-        costCredits: evoCostCredits(entry, quality, fast),
+        costCredits: evoCostCredits(entry, quality, fast, duration),
         scene: 'generation_delivery_pending',
         options: {
+          duration,
+          quality,
+          aspect,
+          fast,
           delivery,
           email: email || undefined,
           locale: getLocale(),
@@ -151,6 +164,7 @@ async function POST({ request }: { request: Request }) {
         aspect,
         quality,
         fast,
+        duration,
       });
       await attachTaskInfo(task.id, { evoTaskId: evoTask.taskId });
     } catch (error: any) {

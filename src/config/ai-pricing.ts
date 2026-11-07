@@ -31,7 +31,9 @@ export interface EvoModel {
   fastPromptPriority?: boolean;
   qualities: string[];
   defaultQuality: string;
-  /** Upstream USD micros per image or per fixed five-second video. */
+  /** Integer seconds accepted by this video route (standard and Fast). */
+  videoDuration?: { min: number; max: number; default: number };
+  /** Upstream USD micros per image or per SECOND of video. */
   upstreamCostMicros: Record<string, number>;
   fastUpstreamCostMicros?: Record<string, number>;
 }
@@ -60,9 +62,10 @@ export const EVO_MODELS: Record<string, EvoModel> = {
     model: 'wan2.7-text-to-video',
     qualities: ['720p', '1080p'],
     defaultQuality: '720p',
+    videoDuration: { min: 2, max: 15, default: AI_VIDEO_DURATION_SECONDS },
     upstreamCostMicros: {
-      '720p': 80_000 * AI_VIDEO_DURATION_SECONDS,
-      '1080p': 120_000 * AI_VIDEO_DURATION_SECONDS,
+      '720p': 80_000,
+      '1080p': 120_000,
     },
   },
   'seedance-2-0': {
@@ -72,15 +75,47 @@ export const EVO_MODELS: Record<string, EvoModel> = {
     fastModel: 'seedance-2.0-fast-text-to-video',
     qualities: ['720p', '1080p'],
     defaultQuality: '720p',
+    videoDuration: { min: 4, max: 15, default: AI_VIDEO_DURATION_SECONDS },
     upstreamCostMicros: {
-      '720p': 199_000 * AI_VIDEO_DURATION_SECONDS,
-      '1080p': 497_000 * AI_VIDEO_DURATION_SECONDS,
+      '720p': 199_000,
+      '1080p': 497_000,
     },
     // The website's 25% Fast promotion ended on 2026-10-06. Use the
     // regular $0.161/s rate; Fast does not accept 1080p.
-    fastUpstreamCostMicros: { '720p': 161_000 * AI_VIDEO_DURATION_SECONDS },
+    fastUpstreamCostMicros: { '720p': 161_000 },
   },
 };
+
+/** Undefined preserves the five-second default for older clients/drafts.
+ * Explicit invalid values must fail before any charge or provider request. */
+export function evoDuration(
+  model: EvoModel,
+  duration?: unknown
+): number | undefined {
+  if (model.kind !== 'video') return undefined;
+  const range = model.videoDuration;
+  if (!range) throw new Error('Video duration is not configured');
+  if (duration === undefined) return range.default;
+  if (
+    typeof duration !== 'number' ||
+    !Number.isSafeInteger(duration) ||
+    duration < range.min ||
+    duration > range.max
+  )
+    throw new Error(
+      `${model.label} duration must be a whole number from ${range.min} to ${range.max} seconds`
+    );
+  return duration;
+}
+
+export function evoDurationOptions(model: EvoModel): number[] {
+  const range = model.videoDuration;
+  if (model.kind !== 'video' || !range) return [];
+  return Array.from(
+    { length: range.max - range.min + 1 },
+    (_, i) => range.min + i
+  );
+}
 
 /** Toolbar chips use lowercase ids; upstream image resolutions use uppercase. */
 export function evoQuality(model: EvoModel, quality: string): string {
@@ -103,11 +138,14 @@ export function evoUsesFastModel(
 export function evoCostCredits(
   model: EvoModel,
   quality: string,
-  fast = false
+  fast = false,
+  duration?: number
 ): number {
   const resolvedQuality = evoQuality(model, quality);
   const costs = evoUsesFastModel(model, resolvedQuality, fast)
     ? model.fastUpstreamCostMicros!
     : model.upstreamCostMicros;
-  return generationCredits(costs[resolvedQuality]);
+  return generationCredits(
+    costs[resolvedQuality] * (evoDuration(model, duration) ?? 1)
+  );
 }
