@@ -1,3 +1,11 @@
+## 2026-11-08 — Complete the blog cover images
+
+The model comparison, video prompt guide and product video ideas articles now
+use dedicated optimized WebP covers in both languages, with localized image
+descriptions. Deploy the six MDX files together with the three new assets under
+`public/imgs/generated/pavo-guides/`. Blog cards, article headers and social
+metadata read the same image paths. No database or configuration changes.
+
 ## 2026-11-07 — Restore the private operations guide body
 
 The MDX plugin now excludes `src/content/admin/`, whose documents are imported
