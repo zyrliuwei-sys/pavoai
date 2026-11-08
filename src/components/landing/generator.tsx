@@ -37,6 +37,10 @@ import {
   type PendingGeneration,
 } from '@/lib/generator-state';
 import { cn } from '@/lib/utils';
+import {
+  GeneratorGuide,
+  type GeneratorPromptExample,
+} from '@/components/landing/generator-guide';
 import { useTypewriter } from '@/components/landing/reveal';
 
 export type {
@@ -93,6 +97,7 @@ export interface LandingGeneratorProps {
     emailAvailable: boolean;
     emailLabel: string;
     emailPlaceholder: string;
+    title: string;
     hint: string;
     downloadLabel: string;
     accountResult: string;
@@ -103,8 +108,11 @@ export interface LandingGeneratorProps {
   };
   tabs: GeneratorTab[];
   /** Example prompts cycled by the typewriter placeholder. */
-  promptExamples: string[];
+  promptExamples: GeneratorPromptExample[];
   examplesLabel: string;
+  examplesDescription: string;
+  usePromptLabel: string;
+  selectedPromptLabel: string;
   generateLabel: string;
   creditLabel: string;
   durationLabel: string;
@@ -231,6 +239,9 @@ export function LandingGenerator({
   tabs,
   promptExamples,
   examplesLabel,
+  examplesDescription,
+  usePromptLabel,
+  selectedPromptLabel,
   generateLabel,
   creditLabel,
   durationLabel,
@@ -282,9 +293,12 @@ export function LandingGenerator({
 
   // Freeze the typewriter once there is something real to show (typed draft
   // or an active run) — it re-rendered the whole bar every 55ms otherwise.
-  const typed = useTypewriter(promptExamples, {
-    active: draft === null && phase === 'idle',
-  });
+  const typed = useTypewriter(
+    promptExamples.map((example) => example.prompt),
+    {
+      active: draft === null && phase === 'idle',
+    }
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -1087,59 +1101,22 @@ export function LandingGenerator({
         </div>
       )}
 
-      {phase === 'idle' && (
-        <div className="mt-3 w-full max-w-[1040px] text-left">
-          {!delivery.registered && delivery.emailAvailable && (
-            <label className="block max-w-sm text-xs text-white/70">
-              {delivery.emailLabel}
-              <input
-                type="email"
-                maxLength={200}
-                value={delivery.email}
-                onChange={(event) => delivery.onEmailChange(event.target.value)}
-                placeholder={delivery.emailPlaceholder}
-                className="mt-2 h-10 w-full rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-[var(--sv-iris)]"
-              />
-            </label>
-          )}
-          <p className="mt-2 text-xs leading-relaxed text-white/60">
-            {delivery.hint}
-          </p>
-        </div>
-      )}
-
-      {/* Trust line */}
-      <ul className="mt-4 flex flex-wrap items-center gap-2">
-        {trust.map((t) => (
-          <li
-            key={t}
-            className="rounded-full border border-white/15 px-3 py-1 text-[11.5px] text-white/70"
-          >
-            {t}
-          </li>
-        ))}
-      </ul>
-
-      {/* Example chips — one tap fills the prompt so the tool works on this page */}
-      <div className="mt-3 flex max-w-[640px] flex-wrap items-center justify-center gap-2">
-        <span className="sv-meta text-[11.5px] text-white/50">
-          {examplesLabel}
-        </span>
-        {promptExamples.map((example) => (
-          <button
-            key={example}
-            type="button"
-            title={example}
-            onClick={() => {
-              setDraft(example);
-              textareaRef.current?.focus();
-            }}
-            className="max-w-[240px] truncate rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[11.5px] text-white/70 transition-colors hover:border-[var(--sv-iris)]/60 hover:text-white"
-          >
-            {example}
-          </button>
-        ))}
-      </div>
+      <GeneratorGuide
+        delivery={delivery}
+        showDelivery={phase === 'idle'}
+        examples={promptExamples}
+        title={examplesLabel}
+        description={examplesDescription}
+        usePromptLabel={usePromptLabel}
+        selectedLabel={selectedPromptLabel}
+        capabilities={trust}
+        currentPrompt={draft}
+        disabled={starting || phase === 'rendering'}
+        onSelect={(prompt) => {
+          setDraft(prompt);
+          textareaRef.current?.focus();
+        }}
+      />
     </div>
   );
 }

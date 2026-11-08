@@ -1,3 +1,24 @@
+## 2026-11-08 — Redesign the generator guidance
+
+The generator now groups delivery instructions with an illustrated prompt
+picker and a compact capability row. Ship the new `generator-guide` component,
+its bilingual labels and `prompt-anime-rooftop.webp` together. Selecting a
+scene still fills and focuses the prompt without starting a generation.
+Download, email and account delivery rules are unchanged. No schema or
+configuration changes are required.
+
+## 2026-11-08 — Expand the Pavo AI video generator guide
+
+The English and Chinese articles at `/blog/pavo-ai-video-generator` now include
+the six-step workflow, three suggested prompts, model/resolution credit quotes,
+download conditions and FAQs. Deploy both MDX files together. The fee table
+imports the existing client-safe `evoCostCredits` catalog used by the generator;
+it does not change pricing. Original publication dates and article URLs remain
+unchanged, and the body records the substantive update date. Prompt examples
+are labeled as suggestions, without claims of completed generation tests.
+Guest email delivery is described as temporarily unavailable. No database,
+configuration, permissions or provider changes are required.
+
 ## 2026-11-08 — Complete the blog cover images
 
 The model comparison, video prompt guide and product video ideas articles now

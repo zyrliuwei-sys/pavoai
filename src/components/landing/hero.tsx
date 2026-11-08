@@ -24,9 +24,12 @@ export interface LandingHeroProps {
   subtitle: string;
   tabs: GeneratorTab[];
   /** Example prompts cycled by the typewriter in the prompt bar. */
-  promptExamples: string[];
-  /** Label in front of the clickable example chips. */
+  promptExamples: LandingGeneratorProps['promptExamples'];
+  /** Heading and interaction labels for the illustrated prompt picker. */
   examplesLabel: string;
+  examplesDescription: string;
+  usePromptLabel: string;
+  selectedPromptLabel: string;
   ctaLabel: string;
   creditLabel: string;
   durationLabel: string;
@@ -66,6 +69,9 @@ export function LandingHero({
   tabs,
   promptExamples,
   examplesLabel,
+  examplesDescription,
+  usePromptLabel,
+  selectedPromptLabel,
   ctaLabel,
   creditLabel,
   durationLabel,
@@ -133,6 +139,9 @@ export function LandingHero({
           tabs={tabs}
           promptExamples={promptExamples}
           examplesLabel={examplesLabel}
+          examplesDescription={examplesDescription}
+          usePromptLabel={usePromptLabel}
+          selectedPromptLabel={selectedPromptLabel}
           generateLabel={ctaLabel}
           creditLabel={creditLabel}
           durationLabel={durationLabel}

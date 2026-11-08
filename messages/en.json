@@ -1680,5 +1680,15 @@
   "works.credits": "credits",
   "works.retrying": "Connection interrupted. Retrying automatically…",
   "lp.gen.duration": "Duration",
-  "lp.gen.duration_hint": "Video length follows this setting, even if your prompt asks for a longer video. Credits update with the selected duration."
+  "lp.gen.duration_hint": "Video length follows this setting, even if your prompt asks for a longer video. Credits update with the selected duration.",
+  "lp.hero.delivery_account": "Save to My Creations",
+  "lp.hero.delivery_email": "Keep a copy of your result",
+  "lp.hero.delivery_download": "Download before you leave",
+  "lp.hero.scenes_title": "Start with a scene",
+  "lp.hero.scenes_description": "Pick a prompt below, then make it your own.",
+  "lp.hero.use_prompt": "Use prompt",
+  "lp.hero.prompt_selected": "Prompt selected",
+  "lp.hero.scene_drive": "Neon night drive",
+  "lp.hero.scene_product": "Product close-up",
+  "lp.hero.scene_anime": "Anime at sunset"
 }

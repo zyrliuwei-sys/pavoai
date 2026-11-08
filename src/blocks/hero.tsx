@@ -206,6 +206,11 @@ export function Hero() {
           emailAvailable: availability.data?.email === true,
           emailLabel: m['lp.hero.paywall_email_label'](),
           emailPlaceholder: m['lp.hero.paywall_email_placeholder'](),
+          title: registered
+            ? m['lp.hero.delivery_account']()
+            : availability.data?.email
+              ? m['lp.hero.delivery_email']()
+              : m['lp.hero.delivery_download'](),
           hint: registered
             ? m['works.account_hint']()
             : availability.data?.email
@@ -252,11 +257,26 @@ export function Hero() {
         creditLabel={m['works.credits']()}
         durationLabel={m['lp.gen.duration']()}
         durationHint={m['lp.gen.duration_hint']()}
-        examplesLabel={m['lp.hero.examples_label']()}
+        examplesLabel={m['lp.hero.scenes_title']()}
+        examplesDescription={m['lp.hero.scenes_description']()}
+        usePromptLabel={m['lp.hero.use_prompt']()}
+        selectedPromptLabel={m['lp.hero.prompt_selected']()}
         promptExamples={[
-          m['lp.hero.pe1'](),
-          m['lp.hero.pe2'](),
-          m['lp.hero.pe3'](),
+          {
+            prompt: m['lp.hero.pe1'](),
+            title: m['lp.hero.scene_drive'](),
+            image: landingVideos['user-neon-drive'].poster,
+          },
+          {
+            prompt: m['lp.hero.pe2'](),
+            title: m['lp.hero.scene_product'](),
+            image: '/imgs/generated/pavo-guides/product-video-cover.webp',
+          },
+          {
+            prompt: m['lp.hero.pe3'](),
+            title: m['lp.hero.scene_anime'](),
+            image: '/imgs/generated/pavo-guides/prompt-anime-rooftop.webp',
+          },
         ]}
         trust={[
           m['lp.hero.trust_1'](),

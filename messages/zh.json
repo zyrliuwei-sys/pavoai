@@ -1680,5 +1680,15 @@
   "works.credits": "积分",
   "works.retrying": "连接暂时中断，正在自动重试…",
   "lp.gen.duration": "时长",
-  "lp.gen.duration_hint": "视频时长以此设置为准，提示词中要求更长时间不会延长视频。积分消耗随所选时长更新。"
+  "lp.gen.duration_hint": "视频时长以此设置为准，提示词中要求更长时间不会延长视频。积分消耗随所选时长更新。",
+  "lp.hero.delivery_account": "作品存入「我的作品」",
+  "lp.hero.delivery_email": "为作品留一份备份",
+  "lp.hero.delivery_download": "离开前，记得下载作品",
+  "lp.hero.scenes_title": "从一个场景开始",
+  "lp.hero.scenes_description": "点选提示词，再加入你自己的想法。",
+  "lp.hero.use_prompt": "使用提示词",
+  "lp.hero.prompt_selected": "已选用提示词",
+  "lp.hero.scene_drive": "霓虹夜行",
+  "lp.hero.scene_product": "产品特写",
+  "lp.hero.scene_anime": "日落动漫"
 }
