@@ -37,6 +37,7 @@ import { CookieConsent } from '@/blocks/cookie-consent';
 import { Ads } from '@/components/analytics/ads';
 import { GoogleAnalytics } from '@/components/analytics/google-analytics';
 import { Plausible } from '@/components/analytics/plausible';
+import { Pvuv } from '@/components/analytics/pvuv';
 import { CustomerService } from '@/components/customer-service';
 import { GoogleOneTap } from '@/components/google-one-tap';
 import { SandboxPreviewBridge } from '@/components/sandbox-preview-bridge';
@@ -204,6 +205,7 @@ function RootComponent() {
             src={analytics.plausibleSrc || undefined}
           />
         ) : null}
+        <Pvuv />
         {analytics?.adsenseCode ? (
           <Ads code={analytics.adsenseCode} loadScript={adsAllowed} />
         ) : null}
