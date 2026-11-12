@@ -1,3 +1,16 @@
+## 2026-11-12 — Consolidate retired onboarding articles into the homepages
+
+Four branded onboarding articles and their translations are retired. Deploy
+the server entry, permanent redirect configuration and updated post registry
+together: the eight old URLs return an empty HTTP 301 with a language-specific
+Location before locale middleware or page metadata renders. Trailing slashes
+use the same redirect, and query parameters do not change the destination.
+The active post registry and database-post merge omit retired entries from
+blog listings, sitemap and text indexes. Homepage guide links now point
+directly to the language-aware homepage. Keep the Blog navigation and all
+remaining article content, canonical URLs and language alternatives intact.
+No database, permissions, secrets or homepage metadata changes are required.
+
 ## 2026-11-08 — Redesign the generator guidance
 
 The generator now groups delivery instructions with an illustrated prompt
@@ -9,7 +22,7 @@ configuration changes are required.
 
 ## 2026-11-08 — Expand the Pavo AI video generator guide
 
-The English and Chinese articles at `/blog/pavo-ai-video-generator` now include
+The English and Chinese introductory video articles now include
 the six-step workflow, three suggested prompts, model/resolution credit quotes,
 download conditions and FAQs. Deploy both MDX files together. The fee table
 imports the existing client-safe `evoCostCredits` catalog used by the generator;

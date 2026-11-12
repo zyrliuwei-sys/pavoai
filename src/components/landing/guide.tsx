@@ -76,7 +76,7 @@ export function LandingGuide({
           </h3>
           <ul className="mt-4 grid gap-x-14 gap-y-2 md:grid-cols-2">
             {links.map(({ label, href }) => (
-              <li key={href}>
+              <li key={label}>
                 <Link
                   href={href}
                   className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[var(--sv-iris-strong)] underline-offset-4 hover:underline"

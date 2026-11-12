@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 
-import { pavoGuideSlugs } from '@/config/pavo-guides';
+import { isRetiredBlogSlug } from '@/config/permanent-redirects';
 import { baseLocale } from '@/paraglide/runtime.js';
 
 /**
@@ -13,7 +13,6 @@ import { baseLocale } from '@/paraglide/runtime.js';
  * local posts via the pure helpers below.
  */
 export const BLOG_POST_SLUGS = [
-  ...Object.values(pavoGuideSlugs),
   'veo-3-1-vs-kling-3-0',
   'how-to-write-cinematic-video-prompts',
   'ugc-ads-with-ai-prompts',
@@ -118,12 +117,12 @@ export function mergePosts(
   options: { limit?: number } = {}
 ): BlogPost[] {
   const dbSlugs = new Set(dbPosts.map((p) => p.slug));
-  const merged = [
-    ...dbPosts,
-    ...localPosts.filter((p) => !dbSlugs.has(p.slug)),
-  ].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  const merged = [...dbPosts, ...localPosts.filter((p) => !dbSlugs.has(p.slug))]
+    .filter((post) => !isRetiredBlogSlug(post.slug))
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   return options.limit ? merged.slice(0, options.limit) : merged;
 }
 

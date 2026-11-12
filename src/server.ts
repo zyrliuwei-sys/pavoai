@@ -8,6 +8,7 @@ import {
   sanitizeReferrer,
   sanitizeUtm,
 } from './lib/cookie';
+import { permanentRedirectResponse } from './lib/permanent-redirect';
 import { paraglideMiddleware } from './paraglide/server.js';
 
 // On Cloudflare Workers, stash the binding env (D1, ASSETS, …) on globalThis
@@ -104,6 +105,11 @@ function withPoweredBy(response: Response): Response {
 // so getLocale() resolves per-request (AsyncLocalStorage) during SSR.
 export default {
   async fetch(req: Request): Promise<Response> {
+    // Return a real HTTP redirect before D1, Paraglide or the page renderer can
+    // load an old article or emit its canonical/language-alternative metadata.
+    const redirect = permanentRedirectResponse(req);
+    if (redirect) return withPoweredBy(redirect);
+
     await ensureCloudflareEnv();
     // Wrap the whole request so anything before/after the handler shares
     // the same db client too.
